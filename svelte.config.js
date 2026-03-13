@@ -6,14 +6,20 @@ const config = {
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
 		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
 		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
-		adapter: adapter()
-	},
-	vitePlugin: {
-		dynamicCompileOptions: ({ filename }) => ({ runes: !filename.includes('node_modules') })
-	},
-	alias: {
+		adapter: adapter(),
+			alias: {
 		'@/*': './path/to/lib/*'
 	}
+	},
+	vitePlugin: {
+		dynamicCompileOptions: ({ filename }) => {
+			const nonRunic = [
+				// 'svelte-clerk',
+				'@iconify/svelte'
+			];
+			return { runes: !nonRunic.some((p) => filename.includes(p)) }
+		}
+	},
 };
 
 export default config;
