@@ -40,3 +40,17 @@ npm run build
 You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+
+
+
+## TODO
+- [x] npx sv create tarmacos
+- [x] configure tailwind
+- [x] configure shadcn
+- [x] build home page for testing ui out
+- [ ] make it deploy
+- [ ] Add CI/CD
+- [ ] Integrate clerk and add auth flow
+- [ ] Integrate convex and add DB schema
+- [ ] Backend APIs - create Profile
+- [ ] Convex add mutation for create profile
