@@ -8,8 +8,8 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 <ClerkProvider>
-<main>
-<Homepagenav />
-	{@render children()}
-</main>
+	<main>
+		<Homepagenav />
+		{@render children()}
+	</main>
 </ClerkProvider>
