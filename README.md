@@ -48,7 +48,7 @@ You can preview the production build with `npm run preview`.
 - [x] configure shadcn
 - [x] build home page for testing ui out
 - [x] make it deploy
-- [ ] Add CI/CD
+- [x] Add CI/CD
 - [ ] Integrate clerk and add auth flow
 - [ ] Integrate convex and add DB schema
 - [ ] Backend APIs - create Profile
