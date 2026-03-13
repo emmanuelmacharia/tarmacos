@@ -34,7 +34,7 @@
 				</Button>
 			</div>
 		</div>
-		<div class="mt-10 items-center justify-center gap-4">
+		<div class="mt-10 items-center justify-center sm:gap-2 md:gap-4">
 			<button
 				class="my-2 cursor-pointer rounded-full border border-primary/30 bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted/50"
 				>Frontend Engineer at Stripe</button
@@ -46,6 +46,10 @@
 			<button
 				class="my-2 cursor-pointer rounded-full border border-primary/30 bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted/50"
 				>Project Manager at Microsoft</button
+			>
+			<button
+				class="my-2 cursor-pointer rounded-full border border-primary/30 bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted/50 md:hidden"
+				>Data analyst at Amazon</button
 			>
 		</div>
 	</div>
