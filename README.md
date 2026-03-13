@@ -48,7 +48,7 @@ You can preview the production build with `npm run preview`.
 - [x] configure tailwind
 - [x] configure shadcn
 - [x] build home page for testing ui out
-- [ ] make it deploy
+- [x] make it deploy
 - [ ] Add CI/CD
 - [ ] Integrate clerk and add auth flow
 - [ ] Integrate convex and add DB schema

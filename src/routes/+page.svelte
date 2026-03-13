@@ -33,10 +33,10 @@ import Paperclip from "$lib/icons/Paperclip.svelte";
 				</Button>
             </div>
 		</div>
-		<div class="mt-10 flex-wrap justify-center gap-3">
-			<button class="px-4 py-2 rounded-full border border-primary/30 bg-background text-sm font-medium hover:bg-muted/50 cursor-pointer transition-colors shadow-sm">Frontend Engineer at Stripe</button>
-			<button class="px-4 py-2 rounded-full border border-primary/30 bg-background text-sm font-medium hover:bg-muted/50 cursor-pointer transition-colors shadow-sm">Product Designer at Apple</button>
-			<button class="px-4 py-2 rounded-full border border-primary/30 bg-background text-sm font-medium hover:bg-muted/50 cursor-pointer transition-colors shadow-sm">Project Manager at Microsoft</button>
+		<div class="mt-10 justify-center items-center gap-4">
+			<button class="my-2 px-4 py-2 rounded-full border border-primary/30 bg-background text-sm font-medium hover:bg-muted/50 cursor-pointer transition-colors shadow-sm">Frontend Engineer at Stripe</button>
+			<button class="my-2 px-4 py-2 rounded-full border border-primary/30 bg-background text-sm font-medium hover:bg-muted/50 cursor-pointer transition-colors shadow-sm">Product Designer at Apple</button>
+			<button class="my-2 px-4 py-2 rounded-full border border-primary/30 bg-background text-sm font-medium hover:bg-muted/50 cursor-pointer transition-colors shadow-sm">Project Manager at Microsoft</button>
 		</div>
 	</div>
 </div>
