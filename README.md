@@ -49,7 +49,7 @@ You can preview the production build with `npm run preview`.
 - [x] build home page for testing ui out
 - [x] make it deploy
 - [x] Add CI/CD
-- [ ] Integrate clerk and add auth flow
+- [x] Integrate clerk and add auth flow
 - [ ] Integrate convex and add DB schema
 - [ ] Backend APIs - create Profile
 - [ ] Convex add mutation for create profile
