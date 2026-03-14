@@ -7,7 +7,6 @@
 <div
 	class="relative flex min-h-screen flex-col items-center justify-center p-6 font-sans text-foreground"
 >
-	<!-- Create a nav bar -->
 
 	<div class="mx-auto flex w-full max-w-3xl flex-col items-center">
 		<h1 class="mb-10 text-center text-3xl font-semibold tracking-tight text-foreground md:text-4xl">

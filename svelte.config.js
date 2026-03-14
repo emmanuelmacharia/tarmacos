@@ -14,7 +14,6 @@ const config = {
 	vitePlugin: {
 		dynamicCompileOptions: ({ filename }) => {
 			const nonRunic = [
-				// 'svelte-clerk',
 				'@iconify/svelte'
 			];
 			return { runes: !nonRunic.some((p) => filename.includes(p)) };

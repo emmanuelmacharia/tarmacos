@@ -2,7 +2,7 @@
 	import { Show, SignInButton, UserButton } from 'svelte-clerk';
 </script>
 
-<header class="absolute top-0 right-0 flex gap-4 p-6">
+<header class="absolute top-0 right-0 flex gap-4 p-6 z-50 pointer-events-auto">
 	<Show when="signed-out">
 		<SignInButton />
 	</Show>
