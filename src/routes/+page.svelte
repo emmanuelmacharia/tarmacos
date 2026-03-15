@@ -59,7 +59,7 @@
 		{:else if query.error}
 			failed to load: {query.error.toString()}
 		{:else}
-			<ul>
+			<ul class="my-4">
 				{#each query.data as task (task.text)}
 					<li>
 						{task.isCompleted ? '☑' : '☐'}
