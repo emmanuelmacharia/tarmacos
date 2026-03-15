@@ -2,6 +2,10 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Paperclip from '$lib/icons/Paperclip.svelte';
 	import Sparkles from '$lib/icons/Sparkles.svelte';
+	import { useQuery } from 'convex-svelte';
+	import { api } from '../convex/_generated/api.js';
+
+	const query = useQuery(api.task.get, {});
 </script>
 
 <div
@@ -50,5 +54,20 @@
 				>Data analyst at Amazon</button
 			>
 		</div>
+		{#if query.isLoading}
+			Loading...
+		{:else if query.error}
+			failed to load: {query.error.toString()}
+		{:else}
+			<ul>
+				{#each query.data as task (task.text)}
+					<li>
+						{task.isCompleted ? '☑' : '☐'}
+						<span>{task.text}</span>
+						<span>assigned by {task.assigner}</span>
+					</li>
+				{/each}
+			</ul>
+		{/if}
 	</div>
 </div>
