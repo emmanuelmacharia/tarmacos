@@ -28,7 +28,7 @@ export default defineSchema({
 	// USER PREFERENCE
 	userPreferences: defineTable({
 		userId: v.id('users'),
-		defaultProfileId: v.optional(v.id('profiles')),
+		// defaultProfileId: v.optional(v.id('profiles')),
 		defaultWriterModel: v.optional(v.string()),
 		defaultScorerModel: v.optional(v.string()),
 		defaultTemplateId: v.optional(v.string()),
