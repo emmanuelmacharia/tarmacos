@@ -14,18 +14,12 @@
 	$effect(() => {
 		if (!session || !user?.id) return;
 		if (syncedUser === user.id) return;
-		const payload = {
-			email: user.primaryEmailAddress?.emailAddress ?? user.emailAddresses[0]?.emailAddress,
-			imageUrl: user.imageUrl ?? undefined,
-			fullName: user.fullName ?? `${user.firstName} ${user.lastName}`
-		};
-
 		void (async () => {
 			try {
-				await convex.mutation(api.user.createUser.createUser, payload);
+				await convex.mutation(api.user.createUser.createUser, {});
 				syncedUser = user.id;
 			} catch (err) {
-				// we'll add helers for user management
+				// we'll add helpers for error handling
 				console.log(err)
 			}
 		})();
