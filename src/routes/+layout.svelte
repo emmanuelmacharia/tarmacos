@@ -5,6 +5,7 @@
 	import Homepagenav from '$lib/components/homepagenav.svelte';
 	import { PUBLIC_CONVEX_URL } from '$env/static/public';
 	import { setupConvex } from 'convex-svelte';
+	import ConvexClerkProvider from '$lib/providers/ConvexClerkProvider.svelte';
 
 	setupConvex(PUBLIC_CONVEX_URL);
 	let { children } = $props();
@@ -12,6 +13,7 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 <ClerkProvider>
+	<ConvexClerkProvider />
 	<main>
 		<Homepagenav />
 		{@render children()}
