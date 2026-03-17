@@ -20,7 +20,7 @@
 				syncedUser = user.id;
 			} catch (err) {
 				// we'll add helpers for error handling
-				console.log(err)
+				console.log(err);
 			}
 		})();
 	});
