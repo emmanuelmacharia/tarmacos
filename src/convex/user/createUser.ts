@@ -1,13 +1,7 @@
-import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
 
 export const createUser = mutation({
-	args: {
-		email: v.string(),
-		fullName: v.string(),
-		imageUrl: v.optional(v.string())
-	},
-	handler: async (ctx, args) => {
+	handler: async (ctx) => {
 		const identity = await ctx.auth.getUserIdentity();
 
 		if (!identity) {
@@ -20,18 +14,31 @@ export const createUser = mutation({
 			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
 			.unique();
 
-		if (existing) return;
+		if (existing) {
+			await ctx.db.patch('users', existing._id, {
+				lastSeenAt: new Date().getTime(),
+				email: identity.email!,
+				fullName: identity.name!,
+				imageUrl: identity.pictureUrl
+			});
+			return existing._id;
+		}
 
-		const payload = {
-			clerkUserId: clerkId,
-			email: args.email,
-			fullName: args.fullName,
-			imageUrl: args.imageUrl,
-			status: 'active' as const,
-			createdAt: new Date().getTime(),
-			updatedAt: new Date().getTime()
-		};
-
-		return await ctx.db.insert('users', payload);
+		try {
+			const payload = {
+				clerkUserId: clerkId,
+				email: identity.email!,
+				fullName: identity.name!,
+				imageUrl: identity.pictureUrl,
+				status: 'active' as const,
+				createdAt: new Date().getTime(),
+				updatedAt: new Date().getTime()
+			};
+			const user = await ctx.db.insert('users', payload);
+			return user;
+		} catch (error) {
+			// handle convex errors more gracefully
+			console.log(error);
+		}
 	}
 });
