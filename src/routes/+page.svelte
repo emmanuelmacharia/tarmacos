@@ -2,10 +2,31 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Paperclip from '$lib/icons/Paperclip.svelte';
 	import Sparkles from '$lib/icons/Sparkles.svelte';
-	import { useQuery } from 'convex-svelte';
+	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../convex/_generated/api.js';
+	import { useClerkContext } from 'svelte-clerk';
 
-	const query = useQuery(api.task.get, {});
+	const clerk = useClerkContext();
+	const convex = useConvexClient();
+
+	const session = $derived(clerk.session);
+	const user = $derived(clerk.user);
+	let syncedUser = $state<string | null>(null);
+
+	$effect(() => {
+		if (!session || !user?.id) return;
+		if (syncedUser === user.id) return;
+		const payload = {
+			email: user.primaryEmailAddress?.emailAddress ?? user.emailAddresses[0]?.emailAddress,
+			imageUrl: user.imageUrl ?? undefined,
+			fullName: user.fullName ?? `${user.firstName} ${user.lastName}`
+		};
+
+		void (async () => {
+			await convex.mutation(api.user.createUser.createUser, payload);
+		})();
+		syncedUser = user.id;
+	});
 </script>
 
 <div
@@ -54,20 +75,5 @@
 				>Data analyst at Amazon</button
 			>
 		</div>
-		{#if query.isLoading}
-			Loading...
-		{:else if query.error}
-			failed to load: {query.error.toString()}
-		{:else}
-			<ul class="my-4">
-				{#each query.data as task (task.text)}
-					<li>
-						{task.isCompleted ? '☑' : '☐'}
-						<span>{task.text}</span>
-						<span>assigned by {task.assigner}</span>
-					</li>
-				{/each}
-			</ul>
-		{/if}
 	</div>
 </div>
