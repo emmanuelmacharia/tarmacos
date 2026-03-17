@@ -8,7 +8,6 @@
  * @module
  */
 
-import type * as task from "../task.js";
 import type * as user_createUser from "../user/createUser.js";
 
 import type {
@@ -18,7 +17,6 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  task: typeof task;
   "user/createUser": typeof user_createUser;
 }>;
 
