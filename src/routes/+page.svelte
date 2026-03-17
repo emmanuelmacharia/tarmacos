@@ -21,9 +21,14 @@
 		};
 
 		void (async () => {
-			await convex.mutation(api.user.createUser.createUser, payload);
+			try {
+				await convex.mutation(api.user.createUser.createUser, payload);
+				syncedUser = user.id;
+			} catch (err) {
+				// we'll add helers for user management
+				console.log(err)
+			}
 		})();
-		syncedUser = user.id;
 	});
 </script>
 
