@@ -27,7 +27,7 @@
 				<a href={resolve('/dashboard/generations')} data-sveltekit-preload-data="hover">
 					<Button
 						class={cn(
-							'rounded-none border border-primary/30',
+							'rounded-none border border-primary/30 transition-colors',
 							page.url.pathname.includes(routes.generations)
 								? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground/90'
 								: 'bg-transparent hover:bg-gray-50/50'
@@ -39,7 +39,7 @@
 				<a href={resolve('/dashboard/history')} data-sveltekit-preload-data="hover">
 					<Button
 						class={cn(
-							'rounded-none border border-primary/30',
+							'rounded-none border border-primary/30 transition-colors',
 							page.url.pathname.includes(routes.history)
 								? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground/90'
 								: 'bg-transparent hover:bg-gray-50/50'

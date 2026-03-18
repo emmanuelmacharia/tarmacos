@@ -51,6 +51,6 @@ You can preview the production build with `npm run preview`.
 - [x] Add CI/CD
 - [x] Integrate clerk and add auth flow
 - [x] Integrate convex
-- [ ] Add Convex DB Schema
+- [x] Add Convex DB Schema
 - [ ] Backend APIs - create Profile
 - [ ] Convex add mutation for create profile
