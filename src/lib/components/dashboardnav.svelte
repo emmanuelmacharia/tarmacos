@@ -19,7 +19,6 @@
 	let isMobileOpen = $state(false);
 	let isModalOpen = $state(false);
 
-
 	let profiles = $state([
 		{
 			id: '1',
@@ -91,7 +90,7 @@
 	<button
 		type="button"
 		aria-label="Open navigation menu"
-		class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background text-foreground transition-colors hover:font-bold cursor-pointer"
+		class="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-border bg-background text-foreground transition-colors hover:font-bold"
 		onclick={() => (isMobileOpen = true)}
 	>
 		<PanelLeft size={18} />
@@ -136,7 +135,7 @@
 		<button
 			type="button"
 			aria-label="Close navigation menu"
-			class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background transition-colors hover:font-bold cursor-pointer"
+			class="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-border bg-background transition-colors hover:font-bold"
 			onclick={closeMobileMenu}
 		>
 			<X size={18} />
@@ -145,13 +144,11 @@
 
 	<div class="flex-1 overflow-y-auto py-6">
 		<div class="px-4">
-			<div
-				class="mb-3 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-			>
+			<div class="mb-3 px-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
 				Job profiles
 			</div>
 
-			<div class="flex flex-col gap-2 my-4">
+			<div class="my-4 flex flex-col gap-2">
 				{#each profiles as profile (profile.id)}
 					<button
 						type="button"
@@ -160,16 +157,14 @@
 							'flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors',
 							profile.isActive
 								? 'bg-primary/10 font-medium text-primary'
-								: 'text-muted-foreground hover:font-bold cursor-pointer hover:text-foreground'
+								: 'cursor-pointer text-muted-foreground hover:font-bold hover:text-foreground'
 						)}
 						aria-label={profile.name}
 					>
 						<span
 							class={cn(
 								'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background-secondary/5 text-lg',
-								profile.isActive
-									? 'border-primary/30 shadow-sm'
-									: 'border-border'
+								profile.isActive ? 'border-primary/30 shadow-sm' : 'border-border'
 							)}
 						>
 							{profile.icon}
@@ -182,7 +177,7 @@
 					type="button"
 					onclick={() => (isModalOpen = true)}
 					aria-label="Add new profile"
-					class="mt-1 flex w-full items-center gap-3 rounded-lg p-2 text-muted-foreground transition-colors hover:font-bold cursor-pointer hover:text-foreground"
+					class="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 text-muted-foreground transition-colors hover:font-bold hover:text-foreground"
 				>
 					<span
 						class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-dashed border-gray-500"
@@ -214,7 +209,7 @@
 	<div class="mt-auto border-t-2 border-border p-4">
 		<button
 			type="button"
-			class="flex w-full items-center gap-3 rounded-lg p-2 text-muted-foreground transition-colors hover:font-bold cursor-pointer hover:text-foreground"
+			class="flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 text-muted-foreground transition-colors hover:font-bold hover:text-foreground"
 		>
 			<Settings size={18} />
 			<span class="text-sm font-medium">Settings</span>
@@ -236,10 +231,7 @@
 		</div>
 
 		<span
-			class={cn(
-				'whitespace-nowrap text-lg font-bold',
-				isCollapsed ? 'hidden' : 'hidden md:block'
-			)}
+			class={cn('text-lg font-bold whitespace-nowrap', isCollapsed ? 'hidden' : 'hidden md:block')}
 		>
 			Resume <span class="opacity-70">Tailor</span>
 		</span>
@@ -262,7 +254,7 @@
 		<div class="px-3 md:px-4">
 			<div
 				class={cn(
-					'mb-3 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap',
+					'mb-3 px-2 text-xs font-semibold tracking-wider whitespace-nowrap text-muted-foreground uppercase',
 					isCollapsed ? 'hidden' : 'hidden md:block'
 				)}
 			>
@@ -278,27 +270,20 @@
 							'flex w-full items-center gap-3 rounded-lg p-2 transition-colors',
 							profile.isActive
 								? 'bg-primary/10 font-medium text-primary'
-								: 'text-muted-foreground hover:font-bold cursor-pointer hover:text-foreground'
+								: 'cursor-pointer text-muted-foreground hover:font-bold hover:text-foreground'
 						)}
 						aria-label={profile.name}
 					>
 						<span
 							class={cn(
 								'mx-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background-secondary/5 text-lg md:mx-0 md:h-8 md:w-8 md:text-base',
-								profile.isActive
-									? 'border-primary/30 shadow-sm'
-									: 'border-border'
+								profile.isActive ? 'border-primary/30 shadow-sm' : 'border-border'
 							)}
 						>
 							{profile.icon}
 						</span>
 
-						<span
-							class={cn(
-								'truncate text-sm',
-								isCollapsed ? 'hidden' : 'hidden md:block'
-							)}
-						>
+						<span class={cn('truncate text-sm', isCollapsed ? 'hidden' : 'hidden md:block')}>
 							{profile.name}
 						</span>
 					</button>
@@ -308,7 +293,7 @@
 					type="button"
 					onclick={() => (isModalOpen = true)}
 					aria-label="Add new profile"
-					class="mt-1 flex w-full items-center gap-3 rounded-lg p-2 text-muted-foreground transition-colors hover:font-bold cursor-pointer hover:text-foreground"
+					class="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 text-muted-foreground transition-colors hover:font-bold hover:text-foreground"
 				>
 					<span
 						class="mx-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-dashed border-gray-500 md:mx-0 md:h-8 md:w-8"
@@ -316,12 +301,7 @@
 						<Plus size={16} />
 					</span>
 
-					<span
-						class={cn(
-							'whitespace-nowrap text-sm',
-							isCollapsed ? 'hidden' : 'hidden md:block'
-						)}
-					>
+					<span class={cn('text-sm whitespace-nowrap', isCollapsed ? 'hidden' : 'hidden md:block')}>
 						Add New Role
 					</span>
 				</button>
@@ -338,12 +318,7 @@
 					>
 						<item.icon size={18} class="mx-auto md:mx-0" />
 
-						<span
-							class={cn(
-								'text-sm font-medium',
-								isCollapsed ? 'hidden' : 'hidden md:block'
-							)}
-						>
+						<span class={cn('text-sm font-medium', isCollapsed ? 'hidden' : 'hidden md:block')}>
 							{item.label}
 						</span>
 					</a>
@@ -355,15 +330,10 @@
 	<div class="mt-auto w-full border-t-2 border-border p-4">
 		<button
 			type="button"
-			class="flex w-full items-center gap-3 rounded-lg p-2 text-muted-foreground transition-colors hover:font-bold cursor-pointer hover:text-foreground"
+			class="flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 text-muted-foreground transition-colors hover:font-bold hover:text-foreground"
 		>
 			<Settings size={18} class="mx-auto md:mx-0" />
-			<span
-				class={cn(
-					'text-sm font-medium',
-					isCollapsed ? 'hidden' : 'hidden md:block'
-				)}
-			>
+			<span class={cn('text-sm font-medium', isCollapsed ? 'hidden' : 'hidden md:block')}>
 				Settings
 			</span>
 		</button>

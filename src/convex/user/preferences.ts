@@ -73,7 +73,7 @@ export const patchProfile = mutation({
 				return;
 			} catch (error) {
 				console.log(error);
-				return
+				return;
 			}
 		}
 
