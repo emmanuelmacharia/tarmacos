@@ -36,7 +36,7 @@ export const createUser = mutation({
 				updatedAt: new Date().getTime()
 			};
 			const user = await ctx.db.insert('users', payload);
-			await ctx.runMutation(api.user.userPreferences.createPreferences);
+			await ctx.runMutation(api.user.preferences.createPreferences);
 			return user;
 		} catch (error) {
 			// handle convex errors more gracefully
