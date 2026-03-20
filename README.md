@@ -52,5 +52,9 @@ You can preview the production build with `npm run preview`.
 - [x] Integrate clerk and add auth flow
 - [x] Integrate convex
 - [x] Add Convex DB Schema
-- [ ] Backend APIs - create Profile
+- [x] Storage - we'll use convex file storage - it's already integrated with convex
+- [x] Backend APIs - create Prefernces
+- [x] Complete dashboard navigation
+- [ ] Prompt form - create this, with upload fuctionality & ability to submit
+- [ ] Integrate AI SDK
 - [ ] Convex add mutation for create profile
