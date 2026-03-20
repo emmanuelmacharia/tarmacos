@@ -16,7 +16,7 @@
 		if (syncedUser === user.id) return;
 		void (async () => {
 			try {
-				await convex.mutation(api.user.createUser.createUser, {});
+				await convex.mutation(api.user.user.createUser, {});
 				syncedUser = user.id;
 			} catch (err) {
 				// we'll add helpers for error handling

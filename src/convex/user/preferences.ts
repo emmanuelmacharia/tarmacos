@@ -69,7 +69,7 @@ export const patchProfile = mutation({
 		if (!preferences) {
 			try {
 				// create the preference row if it doesn't exist
-				await ctx.runMutation(api.user.userPreferences.createPreferences);
+				await ctx.runMutation(api.user.preferences.createPreferences);
 				return;
 			} catch (error) {
 				console.log(error);
