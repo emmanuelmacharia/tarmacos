@@ -1,3 +1,4 @@
+import { api } from '../_generated/api';
 import { mutation } from '../_generated/server';
 
 export const createUser = mutation({
@@ -35,6 +36,7 @@ export const createUser = mutation({
 				updatedAt: new Date().getTime()
 			};
 			const user = await ctx.db.insert('users', payload);
+			await ctx.runMutation(api.user.userPreferences.createPreferences);
 			return user;
 		} catch (error) {
 			// handle convex errors more gracefully
