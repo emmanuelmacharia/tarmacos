@@ -2,11 +2,22 @@ import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
 // enums
-export const userStatus = v.union(v.literal('active'), v.literal('disabled'));
-const defaultResumeLength = v.union(
+const userStatus = v.union(v.literal('active'), v.literal('disabled'));
+export const defaultResumeLength = v.union(
 	v.literal('one_page'),
 	v.literal('two_page'),
 	v.literal('auto')
+);
+
+export const seniorityLevel = v.union(
+	v.literal('intern'),
+	v.literal('junior'),
+	v.literal('mid'),
+	v.literal('senior'),
+	v.literal('staff'),
+	v.literal('principal'),
+	v.literal('lead'),
+	v.literal('manager')
 );
 
 // tables
@@ -28,7 +39,7 @@ export default defineSchema({
 	// USER PREFERENCE
 	userPreferences: defineTable({
 		userId: v.id('users'),
-		// defaultProfileId: v.optional(v.id('profiles')),
+		defaultProfileId: v.optional(v.id('profiles')),
 		defaultWriterModel: v.optional(v.string()),
 		defaultScorerModel: v.optional(v.string()),
 		defaultTemplateId: v.optional(v.string()),
@@ -36,5 +47,29 @@ export default defineSchema({
 		theme: v.optional(v.string()),
 		createdAt: v.number(),
 		updatedAt: v.number()
-	}).index('by_userId', ['userId'])
+	}).index('by_userId', ['userId']),
+
+	// Canonical profiles
+	profiles: defineTable({
+		userId: v.id('users'),
+		name: v.string(),
+		slug: v.optional(v.string()),
+		headline: v.optional(v.string()),
+		summary: v.optional(v.string()),
+		primaryFocus: v.optional(v.string()),
+		yearsOfExperience: v.optional(v.number()),
+		seniorityLevel: v.optional(seniorityLevel),
+		coreSkills: v.optional(v.array(v.string())),
+		industries: v.optional(v.array(v.string())),
+		profilePrompt: v.optional(v.string()),
+		promptVersion: v.optional(v.number()),
+		preferredTemplateId: v.optional(v.string()),
+		isDefault: v.optional(v.boolean()),
+		isArchived: v.optional(v.boolean()),
+		createdAt: v.number(),
+		updatedAt: v.number()
+	})
+		.index('by_userId', ['userId'])
+		.index('by_userId_isDefault', ['userId', 'isDefault'])
+		.index('by_userId_isArchived', ['userId', 'isArchived'])
 });

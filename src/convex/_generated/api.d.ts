@@ -8,7 +8,8 @@
  * @module
  */
 
-import type * as user_createUser from "../user/createUser.js";
+import type * as user_preferences from "../user/preferences.js";
+import type * as user_user from "../user/user.js";
 
 import type {
   ApiFromModules,
@@ -17,7 +18,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  "user/createUser": typeof user_createUser;
+  "user/preferences": typeof user_preferences;
+  "user/user": typeof user_user;
 }>;
 
 /**

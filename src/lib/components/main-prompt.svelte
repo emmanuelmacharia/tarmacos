@@ -11,25 +11,28 @@
 	<div
 		class="relative w-full rounded-2xl border border-primary/30 bg-background shadow-lg transition-colors focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 hover:border-border"
 	>
-		<textarea
-			rows="2"
-			class="w-full resize-none bg-transparent p-4 text-lg leading-relaxed outline-none placeholder:text-muted-foreground/50 md:text-xl"
-			placeholder="Paste a Job description of the role..."
-		></textarea>
-		<div class="mt-2 flex items-center justify-between p-2">
-			<div
-				class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted/50 hover:text-foreground"
-			>
-				<Paperclip size={18} />
-				<span>Attach Baseline Resume</span>
+		<form action="">
+			<textarea
+				rows="2"
+				class="w-full resize-none bg-transparent p-4 text-lg leading-relaxed outline-none placeholder:text-muted-foreground/50 md:text-xl"
+				placeholder="Paste a Job description of the role..."
+			></textarea>
+
+			<div class="mt-2 flex flex-col items-center gap-4 p-2 md:flex-row md:justify-between">
+				<div
+					class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted/50 hover:text-foreground"
+				>
+					<Paperclip size={18} />
+					<span>Attach Baseline Resume</span>
+				</div>
+				<Button class="flex gap-4">
+					<Sparkles size={18} />
+					Tailor resume
+				</Button>
 			</div>
-			<Button class="flex gap-4">
-				<Sparkles size={18} />
-				Tailor resume
-			</Button>
-		</div>
+		</form>
 	</div>
-	<div class="mt-10 items-center justify-center sm:gap-2 md:gap-4">
+	<div class="mt-10 flex flex-wrap items-center justify-center sm:gap-2 md:gap-4">
 		<button
 			class="my-2 cursor-pointer rounded-full border border-primary/30 bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted/50"
 			>Frontend Engineer at Stripe</button
