@@ -18,7 +18,7 @@
 			placeholder="Paste a Job description of the role..."
 		></textarea>
 		
-		<div class="mt-2 flex items-center justify-between p-2">
+		<div class="mt-2 flex items-center md:justify-between flex-col md:flex-row gap-4 p-2">
 			<div
 				class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted/50 hover:text-foreground"
 			>
@@ -32,7 +32,7 @@
 		</div>
 	</form>
 	</div>
-	<div class="mt-10 items-center justify-center sm:gap-2 md:gap-4">
+	<div class="mt-10 items-center flex flex-wrap justify-center sm:gap-2 md:gap-4">
 		<button
 			class="my-2 cursor-pointer rounded-full border border-primary/30 bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted/50"
 			>Frontend Engineer at Stripe</button
