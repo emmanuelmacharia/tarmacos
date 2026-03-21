@@ -3,6 +3,7 @@
 	import Paperclip from '$lib/icons/Paperclip.svelte';
 	import Sparkles from '$lib/icons/Sparkles.svelte';
 	import { FileIcon, Maximize, Minimize, Settings, X } from '@lucide/svelte';
+	import ModelSelection from './model-selection.svelte';
 
 	// 0 = Normal, 1 = Slightly Expanded, 2 = Fully Expanded
 	let expansionState = $state(0);
@@ -208,6 +209,8 @@
 					</button>
 				{/if}
 			</div>
+
+			<ModelSelection />
 
 			<Button class="flex gap-4">
 				<Sparkles size={18} />
