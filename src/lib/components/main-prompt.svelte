@@ -38,7 +38,6 @@
 	const models = $state(aiModels.data);
 	const providers = $state(aiProviders.data);
 
-
 	function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 	}
