@@ -220,7 +220,7 @@
 
 			<Button class="flex gap-4">
 				<Sparkles size={18} />
-				<span>Tailor resume</span>
+				<span class="hidden md:block">Tailor resume</span>
 			</Button>
 		</div>
 	</form>
