@@ -518,7 +518,7 @@
 				</div>
 				<div class="custom-scrollbar w-full flex-1 overflow-y-auto">
 					<div class="flex flex-col gap-1 p-2">
-						{#each curatedModelsAndProviders.find((c) => c.slug === activeCategory)?.models as model (model)}
+						{#each curatedModelsAndProviders.find((c) => c.slug === activeCategory)?.models ?? [] as model (model)}
 							<div
 								class="group relative flex w-full items-center gap-3 rounded-xl p-3 transition-colors focus-within:ring-2 focus-within:ring-primary/30 hover:bg-background-secondary/10 {(activeTab ===
 								'writer'
