@@ -4,6 +4,8 @@
 	import Sparkles from '$lib/icons/Sparkles.svelte';
 	import { FileIcon, Maximize, Minimize, Settings, X } from '@lucide/svelte';
 	import ModelSelection from './model-selection.svelte';
+	import * as aiProviders from '$lib/data/ai_providers.json';
+	import * as aiModels from '$lib/data/models.json';
 
 	// 0 = Normal, 1 = Slightly Expanded, 2 = Fully Expanded
 	let expansionState = $state(0);
@@ -17,6 +19,10 @@
 	let showExpandedIcon = $derived.by(() => {
 		return expansionState > 0 || (textareaRef?.scrollHeight ?? 0) > 100;
 	});
+
+	const models = $state(aiModels.data);
+	const providers = $state(aiProviders.data);
+
 	function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 	}
@@ -210,7 +216,7 @@
 				{/if}
 			</div>
 
-			<ModelSelection />
+			<ModelSelection {providers} {models} />
 
 			<Button class="flex gap-4">
 				<Sparkles size={18} />
