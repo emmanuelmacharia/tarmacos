@@ -102,7 +102,7 @@
 		onsubmit={handleSubmit}
 		class="relative flex w-full flex-col rounded-2xl border border-primary/30 bg-background shadow-lg transition-all duration-500 ease-out focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 hover:border-border {expansionState ===
 		2
-			? 'z-50 h-[75vh]'
+			? 'z-40 h-[75vh]'
 			: expansionState === 1
 				? 'z-10 h-50'
 				: 'z-0 min-h-18'}"
@@ -185,7 +185,7 @@
 			</div>
 		{/if}
 		<div
-			class="z-10 mt-auto flex w-full shrink-0 items-center justify-between rounded-b-xl border-t border-border/30 bg-background p-2 pt-3"
+			class="z-10 mt-auto flex flex-wrap gap-2 w-full shrink-0 items-center justify-between rounded-b-xl border-t border-border/30 bg-background p-2 pt-3"
 		>
 			<div class="flex flex-row gap-1 border-r border-border/50 md:gap-2">
 				<button
@@ -194,7 +194,7 @@
 					title="Attach files"
 				>
 					<Paperclip size={18} />
-					<span class="hidden md:block">Attach Baseline Resume</span>
+					<span class="xs:hidden block">Attach Baseline Resume</span>
 				</button>
 				<input
 					type="file"
@@ -220,7 +220,7 @@
 
 			<Button class="flex gap-4">
 				<Sparkles size={18} />
-				<span class="hidden md:block">Tailor resume</span>
+				<span class="xs:hidden block">Tailor resume</span>
 			</Button>
 		</div>
 	</form>

@@ -216,11 +216,9 @@
 	}
 
 	// state
-	let activeTab: Role = $state('writer');
-	// let selectedWriterModel = $state<SelectedModel | null>(null);
-	// let selectedReviewermodel = $state<SelectedModel | null>(null);
-	let activeCategory = $state<string>('openai');
+	let activeTab: Role = $state('writer');	
 	let openModelSettings = $state(false);
+	let searchModel = $state('');
 
 	let { providers, models }: Props = $props();
 
@@ -248,11 +246,33 @@
 	});
 
 	let curatedModelsAndProviders = $derived.by(() => {
-		return modelAndProvidersFullList.filter((p) => p.models.length > 0);
+		const fullSearchList = modelAndProvidersFullList.filter(
+			(p) => p.models.length > 0
+		);
+
+		if (!searchModel) {
+			return fullSearchList;
+		}
+
+		const term = searchModel.toLowerCase();
+
+		const searchFilter = fullSearchList
+			.map((provider) => ({
+				...provider,
+				models: provider.models.filter(
+					(model) =>
+						model.name.toLowerCase().includes(term) ||
+						model.id.toLowerCase().includes(term)
+				)
+			}))
+			.filter((provider) => provider.models.length > 0);
+		return searchFilter;
 	});
 
-	$effect(() => handleOpenChange(isOpen));
+	let activeCategory = $derived(curatedModelsAndProviders[0].slug ?? null);
 
+	$effect(() => handleOpenChange(isOpen));
+	
 	let isOpen = $state(false);
 
 	let selections = $state<Record<Role, SelectedModel>>({
@@ -344,7 +364,7 @@
 			</div>
 		</div>
 	</Popover.Trigger>
-	<PopoverContent side="top" class="w-85 bg-background md:w-125">
+	<PopoverContent side="top" class="xs:w-70 w-85 bg-background md:w-125">
 		{#if openModelSettings && activeModel}
 			{@const searchSupport = supportsSearch(activeModel)}
 			{@const reasoningSupport = supportsReasoning(activeModel)}
@@ -474,7 +494,7 @@
 			</div>
 			<div class="flex items-center gap-2 border-b border-border/40 bg-background/50 p-3">
 				<Search size={16} class="ml-1 text-muted-foreground" />
-				<input
+				<input bind:value={searchModel} 
 					type="text"
 					placeholder="search models..."
 					class="w-full border-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
