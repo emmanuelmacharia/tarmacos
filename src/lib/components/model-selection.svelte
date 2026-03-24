@@ -188,7 +188,7 @@
 		return searchFilter;
 	});
 
-	let activeCategory = $derived(curatedModelsAndProviders[0].slug ?? null);
+	let activeCategory = $derived(curatedModelsAndProviders[0]?.slug ?? null);
 
 	$effect(() => handleOpenChange(isOpen));
 
