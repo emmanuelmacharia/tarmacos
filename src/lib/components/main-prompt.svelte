@@ -117,7 +117,7 @@
 						<span class="max-w-37.5 truncate font-medium">{file.name}</span>
 						<button
 							type="button"
-							onclick={removeFile(index)}
+							onclick={() => removeFile(index)}
 							class="ml-1 rounded-full bg-card/80 p-0.5 opacity-60 transition-colors hover:text-destructive hover:opacity-100"
 							title="remove attachment"
 						>
