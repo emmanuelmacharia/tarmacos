@@ -19,7 +19,14 @@
 	import Label from './ui/label/label.svelte';
 	import * as Select from './ui/select/index';
 	import { SvelteMap } from 'svelte/reactivity';
-	import type { Role, ModelConfig, SelectedModel, AIModel, ModelsAndProviders, Props } from '$lib/data/models';
+	import type {
+		Role,
+		ModelConfig,
+		SelectedModel,
+		AIModel,
+		ModelsAndProviders,
+		Props
+	} from '$lib/data/models';
 
 	// consts
 	const DEFAULT_MODEL_CONFIG: ModelConfig = {
@@ -131,7 +138,7 @@
 	}
 
 	// state
-	let activeTab: Role = $state('writer');	
+	let activeTab: Role = $state('writer');
 	let openModelSettings = $state(false);
 	let searchModel = $state('');
 
@@ -161,9 +168,7 @@
 	});
 
 	let curatedModelsAndProviders = $derived.by(() => {
-		const fullSearchList = modelAndProvidersFullList.filter(
-			(p) => p.models.length > 0
-		);
+		const fullSearchList = modelAndProvidersFullList.filter((p) => p.models.length > 0);
 
 		if (!searchModel) {
 			return fullSearchList;
@@ -176,8 +181,7 @@
 				...provider,
 				models: provider.models.filter(
 					(model) =>
-						model.name.toLowerCase().includes(term) ||
-						model.id.toLowerCase().includes(term)
+						model.name.toLowerCase().includes(term) || model.id.toLowerCase().includes(term)
 				)
 			}))
 			.filter((provider) => provider.models.length > 0);
@@ -187,7 +191,7 @@
 	let activeCategory = $derived(curatedModelsAndProviders[0].slug ?? null);
 
 	$effect(() => handleOpenChange(isOpen));
-	
+
 	let isOpen = $state(false);
 
 	let selections = $state<Record<Role, SelectedModel>>({
@@ -409,7 +413,8 @@
 			</div>
 			<div class="flex items-center gap-2 border-b border-border/40 bg-background/50 p-3">
 				<Search size={16} class="ml-1 text-muted-foreground" />
-				<input bind:value={searchModel} 
+				<input
+					bind:value={searchModel}
 					type="text"
 					placeholder="search models..."
 					class="w-full border-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
