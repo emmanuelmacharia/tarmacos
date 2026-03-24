@@ -459,7 +459,7 @@
 					Writer Mode
 				</button>
 				<button
-					title="writer"
+					title="reviewer"
 					onclick={() => (activeTab = 'reviewer')}
 					class="trasition-all flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium {activeTab ===
 					'reviewer'
@@ -499,7 +499,7 @@
 					>
 						<Star
 							size={16}
-							class={activeCategory === 'favourites' ? 'fill-yellow=500 text-yellow-500' : ''}
+							class={activeCategory === 'favourites' ? 'fill-yellow-500 text-yellow-500' : ''}
 						/>
 					</button>
 					{#each curatedModelsAndProviders.filter((c) => c.slug !== 'favourites') as cat (cat.slug)}
