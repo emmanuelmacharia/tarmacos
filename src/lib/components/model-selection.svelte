@@ -395,7 +395,7 @@
 											onCheckedChange={(checked) => setReasoning(activeTab, checked)}
 											class="data-[state=checked]:bg-background-secondary/90 data-[state=unchecked]:bg-background-secondary/30"
 										/>
-										<Label for="reasoning" class="text-muted-foreground">Reasoning</Label>
+										<Label for="{activeTab}-reasoning" class="text-muted-foreground">Reasoning</Label>
 									</div>
 								</div>
 								{#if reasoningSupport && activeSelection.config.reasoning}
