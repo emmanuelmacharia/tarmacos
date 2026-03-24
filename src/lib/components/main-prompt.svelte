@@ -6,6 +6,7 @@
 	import ModelSelection from './model-selection.svelte';
 	import * as aiProviders from '$lib/data/ai_providers.json';
 	import * as aiModels from '$lib/data/models.json';
+	import type { SelectedModel, Role } from '$lib/data/models';
 
 	// 0 = Normal, 1 = Slightly Expanded, 2 = Fully Expanded
 	let expansionState = $state(0);
@@ -14,6 +15,20 @@
 	let attachedFiles = $state<File[]>([]);
 	let showInstructions = $state(false);
 	let additionalInstructions = $state('');
+	let modelSelections = $state<Record<Role, SelectedModel>>({
+		writer: {
+			provider: null,
+			name: null,
+			id: null,
+			config: { search: false, reasoning: false, reasoningEffort: 'None' }
+		},
+		reviewer: {
+			provider: null,
+			name: null,
+			id: null,
+			config: { search: false, reasoning: false, reasoningEffort: 'None' }
+		}
+	});
 	let textareaRef: HTMLTextAreaElement | null = null;
 	let fileInput: HTMLInputElement;
 	let showExpandedIcon = $derived.by(() => {
@@ -22,6 +37,7 @@
 
 	const models = $state(aiModels.data);
 	const providers = $state(aiProviders.data);
+
 
 	function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -185,7 +201,7 @@
 			</div>
 		{/if}
 		<div
-			class="z-10 mt-auto flex flex-wrap gap-2 w-full shrink-0 items-center justify-between rounded-b-xl border-t border-border/30 bg-background p-2 pt-3"
+			class="z-10 mt-auto flex w-full shrink-0 flex-wrap items-center justify-between gap-2 rounded-b-xl border-t border-border/30 bg-background p-2 pt-3"
 		>
 			<div class="flex flex-row gap-1 border-r border-border/50 md:gap-2">
 				<button
@@ -216,7 +232,7 @@
 				{/if}
 			</div>
 
-			<ModelSelection {providers} {models} />
+			<ModelSelection {providers} {models} bind:modelSelections />
 
 			<Button class="flex gap-4">
 				<Sparkles size={18} />
