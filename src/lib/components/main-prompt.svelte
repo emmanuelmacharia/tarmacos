@@ -90,7 +90,7 @@
 
 <div class="mx-auto flex w-full max-w-3xl flex-col items-center">
 	<h1
-		class="mb-10 text-center {expansionState <= 2
+		class="mb-10 text-center {expansionState < 2
 			? 'text-3xl'
 			: 'text-xl'} font-semibold tracking-tight text-foreground md:text-4xl"
 	>
