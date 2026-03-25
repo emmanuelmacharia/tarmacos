@@ -419,13 +419,15 @@
 				</button>
 			</div>
 			{#if activeTab === 'writer'}
-			<p class="text-xs text-muted-foreground p-2">
-				Drafts, tailors, and optimizes your resume bullet points to perfectly align with the target job description.
-			</p>
+				<p class="p-2 text-xs text-muted-foreground">
+					Drafts, tailors, and optimizes your resume bullet points to perfectly align with the
+					target job description.
+				</p>
 			{:else}
-			<p class="text-xs text-muted-foreground p-2">
-				Acts as a strict Applicant Tracking System (ATS). It analyzes your tailored resume to score your match, find missing keywords, and expose weaknesses.
-			</p>
+				<p class="p-2 text-xs text-muted-foreground">
+					Acts as a strict Applicant Tracking System (ATS). It analyzes your tailored resume to
+					score your match, find missing keywords, and expose weaknesses.
+				</p>
 			{/if}
 			<div class="flex items-center gap-2 border-b border-border/40 bg-background/50 p-3">
 				<Search size={16} class="ml-1 text-muted-foreground" />

@@ -267,13 +267,11 @@
 							variant: 'ghost'
 						})} flex cursor-pointer items-center bg-background p-0 text-xs transition-all hover:bg-background/80 hover:text-foreground"
 					>
-						<button
-							type="button"
+						<span
 							class="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-transparent text-muted-foreground transition hover:border-border hover:bg-muted/50 hover:text-foreground sm:h-10 sm:w-10"
-							title="Configure tools"
 						>
 							<Settings2 size={18} />
-						</button>
+						</span>
 					</Popover.Trigger>
 					<Popover.Content side="top" class="w-80 bg-background">
 						<div class="flex flex-col">
@@ -281,7 +279,7 @@
 								<button
 									type="button"
 									onclick={() => (showInstructions = true)}
-									class="flex w-full shrink-0 cursor-pointer items-center justify-between gap-4 rounded-lg border border-transparent py-4 px-2 text-muted-foreground transition hover:border-border hover:bg-background-secondary/10 hover:text-foreground"
+									class="flex w-full shrink-0 cursor-pointer items-center justify-between gap-4 rounded-lg border border-transparent px-2 py-4 text-muted-foreground transition hover:border-border hover:bg-background-secondary/10 hover:text-foreground"
 									title="Add instructions"
 								>
 									<ClipboardPen size={14} />
@@ -295,10 +293,17 @@
 								>
 									<Tooltip.Provider>
 										<Tooltip.Root>
-											<Tooltip.Trigger class="{buttonVariants({ variant: 'ghost' })} bg-background hover:bg-background/20 ring-dark ring-offset-background hidden md:block">
+											<Tooltip.Trigger
+												class="{buttonVariants({
+													variant: 'ghost'
+												})} ring-dark hidden bg-background ring-offset-background hover:bg-background/20 md:block"
+											>
 												<Info size={14} />
 											</Tooltip.Trigger>
-											<Tooltip.Content class="bg-background animate-in border border-border p-4 fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2" arrowClasses="bg-background border-none">
+											<Tooltip.Content
+												class="animate-in border border-border bg-background p-4 fade-in-0 zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+												arrowClasses="bg-background border-none"
+											>
 												<p class="text-xs text-muted-foreground">
 													Advanced mode lets you choose models and customize your AI experience.
 												</p>
@@ -322,7 +327,7 @@
 			</div>
 
 			{#if promptMode === 'Advanced'}
-			<ModelSelection {providers} {models} bind:modelSelections />
+				<ModelSelection {providers} {models} bind:modelSelections />
 			{/if}
 
 			<Button class="flex gap-4">
@@ -331,7 +336,7 @@
 			</Button>
 		</div>
 	</form>
-	<div class="mt-10 flex flex-wrap items-center justify-center sm:gap-2 md:gap-4">
+	<!-- <div class="mt-10 flex flex-wrap items-center justify-center sm:gap-2 md:gap-4">
 		<button
 			class="my-2 cursor-pointer rounded-full border border-primary/30 bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted/50"
 			>Frontend Engineer at Stripe</button
@@ -348,5 +353,5 @@
 			class="my-2 cursor-pointer rounded-full border border-primary/30 bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted/50 md:hidden"
 			>Data analyst at Amazon</button
 		>
-	</div>
+	</div> -->
 </div>
