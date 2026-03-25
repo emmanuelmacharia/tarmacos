@@ -9,7 +9,8 @@
 		Search,
 		Star,
 		ChevronLeft,
-		Brain
+		Brain,
+		ChevronDown
 	} from '@lucide/svelte';
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
@@ -282,6 +283,9 @@
 				</div>
 			</div>
 		</div>
+		<div class="flex items-center">
+			<ChevronDown size={14} />
+		</div>
 	</Popover.Trigger>
 	<PopoverContent side="top" class="xs:w-70 w-85 bg-background md:w-125">
 		{#if openModelSettings && activeModel}
@@ -397,7 +401,7 @@
 						: 'text-muted-foreground hover:bg-background-secondary/20 hover:text-foreground'}"
 				>
 					<Pen size={14} class={activeTab === 'writer' ? 'text-blue-500' : ''} />
-					Writer Mode
+					Select writer
 				</button>
 				<button
 					title="reviewer"
@@ -408,9 +412,18 @@
 						: 'text-muted-foreground hover:bg-background-secondary/20 hover:text-foreground'}"
 				>
 					<Eye size={14} class={activeTab === 'reviewer' ? 'text-blue-500' : ''} />
-					Reviewer Mode
+					Select reviewer
 				</button>
 			</div>
+			{#if activeTab === 'writer'}
+			<p class="text-xs text-muted-foreground p-2">
+				Drafts, tailors, and optimizes your resume bullet points to perfectly align with the target job description.
+			</p>
+			{:else}
+			<p class="text-xs text-muted-foreground p-2">
+				Acts as a strict Applicant Tracking System (ATS). It analyzes your tailored resume to score your match, find missing keywords, and expose weaknesses.
+			</p>
+			{/if}
 			<div class="flex items-center gap-2 border-b border-border/40 bg-background/50 p-3">
 				<Search size={16} class="ml-1 text-muted-foreground" />
 				<input
