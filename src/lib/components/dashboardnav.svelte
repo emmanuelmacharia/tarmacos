@@ -85,7 +85,7 @@
 </script>
 
 <header
-	class="sticky top-0 z-30 flex items-center justify-between border-b border-gray-300 bg-background/80 px-4 py-3 backdrop-blur md:hidden"
+	class="sticky top-0 z-50 flex items-center justify-between border-b border-gray-300 bg-background/80 px-4 py-3 backdrop-blur md:hidden"
 >
 	<button
 		type="button"
@@ -110,7 +110,7 @@
 	type="button"
 	aria-label="Close navigation menu"
 	class={cn(
-		'fixed inset-0 z-40 bg-black/40 transition-opacity md:hidden',
+		'fixed inset-0 z-50 bg-black/40 transition-opacity md:hidden',
 		isMobileOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
 	)}
 	onclick={closeMobileMenu}
@@ -119,7 +119,7 @@
 <aside
 	class={cn(
 		'fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-gray-300 bg-background shadow-xl transition-transform duration-300 md:hidden',
-		isMobileOpen ? 'translate-x-0 z-50' : '-translate-x-full'
+		isMobileOpen ? 'z-50 translate-x-0' : '-translate-x-full'
 	)}
 >
 	<div class="flex items-center justify-between border-b border-gray-300 px-4 py-8">
