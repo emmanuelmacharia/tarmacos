@@ -209,7 +209,7 @@
 					title="Attach files"
 				>
 					<Paperclip size={18} />
-					<span class="xs:hidden block">Attach Baseline Resume</span>
+					<span class="sm:hidden block">Attach Baseline Resume</span>
 				</button>
 				<input
 					type="file"
@@ -235,7 +235,7 @@
 
 			<Button class="flex gap-4">
 				<Sparkles size={18} />
-				<span class="xs:hidden block">Tailor resume</span>
+				<span class="sm:hidden block">Tailor resume</span>
 			</Button>
 		</div>
 	</form>
