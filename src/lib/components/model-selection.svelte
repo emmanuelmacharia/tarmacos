@@ -118,6 +118,9 @@
 		selections[role].name = modelDetails.name;
 		selections[role].provider = activeCategory;
 		selections[role].config = normalizeModelConfig(modelDetails, selections[role].config).config;
+
+		// let's use this for now - not the best pattern though - you have 2 variables representing the same thing
+		modelSelections = $state.snapshot(selections);
 	}
 
 	function setReasoning(role: Role, enabled: boolean) {
