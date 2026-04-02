@@ -358,7 +358,6 @@ export async function runWriterReviewerWorkflow({
 			};
 		}
 
-
 		/**
 		 * Otherwise, generate the next revision.
 		 *
