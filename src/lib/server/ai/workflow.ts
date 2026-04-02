@@ -304,8 +304,6 @@ export async function runWriterReviewerWorkflow({
 
 		console.log(`Starting iteration ${iteration} of review loop`);
 
-		if (iteration > input.maxIterations) break;
-
 		// core loop
 		await emitEvent(emit, {
 			type: 'agent-started',
@@ -360,6 +358,7 @@ export async function runWriterReviewerWorkflow({
 			};
 		}
 
+
 		/**
 		 * Otherwise, generate the next revision.
 		 *
@@ -370,6 +369,8 @@ export async function runWriterReviewerWorkflow({
 		 *
 		 * This is the key handoff loop.
 		 */
+
+		if (iteration === input.maxIterations) break;
 
 		const nextIteration = iteration + 1;
 
