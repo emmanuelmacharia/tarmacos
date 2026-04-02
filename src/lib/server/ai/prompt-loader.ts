@@ -1,5 +1,5 @@
 /**
- * Central prompt registry - single place to load md files, 
+ * Central prompt registry - single place to load md files,
  * easy to swap content later
  * Prompt stays away from the code
  */
@@ -13,15 +13,15 @@ import reviewerWorkflow from './prompts/workflows/reviewer.md?raw';
 import planWorkflow from './prompts/workflows/reviewer-plan.md?raw';
 
 export const PROMPTS = {
-  baseSystemPrompt: systemPrompt.trim(),
-  roles: {
-    writer: writerRolePrompt.trim(),
-    reviewer: reviewerRolePrompt.trim()
-  },
-  workflows: {
-    reviewerPlan: planWorkflow.trim(),
-    writerDraft: writerDraftWorkflow.trim(),
-    writerRevise: writerReviseWorkflow.trim(),
-    reviewerReview: reviewerWorkflow.trim(),
-  }
+	baseSystemPrompt: systemPrompt.trim(),
+	roles: {
+		writer: writerRolePrompt.trim(),
+		reviewer: reviewerRolePrompt.trim()
+	},
+	workflows: {
+		reviewerPlan: planWorkflow.trim(),
+		writerDraft: writerDraftWorkflow.trim(),
+		writerRevise: writerReviseWorkflow.trim(),
+		reviewerReview: reviewerWorkflow.trim()
+	}
 } as const;

@@ -145,42 +145,58 @@
 	<h1
 		class="text-center {expansionState < 2
 			? 'text-3xl md:text-4xl'
-			: 'text-xl md:text-2xl'} font-semibold tracking-tight text-foreground transition-all mb-6"
+			: 'text-xl md:text-2xl'} mb-6 font-semibold tracking-tight text-foreground transition-all"
 	>
 		What role are we targeting today?
 	</h1>
 
-	<div class="w-full flex items-center justify-center gap-0 mb-8 px-2">
-		<div class="step-item flex flex-col items-center flex-1 max-w-35 text-center">
-			<div class="step-badge w-8 h-8 rounded-full bg-background-secondary/70 text-primary-foreground flex items-center justify-center text-sm font-semibold shadow-md shrink-0 relative z-10">
+	<div class="mb-8 flex w-full items-center justify-center gap-0 px-2">
+		<div class="step-item flex max-w-35 flex-1 flex-col items-center text-center">
+			<div
+				class="step-badge relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background-secondary/70 text-sm font-semibold text-primary-foreground shadow-md"
+			>
 				<ClipboardPen size={14} />
 			</div>
-			<div class="mt-2 step-label flex items-center flex-col justify-center">
-				<p class="text-xs text-foreground leading-tight">Paste a job description</p>
-				<p class="text-xs text-muted-foreground mt-0 hidden sm:block">Add the full job listing below</p>
+			<div class="step-label mt-2 flex flex-col items-center justify-center">
+				<p class="text-xs leading-tight text-foreground">Paste a job description</p>
+				<p class="mt-0 hidden text-xs text-muted-foreground sm:block">
+					Add the full job listing below
+				</p>
 			</div>
 		</div>
 
-		<div class="step-connector flex-1 h-px bg-linear-to-r from-primary to-border max-w-15 mb-6 shrink"></div>
+		<div
+			class="step-connector mb-6 h-px max-w-15 flex-1 shrink bg-linear-to-r from-primary to-border"
+		></div>
 
-		<div class="step-item flex flex-col items-center flex-1 max-w-35 text-center">
-			<div class="step-badge w-8 h-8 rounded-full bg-background-secondary/70 text-primary-foreground flex items-center justify-center text-sm font-semibold shadow-md shrink-0 relative z-10">
+		<div class="step-item flex max-w-35 flex-1 flex-col items-center text-center">
+			<div
+				class="step-badge relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background-secondary/70 text-sm font-semibold text-primary-foreground shadow-md"
+			>
 				<PaperclipIcon size={14} />
 			</div>
-			<div class="mt-2 step-label flex items-center flex-col justify-center">
-				<p class="text-xs text-foreground leading-tight">Attach resume</p>
-				<p class="text-xs text-muted-foreground mt-0 hidden sm:block">Upload your baseline resume with your job history & projects</p>
+			<div class="step-label mt-2 flex flex-col items-center justify-center">
+				<p class="text-xs leading-tight text-foreground">Attach resume</p>
+				<p class="mt-0 hidden text-xs text-muted-foreground sm:block">
+					Upload your baseline resume with your job history & projects
+				</p>
 			</div>
 		</div>
-		<div class="step-connector flex-1 h-px bg-linear-to-r from-primary to-border max-w-15 mb-6 shrink"></div>
+		<div
+			class="step-connector mb-6 h-px max-w-15 flex-1 shrink bg-linear-to-r from-primary to-border"
+		></div>
 
-		<div class="step-item flex flex-col items-center flex-1 max-w-35 text-center">
-			<div class="step-badge w-8 h-8 rounded-full bg-background-secondary/70 text-primary-foreground flex items-center justify-center text-sm font-semibold shadow-md shrink-0 relative z-10">
+		<div class="step-item flex max-w-35 flex-1 flex-col items-center text-center">
+			<div
+				class="step-badge relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background-secondary/70 text-sm font-semibold text-primary-foreground shadow-md"
+			>
 				<Sparkles size={14} />
 			</div>
-			<div class="mt-2 step-label flex items-center flex-col justify-center">
-				<p class="text-xs text-foreground leading-tight">Tailor & Review</p>
-				<p class="text-xs text-muted-foreground hidden sm:block leading-tight">AI tailors your resume automatically, you get to review and download it</p>
+			<div class="step-label mt-2 flex flex-col items-center justify-center">
+				<p class="text-xs leading-tight text-foreground">Tailor & Review</p>
+				<p class="hidden text-xs leading-tight text-muted-foreground sm:block">
+					AI tailors your resume automatically, you get to review and download it
+				</p>
 			</div>
 		</div>
 	</div>
@@ -305,10 +321,12 @@
 								<button
 									type="button"
 									onclick={() => (showInstructions = true)}
-									class="flex w-full shrink-0 cursor-pointer items-center justify-between gap-4 rounded-lg border border-transparent pl-2.5 pr-2 py-4 text-muted-foreground transition hover:border-border hover:bg-background-secondary/10 hover:text-foreground"
+									class="flex w-full shrink-0 cursor-pointer items-center justify-between gap-4 rounded-lg border border-transparent py-4 pr-2 pl-2.5 text-muted-foreground transition hover:border-border hover:bg-background-secondary/10 hover:text-foreground"
 									title="Add instructions"
 								>
-									<div class="ring-dark p-3 hidden bg-background rounded-lg ring-offset-background hover:bg-background/20 md:block">
+									<div
+										class="ring-dark hidden rounded-lg bg-background p-3 ring-offset-background hover:bg-background/20 md:block"
+									>
 										<ClipboardPen size={14} />
 									</div>
 									<span class="text-sm text-muted-foreground">Add instructions</span>
@@ -327,9 +345,9 @@
 												})} ring-dark hidden bg-background ring-offset-background hover:bg-background/20 md:block"
 											>
 												<Info size={14} />
-											</Tooltip.Trigger> 
+											</Tooltip.Trigger>
 											<Tooltip.Content
-												class="animate-in border border-border bg-background-secondary/20 shadow-xl p-4 fade-in-0 zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+												class="animate-in border border-border bg-background-secondary/20 p-4 shadow-xl fade-in-0 zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
 												arrowClasses="bg-background border-none"
 											>
 												<p class="text-xs text-muted-foreground">

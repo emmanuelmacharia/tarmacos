@@ -91,17 +91,19 @@ export const CritiqueAndPlanSchema = z.object({
 
 export type CritiquePlan = z.infer<typeof CritiqueAndPlanSchema>;
 ```
-	- A concise overview of how well the candidate aligns with the target role. Must be between 1–2,000 characters.
-	- A curated list of up to 12 key strengths (each 1–300 characters) that should be highlighted in the resume. Focuses on what the candidate does best relative to the job.
-	- Up to 10 identified areas where the candidate may fall short or present risks to perceived fit. Each gap includes:
-		- A title describing the gap
-		- Severity level (low, medium, or high)
-		- An explanation of why it matters for this role
-		- A suggested mitigation strategy
-	- Up to 30 keywords or themes (each 1–100 characters) that should appear naturally in the resume. These reflect important concepts from the job description.
-	- Up to 12 specific experiences or achievements (each 1–300 characters) that deserve priority placement or emphasis in the draft.
-	- Up to 12 strategic guidance points (each 1–500 characters) that help the writer approach positioning, framing, or trade-offs in the resume.
-	- Up to 12 factual boundaries (each 1–300 characters) that define what can and cannot be claimed. These reduce hallucination risk and keep claims honest.
-	- A clear statement of what the resume should center on (1–1,000 characters). Provides a north star for the entire draft.
-	- A confidence score between 0 and 100% representing how much confidence the reviewer is with the baseline resume
+
+    - A concise overview of how well the candidate aligns with the target role. Must be between 1–2,000 characters.
+    - A curated list of up to 12 key strengths (each 1–300 characters) that should be highlighted in the resume. Focuses on what the candidate does best relative to the job.
+    - Up to 10 identified areas where the candidate may fall short or present risks to perceived fit. Each gap includes:
+    	- A title describing the gap
+    	- Severity level (low, medium, or high)
+    	- An explanation of why it matters for this role
+    	- A suggested mitigation strategy
+    - Up to 30 keywords or themes (each 1–100 characters) that should appear naturally in the resume. These reflect important concepts from the job description.
+    - Up to 12 specific experiences or achievements (each 1–300 characters) that deserve priority placement or emphasis in the draft.
+    - Up to 12 strategic guidance points (each 1–500 characters) that help the writer approach positioning, framing, or trade-offs in the resume.
+    - Up to 12 factual boundaries (each 1–300 characters) that define what can and cannot be claimed. These reduce hallucination risk and keep claims honest.
+    - A clear statement of what the resume should center on (1–1,000 characters). Provides a north star for the entire draft.
+    - A confidence score between 0 and 100% representing how much confidence the reviewer is with the baseline resume
+
 The plan should make the next writer step more focused, more accurate, and more efficient.

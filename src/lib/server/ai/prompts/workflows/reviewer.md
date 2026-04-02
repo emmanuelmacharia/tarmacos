@@ -73,7 +73,7 @@ If approval is warranted:
 
 ## Output requirement
 
-Return only the requested structured output for the current phase. Use only this structure when generating output. 
+Return only the requested structured output for the current phase. Use only this structure when generating output.
 
 ```ts
 export const ReviewSchema = z.object({

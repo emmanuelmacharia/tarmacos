@@ -53,18 +53,18 @@ async function generateCritiquePlan(args: {
 				openrouter: {
 					provider: {
 						require_parameters: true,
-						order: ['deepinfra/bf16'], // fireworks
+						order: ['deepinfra/bf16'] // fireworks
 					}
 				}
-			},
+			}
 		});
 
-		console.log('Raw output from model for critique plan:',  response.output);
+		console.log('Raw output from model for critique plan:', response.output);
 
 		return response.output;
 	} catch (error) {
-			console.error('Error generating critique plan:', error);
-			throw error;
+		console.error('Error generating critique plan:', error);
+		throw error;
 	}
 }
 
@@ -82,10 +82,9 @@ async function generateWriterDraft(args: {
 			temperature: 0.4,
 			abortSignal: args.signal
 		});
-	
-		return text.trim();
 
-	} catch(error) {
+		return text.trim();
+	} catch (error) {
 		console.error('Error generating writer draft:', error);
 		throw error;
 	}
@@ -97,7 +96,6 @@ async function generateReviewerResult(args: {
 	prompt: string;
 	signal?: AbortSignal;
 }): Promise<ReviewResult | string> {
-
 	try {
 		const response = await generateText({
 			model: getChatModel(args.modelId),
@@ -116,10 +114,9 @@ async function generateReviewerResult(args: {
 				}
 			}
 		});
-		
+
 		console.log('Raw output from model for reviewer result:', response.output);
 		return response.output;
-
 	} catch (error) {
 		console.error('Error generating reviewer result:', error);
 		throw error;

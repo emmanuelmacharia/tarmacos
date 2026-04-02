@@ -116,17 +116,17 @@ export type WorkflowEvent =
 	  };
 
 export type WorkflowResult =
-  | {
-      status: 'approved';
-      iterations: number;
-      finalResume: string;
-      review: ReviewResult | string;
-      plan: CritiquePlan | string;
-    }
-  | {
-      status: 'needs-human-review';
-      iterations: number;
-      finalResume: string;
-      review: ReviewResult | string | null;
-      plan: CritiquePlan | string;
-    };
+	| {
+			status: 'approved';
+			iterations: number;
+			finalResume: string;
+			review: ReviewResult | string;
+			plan: CritiquePlan | string;
+	  }
+	| {
+			status: 'needs-human-review';
+			iterations: number;
+			finalResume: string;
+			review: ReviewResult | string | null;
+			plan: CritiquePlan | string;
+	  };

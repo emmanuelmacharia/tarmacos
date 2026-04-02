@@ -68,7 +68,6 @@ Your work must be:
 - useful for the next workflow step
 - aligned with the assigned role and workflow
 
-
 ## Success criteria for any phase
 
 Your output should satisfy all relevant criteria below:

@@ -79,7 +79,7 @@ When requesting revision:
 
 ## Output expectation
 
-Return only the requested structured output for the current phase. 
+Return only the requested structured output for the current phase.
 Do not add prose outside the required structured result.
 
 ## Reviewer success criteria

@@ -30,25 +30,25 @@ async function loadUserJobProfileInstructions(args: { userId: string; profileId:
  */
 
 export async function resolveCustomProfileInstructions(args: {
-  userId: string;
-  role: Role;
-  profileId?: string;
+	userId: string;
+	role: Role;
+	profileId?: string;
 }): Promise<string | null> {
-  if (!args.profileId) return null;
+	if (!args.profileId) return null;
 
-  const profile = await loadUserJobProfileInstructions({
-    userId: args.userId,
-    profileId: args.profileId
-  });
+	const profile = await loadUserJobProfileInstructions({
+		userId: args.userId,
+		profileId: args.profileId
+	});
 
-  if (!profile) return null;
+	if (!profile) return null;
 
-  const raw = '' // needs to come from the db
-    // args.role === 'writer'
-    //   ? profile.writerInstructions
-    //   : profile.reviewerInstructions;
+	const raw = ''; // needs to come from the db
+	// args.role === 'writer'
+	//   ? profile.writerInstructions
+	//   : profile.reviewerInstructions;
 
-  const safe = sanitizeUserText(raw ?? '', 4000);
+	const safe = sanitizeUserText(raw ?? '', 4000);
 
-  return safe || null;
+	return safe || null;
 }
