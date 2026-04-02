@@ -1,18 +1,16 @@
 import { z } from 'zod';
 
+const BlockingIssueSchema = z.object({
+	title: z.string().min(1).max(200),
+	severity: z.enum(['low', 'medium', 'high']),
+	explanation: z.string().min(1).max(1000),
+	suggestedFix: z.string().min(1).max(1000)
+});
+
 export const CritiqueAndPlanSchema = z.object({
 	candidateFitSummary: z.string().min(1).max(2000),
 	strengthsToEmphasize: z.array(z.string().min(1).max(300)).max(12),
-	gapsOrRisks: z
-		.array(
-			z.object({
-				title: z.string().min(1).max(200),
-				severity: z.enum(['low', 'medium', 'high']),
-				explanation: z.string().min(1).max(800),
-				mitigation: z.string().min(1).max(800)
-			})
-		)
-		.max(10),
+	gapsOrRisks: z.array(BlockingIssueSchema).max(10),
 	targetKeywords: z.array(z.string().min(1).max(100)).max(30),
 	experiencePriorities: z.array(z.string().min(1).max(300)).max(12),
 	writerStrategy: z.array(z.string().min(1).max(500)).max(12),
@@ -23,23 +21,33 @@ export const CritiqueAndPlanSchema = z.object({
 
 export type CritiquePlan = z.infer<typeof CritiqueAndPlanSchema>;
 
-export const ReviewSchema = z.object({
-	verdict: z.enum(['approved', 'revise']),
-	summary: z.string().min(1).max(4000),
-	blockingIssues: z
-		.array(
-			z.object({
-				title: z.string().min(1).max(200),
-				severity: z.enum(['low', 'medium', 'high']),
-				explanation: z.string().min(1).max(1000),
-				suggestedFix: z.string().min(1).max(1000)
-			})
-		)
-		.max(10),
-	handoffInstructions: z.array(z.string().min(1).max(500)).max(10),
-	approvalReason: z.string().max(2000).optional(),
-	confidenceScore: z.number().min(0).max(100)
-});
+// export const ReviewSchema = z.object({
+// 	verdict: z.enum(['approved', 'revise']),
+// 	summary: z.string().min(1).max(4000),
+// 	blockingIssues: z.array(BlockingIssueSchema).max(10),
+// 	handoffInstructions: z.array(z.string().min(1).max(500)).max(10),
+// 	approvalReason: z.string().max(2000).optional(),
+// 	confidenceScore: z.number().min(0).max(100)
+// });
+
+export const ReviewSchema = z.discriminatedUnion('verdict', [
+	z.object({
+		verdict: z.literal('approved'),
+		summary: z.string().min(1).max(4000),
+		blockingIssues: z.array(BlockingIssueSchema).max(10),
+		handoffInstructions: z.array(z.string().min(1).max(500)).max(10),
+		approvalReason: z.string().min(1).max(2000),
+		confidenceScore: z.number().min(0).max(100)
+	}),
+	z.object({
+		verdict: z.literal('revise'),
+		summary: z.string().min(1).max(4000),
+		blockingIssues: z.array(BlockingIssueSchema).min(1).max(10),
+		handoffInstructions: z.array(z.string().min(1).max(500)).min(1).max(10),
+		approvalReason: z.string().max(2000).optional(),
+		confidenceScore: z.number().min(0).max(100)
+	})
+]);
 
 export type ReviewResult = z.infer<typeof ReviewSchema>;
 
