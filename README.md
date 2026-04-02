@@ -59,7 +59,7 @@ You can preview the production build with `npm run preview`.
 - [x] Integrate AI SDK & openrouter
 - [ ] Convex add mutation for create profile
 - [ ] Wire up frontend to display created profiles and manually create profile
-- [ ] Auto generate profile by AI if none is created. Use inference into JD to give the profile its params 
+- [ ] Auto generate profile by AI if none is created. Use inference into JD to give the profile its params
 - [ ] Convex add document upload and fetch url
 - [ ] Convex add document db schema and add mutations
 - [ ] Convex add run schema and add mutations
