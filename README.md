@@ -55,7 +55,7 @@ You can preview the production build with `npm run preview`.
 - [x] Storage - we'll use convex file storage - it's already integrated with convex
 - [x] Backend APIs - create Prefernces
 - [x] Complete dashboard navigation
-- [x] Prompt form - create this, with upload fuctionality & ability to submit
+- [x] Prompt form - create this, with upload functionality & ability to submit
 - [x] Integrate AI SDK & openrouter
 - [ ] Convex add mutation for create profile
 - [ ] Wire up frontend to display created profiles and manually create profile
