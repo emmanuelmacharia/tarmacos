@@ -38,6 +38,10 @@ type BuildReviewerReviewTaskArgs = SharedTaskArgs & {
 	currentDraft: string;
 };
 
+function escapeSectionText(value: string): string {
+	return value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 export function sanitizeUserText(input?: string, maxLength = 4000): string {
 	if (!input) return '';
 
@@ -56,7 +60,7 @@ export function sanitizeUserText(input?: string, maxLength = 4000): string {
  * distinguish "data to use" from "instructions to obey".
  */
 function section(label: string, value?: string): string {
-	const content = sanitizeUserText(value, 30_000) || 'None provided.';
+	const content = escapeSectionText(sanitizeUserText(value, 30_000) || 'None provided.');
 	return [`<${label}>`, content, `</${label}>`].join('\n');
 }
 
@@ -68,8 +72,10 @@ function section(label: string, value?: string): string {
  * To keep the handoff precise across agent turns.
  */
 function jsonSection(label: string, value: unknown): string {
-	const serialized = JSON.stringify(value, null, 2);
-	return section(label, serialized);
+	const serialized = JSON.stringify(value, null, 2)
+		.replace(/</g, '\\u003c')
+		.replace(/>/g, '\\u003e');
+	return [`<${label}>`, serialized, `</${label}>`].join('\n');
 }
 
 /**
