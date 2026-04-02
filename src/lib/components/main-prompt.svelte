@@ -8,9 +8,11 @@
 		Info,
 		Maximize,
 		Minimize,
+		PaperclipIcon,
 		SendHorizontal,
 		Settings,
 		Settings2,
+		Sparkles,
 		X
 	} from '@lucide/svelte';
 	import ModelSelection from './model-selection.svelte';
@@ -143,21 +145,61 @@
 	<h1
 		class="text-center {expansionState < 2
 			? 'text-3xl md:text-4xl'
-			: 'text-xl md:text-2xl'} font-semibold tracking-tight text-foreground transition-all"
+			: 'text-xl md:text-2xl'} mb-6 font-semibold tracking-tight text-foreground transition-all"
 	>
 		What role are we targeting today?
 	</h1>
-	<ul
-		class="my-6 flex shrink list-none flex-col items-center justify-center align-middle text-muted-foreground transition-all {expansionState <
-		2
-			? 'text-base'
-			: 'text-sm'}"
-	>
-		<li>Upload your resume</li>
-		<li>Paste in the target job description</li>
-		<li>Generate your tailored, ATS-ready resume</li>
-	</ul>
 
+	<div class="mb-8 flex w-full items-center justify-center gap-0 px-2">
+		<div class="step-item flex max-w-35 flex-1 flex-col items-center text-center">
+			<div
+				class="step-badge relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background-secondary/70 text-sm font-semibold text-primary-foreground shadow-md"
+			>
+				<ClipboardPen size={14} />
+			</div>
+			<div class="step-label mt-2 flex flex-col items-center justify-center">
+				<p class="text-xs leading-tight text-foreground">Paste a job description</p>
+				<p class="mt-0 hidden text-xs text-muted-foreground sm:block">
+					Add the full job listing below
+				</p>
+			</div>
+		</div>
+
+		<div
+			class="step-connector mb-6 h-px max-w-15 flex-1 shrink bg-linear-to-r from-primary to-border"
+		></div>
+
+		<div class="step-item flex max-w-35 flex-1 flex-col items-center text-center">
+			<div
+				class="step-badge relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background-secondary/70 text-sm font-semibold text-primary-foreground shadow-md"
+			>
+				<PaperclipIcon size={14} />
+			</div>
+			<div class="step-label mt-2 flex flex-col items-center justify-center">
+				<p class="text-xs leading-tight text-foreground">Attach resume</p>
+				<p class="mt-0 hidden text-xs text-muted-foreground sm:block">
+					Upload your baseline resume with your job history & projects
+				</p>
+			</div>
+		</div>
+		<div
+			class="step-connector mb-6 h-px max-w-15 flex-1 shrink bg-linear-to-r from-primary to-border"
+		></div>
+
+		<div class="step-item flex max-w-35 flex-1 flex-col items-center text-center">
+			<div
+				class="step-badge relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background-secondary/70 text-sm font-semibold text-primary-foreground shadow-md"
+			>
+				<Sparkles size={14} />
+			</div>
+			<div class="step-label mt-2 flex flex-col items-center justify-center">
+				<p class="text-xs leading-tight text-foreground">Tailor & Review</p>
+				<p class="hidden text-xs leading-tight text-muted-foreground sm:block">
+					AI tailors your resume automatically, you get to review and download it
+				</p>
+			</div>
+		</div>
+	</div>
 	<form
 		action=""
 		onsubmit={handleSubmit}
@@ -279,10 +321,14 @@
 								<button
 									type="button"
 									onclick={() => (showInstructions = true)}
-									class="flex w-full shrink-0 cursor-pointer items-center justify-between gap-4 rounded-lg border border-transparent px-2 py-4 text-muted-foreground transition hover:border-border hover:bg-background-secondary/10 hover:text-foreground"
+									class="flex w-full shrink-0 cursor-pointer items-center justify-between gap-4 rounded-lg border border-transparent py-4 pr-2 pl-2.5 text-muted-foreground transition hover:border-border hover:bg-background-secondary/10 hover:text-foreground"
 									title="Add instructions"
 								>
-									<ClipboardPen size={14} />
+									<div
+										class="ring-dark hidden rounded-lg bg-background p-3 ring-offset-background hover:bg-background/20 md:block"
+									>
+										<ClipboardPen size={14} />
+									</div>
 									<span class="text-sm text-muted-foreground">Add instructions</span>
 									<ArrowRight size={14} />
 								</button>
@@ -301,7 +347,7 @@
 												<Info size={14} />
 											</Tooltip.Trigger>
 											<Tooltip.Content
-												class="animate-in border border-border bg-background p-4 fade-in-0 zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+												class="animate-in border border-border bg-background-secondary/20 p-4 shadow-xl fade-in-0 zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
 												arrowClasses="bg-background border-none"
 											>
 												<p class="text-xs text-muted-foreground">
