@@ -253,7 +253,7 @@ export async function runWriterReviewerWorkflow({
 		type: 'agent-started',
 		role: 'writer',
 		phase: 'writerDraft',
-		iteration: 0,
+		iteration: 1,
 		modelId: input.writer.modelId
 	});
 
