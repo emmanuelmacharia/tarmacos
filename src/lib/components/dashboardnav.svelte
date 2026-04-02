@@ -6,7 +6,6 @@
 		Briefcase,
 		ChevronLeft,
 		ChevronRight,
-		FileText,
 		History,
 		PanelLeft,
 		Plus,
@@ -45,7 +44,7 @@
 
 	const navItems = [
 		{ label: 'Dashboard', href: '/dashboard', icon: Briefcase },
-		{ label: 'Generations', href: '/dashboard/generations', icon: FileText },
+		// { label: 'Generations', href: '/dashboard/generations', icon: FileText },
 		{ label: 'History', href: '/dashboard/history', icon: History }
 	] as const;
 

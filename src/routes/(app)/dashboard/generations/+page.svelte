@@ -161,7 +161,7 @@
 		<textarea bind:value={reviewerInstructions} rows="3"></textarea>
 	</label>
 
-	<button disabled={loading}>
+	<button disabled={loading} hidden>
 		{#if loading}
 			Running...
 		{:else}

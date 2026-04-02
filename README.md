@@ -56,5 +56,11 @@ You can preview the production build with `npm run preview`.
 - [x] Backend APIs - create Prefernces
 - [x] Complete dashboard navigation
 - [x] Prompt form - create this, with upload fuctionality & ability to submit
-- [ ] Integrate AI SDK & openrouter
+- [x] Integrate AI SDK & openrouter
 - [ ] Convex add mutation for create profile
+- [ ] Wire up frontend to display created profiles and manually create profile
+- [ ] Auto generate profile by AI if none is created. Use inference into JD to give the profile its params 
+- [ ] Convex add document upload and fetch url
+- [ ] Convex add document db schema and add mutations
+- [ ] Convex add run schema and add mutations
+- [ ] **Build the generations experience out**
