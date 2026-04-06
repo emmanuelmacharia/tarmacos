@@ -8,7 +8,10 @@
  * @module
  */
 
+import type * as lib_errorMapper from "../lib/errorMapper.js";
+import type * as lib_responseMapper from "../lib/responseMapper.js";
 import type * as user_preferences from "../user/preferences.js";
+import type * as user_profiles from "../user/profiles.js";
 import type * as user_user from "../user/user.js";
 
 import type {
@@ -18,7 +21,10 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "lib/errorMapper": typeof lib_errorMapper;
+  "lib/responseMapper": typeof lib_responseMapper;
   "user/preferences": typeof user_preferences;
+  "user/profiles": typeof user_profiles;
   "user/user": typeof user_user;
 }>;
 
