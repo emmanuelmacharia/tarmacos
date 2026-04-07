@@ -13,6 +13,7 @@
 		Sparkles,
 		X
 	} from '@lucide/svelte';
+	import AddProfileForm from './addProfileForm.svelte';
 
 	let isCollapsed = $state(false);
 	let isMobileOpen = $state(false);
@@ -338,4 +339,8 @@
 		</button>
 	</div>
 </aside>
+
+<div>
+	<AddProfileForm bind:isOpen={isModalOpen} />
+</div>
 
