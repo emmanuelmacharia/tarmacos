@@ -343,4 +343,3 @@
 <div>
 	<AddProfileForm bind:isOpen={isModalOpen} />
 </div>
-

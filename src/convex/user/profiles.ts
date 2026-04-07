@@ -13,7 +13,7 @@ export const createProfile = mutation({
 		seniorityLevel: v.optional(seniorityLevel),
 		profileWriterPrompt: v.optional(v.string()),
 		profileReaderPrompt: v.optional(v.string()),
-		preferredTemplateId: v.optional(v.string()),
+		preferredTemplateId: v.optional(v.string())
 	},
 	handler: async (ctx, args) => {
 		withAppErrors(async () => {
@@ -176,9 +176,17 @@ export const updateProfile = mutation({
 				isDefault: args.isDefault,
 				isArchived: args.isArchived,
 				updatedAt: new Date().getTime(),
-				profileReaderVersion: args.profileReaderPrompt ? profile.profileReaderVersion ? profile.profileReaderVersion + 1 : 1 : profile.profileReaderVersion,
-				profileWriterVersion: args.profileWriterPrompt ? profile.profileWriterVersion ? profile.profileWriterVersion + 1 : 1 : profile.profileWriterVersion
-			}
+				profileReaderVersion: args.profileReaderPrompt
+					? profile.profileReaderVersion
+						? profile.profileReaderVersion + 1
+						: 1
+					: profile.profileReaderVersion,
+				profileWriterVersion: args.profileWriterPrompt
+					? profile.profileWriterVersion
+						? profile.profileWriterVersion + 1
+						: 1
+					: profile.profileWriterVersion
+			};
 			const updatedProfile = await ctx.db.patch('profiles', args.profileId, payload);
 			return ok(updatedProfile, { message: 'Profile updated successfully' });
 		});
