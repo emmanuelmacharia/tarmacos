@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { mutation, query } from '../_generated/server';
 import { seniorityLevel } from '../schema';
-import { assertFound, forbidden, withAppErrors } from '../lib/errorMapper';
+import { assertFound, forbidden, unauthorized, withAppErrors } from '../lib/errorMapper';
 import { ok } from '../lib/responseMapper';
 
 export const createProfile = mutation({
@@ -17,7 +17,10 @@ export const createProfile = mutation({
 	},
 	handler: async (ctx, args) => {
 		withAppErrors(async () => {
-			const identity = assertFound(await ctx.auth.getUserIdentity(), 'Not authorized');
+			const identity = await ctx.auth.getUserIdentity();
+			if (!identity) {
+				unauthorized('Please log in to continue')
+			}
 			const clerkId = identity.subject;
 			const existing = assertFound(
 				await ctx.db

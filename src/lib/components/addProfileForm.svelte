@@ -9,6 +9,8 @@
 	import { useConvexClient } from 'convex-svelte';
 	import { createForm } from '@tanstack/svelte-form';
 	import { api } from '../../convex/_generated/api';
+	import { toast } from 'svelte-sonner';
+	import { getAppErrorMessage } from '$lib/utils/errorHandler';
 
 	const convex = useConvexClient();
 
@@ -72,14 +74,18 @@
 				profileWriterPrompt: value.writerPrompt,
 				seniorityLevel: value.seniority,
 				yearsOfExperience: value.yearsExperience,
-				name: value.name, 
+				name: value.name,
 				primaryFocus: value.primaryFocus,
 				summary: value.summary
 			};
 			try {
 				await convex.mutation(api.user.profiles.createProfile, payload);
+				toast.success('profile created successfully');
+				isOpen = false;
 			} catch (error) {
-				console.log(error);
+
+				const message = getAppErrorMessage(error);
+				toast.error(message);
 			}
 		}
 	}));
