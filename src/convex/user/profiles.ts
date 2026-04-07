@@ -3,24 +3,17 @@ import { mutation, query } from '../_generated/server';
 import { seniorityLevel } from '../schema';
 import { assertFound, forbidden, withAppErrors } from '../lib/errorMapper';
 import { ok } from '../lib/responseMapper';
+
 export const createProfile = mutation({
 	args: {
 		name: v.string(),
-		slug: v.optional(v.string()),
-		headline: v.optional(v.string()),
 		summary: v.optional(v.string()),
 		primaryFocus: v.optional(v.string()),
 		yearsOfExperience: v.optional(v.number()),
 		seniorityLevel: v.optional(seniorityLevel),
-		coreSkills: v.optional(v.array(v.string())),
-		industries: v.optional(v.array(v.string())),
 		profileWriterPrompt: v.optional(v.string()),
 		profileReaderPrompt: v.optional(v.string()),
-		profileWriterVersion: v.optional(v.number()),
-		profileReaderVersion: v.optional(v.number()),
 		preferredTemplateId: v.optional(v.string()),
-		isDefault: v.optional(v.boolean()),
-		isArchived: v.optional(v.boolean())
 	},
 	handler: async (ctx, args) => {
 		withAppErrors(async () => {
@@ -36,23 +29,19 @@ export const createProfile = mutation({
 			const payload = {
 				userId: existing._id,
 				name: args.name,
-				slug: args.slug,
-				headline: args.headline,
 				summary: args.summary,
 				primaryFocus: args.primaryFocus,
 				yearsOfExperience: args.yearsOfExperience,
 				seniorityLevel: args.seniorityLevel,
-				coreSkills: args.coreSkills,
-				industries: args.industries,
 				profileWriterPrompt: args.profileWriterPrompt,
 				profileReaderPrompt: args.profileReaderPrompt,
-				profileWriterVersion: args.profileWriterVersion,
-				profileReaderVersion: args.profileReaderVersion,
 				preferredTemplateId: args.preferredTemplateId,
-				isDefault: args.isDefault,
-				isArchived: args.isArchived,
 				createdAt: new Date().getTime(),
-				updatedAt: new Date().getTime()
+				updatedAt: new Date().getTime(),
+				isDefault: false,
+				isArchived: false,
+				profileReaderVersion: 1,
+				profileWriterVersion: 1
 			};
 			const profile = await ctx.db.insert('profiles', payload);
 			return ok(profile, { message: 'Profile created successfully' });
@@ -144,18 +133,12 @@ export const updateProfile = mutation({
 	args: {
 		profileId: v.id('profiles'),
 		name: v.string(),
-		slug: v.optional(v.string()),
-		headline: v.optional(v.string()),
 		summary: v.optional(v.string()),
 		primaryFocus: v.optional(v.string()),
 		yearsOfExperience: v.optional(v.number()),
 		seniorityLevel: v.optional(seniorityLevel),
-		coreSkills: v.optional(v.array(v.string())),
-		industries: v.optional(v.array(v.string())),
 		profileWriterPrompt: v.optional(v.string()),
 		profileReaderPrompt: v.optional(v.string()),
-		profileWriterVersion: v.optional(v.number()),
-		profileReaderVersion: v.optional(v.number()),
 		preferredTemplateId: v.optional(v.string()),
 		isDefault: v.optional(v.boolean()),
 		isArchived: v.optional(v.boolean())
@@ -181,25 +164,22 @@ export const updateProfile = mutation({
 			if (profile.userId !== user._id) {
 				forbidden('Not authorized to update this profile');
 			}
-			const updatedProfile = await ctx.db.patch('profiles', args.profileId, {
+			const payload = {
 				name: args.name,
-				slug: args.slug,
-				headline: args.headline,
 				summary: args.summary,
 				primaryFocus: args.primaryFocus,
 				yearsOfExperience: args.yearsOfExperience,
 				seniorityLevel: args.seniorityLevel,
-				coreSkills: args.coreSkills,
-				industries: args.industries,
 				profileWriterPrompt: args.profileWriterPrompt,
 				profileReaderPrompt: args.profileReaderPrompt,
-				profileWriterVersion: args.profileWriterVersion,
-				profileReaderVersion: args.profileReaderVersion,
 				preferredTemplateId: args.preferredTemplateId,
 				isDefault: args.isDefault,
 				isArchived: args.isArchived,
-				updatedAt: new Date().getTime()
-			});
+				updatedAt: new Date().getTime(),
+				profileReaderVersion: args.profileReaderPrompt ? profile.profileReaderVersion ? profile.profileReaderVersion + 1 : 1 : profile.profileReaderVersion,
+				profileWriterVersion: args.profileWriterPrompt ? profile.profileWriterVersion ? profile.profileWriterVersion + 1 : 1 : profile.profileWriterVersion
+			}
+			const updatedProfile = await ctx.db.patch('profiles', args.profileId, payload);
 			return ok(updatedProfile, { message: 'Profile updated successfully' });
 		});
 	}
