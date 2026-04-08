@@ -1,4 +1,3 @@
-
 import type { ConvexErrorData } from '../../convex/lib/errorMapper';
 
 export function isAppError(error: unknown): error is Error & { data: ConvexErrorData } {
@@ -12,9 +11,9 @@ export function isAppError(error: unknown): error is Error & { data: ConvexError
 	);
 }
 
-function parseConvexMessage(message: string): ConvexErrorData | null {
-	const start = message.indexOf("{");
-	const end = message.lastIndexOf("}");
+export function parseConvexMessage(message: string): ConvexErrorData | null {
+	const start = message.indexOf('{');
+	const end = message.lastIndexOf('}');
 
 	if (start === -1 || end === -1 || end <= start) {
 		return null;
@@ -25,7 +24,7 @@ function parseConvexMessage(message: string): ConvexErrorData | null {
 	try {
 		return JSON.parse(jsonPart) as ConvexErrorData;
 	} catch (err) {
-		console.log("Failed to parse Convex error JSON:", jsonPart, err);
+		console.log('Failed to parse Convex error JSON:', jsonPart, err);
 		return null;
 	}
 }
