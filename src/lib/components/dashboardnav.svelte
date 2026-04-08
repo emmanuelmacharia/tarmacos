@@ -14,34 +14,15 @@
 		X
 	} from '@lucide/svelte';
 	import AddProfileForm from './addProfileForm.svelte';
+	import type { Profile } from '$lib/data/models';
 
 	let isCollapsed = $state(false);
 	let isMobileOpen = $state(false);
 	let isModalOpen = $state(false);
 
-	let profiles = $state([
-		{
-			id: '1',
-			name: 'Frontend Engineer',
-			icon: '🎨',
-			prompt: 'Focus on React, Svelte, and modern UI/UX frontend skills.',
-			isActive: true
-		},
-		{
-			id: '2',
-			name: 'Full Stack Developer',
-			icon: '💻',
-			prompt: 'Highlight Node.js, databases, and end-to-end architecture.',
-			isActive: false
-		},
-		{
-			id: '3',
-			name: 'Product Manager',
-			icon: '📊',
-			prompt: 'Focus on leadership, agile delivery, and product strategy.',
-			isActive: false
-		}
-	]);
+	let { profiles = [] as Profile[], activeProfile = $bindable<Profile | undefined>() } = $props();
+
+	let profilesState: Profile[] = $derived([...profiles]);
 
 	const navItems = [
 		{ label: 'Dashboard', href: '/dashboard', icon: Briefcase },
@@ -50,9 +31,7 @@
 	] as const;
 
 	function activateProfile(id: string) {
-		for (const profile of profiles) {
-			profile.isActive = profile.id === id;
-		}
+		activeProfile = profiles.find((profile) => profile._id === id);
 	}
 
 	function closeMobileMenu() {
@@ -149,13 +128,13 @@
 			</div>
 
 			<div class="my-4 flex flex-col gap-2">
-				{#each profiles as profile (profile.id)}
+				{#each profilesState as profile (profile._id)}
 					<button
 						type="button"
-						onclick={() => activateProfile(profile.id)}
+						onclick={() => activateProfile(profile._id)}
 						class={cn(
 							'flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors',
-							profile.isActive
+							profile._id === activeProfile._id
 								? 'bg-primary/10 font-medium text-primary'
 								: 'cursor-pointer text-muted-foreground hover:font-bold hover:text-foreground'
 						)}
@@ -164,10 +143,10 @@
 						<span
 							class={cn(
 								'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background-secondary/5 text-lg',
-								profile.isActive ? 'border-primary/30 shadow-sm' : 'border-border'
+								profile._id === activeProfile._id ? 'border-primary/30 shadow-sm' : 'border-border'
 							)}
 						>
-							{profile.icon}
+							🎨
 						</span>
 						<span class="truncate text-sm">{profile.name}</span>
 					</button>
@@ -262,13 +241,13 @@
 			</div>
 
 			<div class="flex flex-col gap-2">
-				{#each profiles as profile (profile.id)}
+				{#each profilesState as profile (profile._id)}
 					<button
 						type="button"
-						onclick={() => activateProfile(profile.id)}
+						onclick={() => activateProfile(profile._id)}
 						class={cn(
 							'flex w-full items-center gap-3 rounded-lg p-2 transition-colors',
-							profile.isActive
+							profile._id === activeProfile._id
 								? 'bg-primary/10 font-medium text-primary'
 								: 'cursor-pointer text-muted-foreground hover:font-bold hover:text-foreground'
 						)}
@@ -277,10 +256,10 @@
 						<span
 							class={cn(
 								'mx-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background-secondary/5 text-lg md:mx-0 md:h-8 md:w-8 md:text-base',
-								profile.isActive ? 'border-primary/30 shadow-sm' : 'border-border'
+								profile._id === activeProfile._id ? 'border-primary/30 shadow-sm' : 'border-border'
 							)}
 						>
-							{profile.icon}
+							🎨
 						</span>
 
 						<span class={cn('truncate text-sm', isCollapsed ? 'hidden' : 'hidden md:block')}>
@@ -341,5 +320,5 @@
 </aside>
 
 <div>
-	<AddProfileForm bind:isOpen={isModalOpen} />
+	<AddProfileForm bind:isOpen={isModalOpen} bind:allUserProfiles={profilesState} />
 </div>

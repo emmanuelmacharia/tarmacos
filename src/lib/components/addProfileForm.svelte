@@ -11,10 +11,11 @@
 	import { api } from '../../convex/_generated/api';
 	import { toast } from 'svelte-sonner';
 	import { getAppErrorMessage } from '$lib/utils/errorHandler';
+	import { Level } from '$lib/data/models';
 
 	const convex = useConvexClient();
 
-	let { isOpen = $bindable() } = $props();
+	let { isOpen = $bindable(), allUserProfiles = $bindable() } = $props();
 
 	const seniorityLevel = [
 		'intern',
@@ -26,8 +27,6 @@
 		'lead',
 		'manager'
 	] as const;
-
-	type Level = 'intern' | 'junior' | 'mid' | 'senior' | 'staff' | 'principal' | 'lead' | 'manager';
 
 	const formSchema = z.object({
 		name: z.string().min(1, 'Profile name is required'),
@@ -67,8 +66,6 @@
 		},
 		onSubmit: async ({ value }) => {
 			// Handle form submission logic here, e.g. send data to server or update state
-			console.log('Form submitted with values:', value);
-			// call convex mutation to persist data
 			const payload = {
 				profileReaderPrompt: value.reviewerPrompt,
 				profileWriterPrompt: value.writerPrompt,
@@ -79,11 +76,11 @@
 				summary: value.summary
 			};
 			try {
-				await convex.mutation(api.user.profiles.createProfile, payload);
+				const profiles = await convex.mutation(api.user.profiles.createProfile, payload);
 				toast.success('profile created successfully');
+				allUserProfiles = profiles.data;
 				isOpen = false;
 			} catch (error) {
-
 				const message = getAppErrorMessage(error);
 				toast.error(message);
 			}
@@ -320,7 +317,7 @@
 				<Button type="button" variant="outline" onclick={handleCancel} class="border-primary/40">
 					Cancel
 				</Button>
-				<Button type="submit">Save Profile</Button>
+				<Button type="submit" size="lg" class="px-6 py-4">Save Profile</Button>
 			</div>
 		</form>
 	</Dialog.Content>
