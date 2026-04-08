@@ -20,6 +20,21 @@ export const seniorityLevel = v.union(
 	v.literal('manager')
 );
 
+export const documentType = v.union(
+	v.literal('uploaded_resume'),
+	v.literal('promoted_generated_resume'),
+	v.literal('uploaded_coverletter'),
+	v.literal('promoted_generated_coverletter')
+);
+
+export const documentFormat = v.union(
+	v.literal('pdf'),
+	v.literal('docx'),
+	v.literal('markdown'),
+	v.literal('txt'),
+	v.literal('json')
+);
+
 // tables
 export default defineSchema({
 	// USERS
@@ -69,5 +84,27 @@ export default defineSchema({
 	})
 		.index('by_userId', ['userId'])
 		.index('by_userId_isDefault', ['userId', 'isDefault'])
-		.index('by_userId_isArchived', ['userId', 'isArchived'])
+		.index('by_userId_isArchived', ['userId', 'isArchived']),
+
+	documents: defineTable({
+		userId: v.id('users'),
+		profileId: v.optional(v.id('profiles')),
+		name: v.string(),
+		fileSize: v.number(), // in MB
+		version: v.number(),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+		publicURL: v.optional(v.string()),
+		storageId: v.id('_storage'),
+		documentFormat: documentFormat, // eg pdf, docx etc
+		mimeType: v.optional(v.string()),
+		documentType: documentType, // 'original_baseline', 'promoted_baseline'
+		// we need to add a run id - we'll expire documents and clean them up if we dont have a run attached
+		// runId: v.optional(v.id('runs'))
+		expiresAt: v.number() // for abandoned uploads to be cleaned up
+	})
+		.index('by_userId', ['userId'])
+		.index('by_profileId', ['profileId'])
+		.index('by_storage_id', ['storageId'])
+	// .index('by_runid', ['runId'])
 });

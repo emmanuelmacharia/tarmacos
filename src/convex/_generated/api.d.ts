@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as documents_upload from "../documents/upload.js";
 import type * as lib_errorMapper from "../lib/errorMapper.js";
 import type * as lib_responseMapper from "../lib/responseMapper.js";
 import type * as user_preferences from "../user/preferences.js";
@@ -21,6 +22,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "documents/upload": typeof documents_upload;
   "lib/errorMapper": typeof lib_errorMapper;
   "lib/responseMapper": typeof lib_responseMapper;
   "user/preferences": typeof user_preferences;
