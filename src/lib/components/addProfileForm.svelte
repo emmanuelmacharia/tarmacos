@@ -11,7 +11,7 @@
 	import { api } from '../../convex/_generated/api';
 	import { toast } from 'svelte-sonner';
 	import { getAppErrorMessage } from '$lib/utils/errorHandler';
-	import { Level } from '$lib/data/models';
+	import type { Level } from '$lib/data/models';
 
 	const convex = useConvexClient();
 
