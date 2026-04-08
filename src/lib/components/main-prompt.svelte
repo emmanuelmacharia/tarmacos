@@ -49,7 +49,6 @@
 		error?: string;
 	};
 
-	type PersistedDocument = Doc<'documents'>;
 	type AllowedFileTypes = 'pdf' | 'docx' | 'markdown' | 'txt' | 'json';
 	type ActiveProfile = Doc<'profiles'>;
 
@@ -176,6 +175,7 @@
 			const uploadUrl = await convex.mutation(api.documents.upload.generateUploadUrl, {});
 			const latestFileStateBeforeUpload = attachedFiles.find((f) => f.localId === localId);
 			if (!latestFileStateBeforeUpload || latestFileStateBeforeUpload.removed) return;
+
 			const abortController = new AbortController();
 			updateAttachment(localId, { abortController, status: 'uploading' });
 			// upload file
@@ -185,12 +185,13 @@
 				body: file.file,
 				signal: abortController.signal
 			});
-			console.log('upload file response object ------>', response);
 			if (!response.ok) {
 				// we need to throw; we also need to notify user here
 				throw new Error(`Upload failed with status ${response.status}`);
 			}
-			const { storageId } = (await response.json()) as { storageId: Id<'_storage'> };
+			const uploadResponse = await response.json();
+			const { storageId } = uploadResponse as { storageId: Id<'_storage'> };
+
 			const latestFileStateAfterUpload = attachedFiles.find((f) => f.localId === localId);
 			if (!latestFileStateAfterUpload || latestFileStateAfterUpload.removed) {
 				// remove the uploaded file - since the user has deleted it already
@@ -199,28 +200,29 @@
 			}
 			// persist record
 			updateAttachment(localId, { storageId, status: 'persisting' });
+
 			const payload = {
 				profileId: activeProfile ? activeProfile._id : undefined,
 				name: latestFileStateAfterUpload.file.name,
 				fileSize: latestFileStateAfterUpload.file.size,
 				storageId,
-				documentFormat: latestFileStateAfterUpload.file.type as AllowedFileTypes,
+				documentFormat: latestFileStateAfterUpload.file.name.split('.')[1] as AllowedFileTypes,
 				mimeType: latestFileStateAfterUpload.file.type
 			};
 			const documentRecord = await convex.mutation(api.documents.upload.registerUpload, payload);
 
-			const docRecord: PersistedDocument = documentRecord.data as PersistedDocument;
+			const docRecord = documentRecord.data as Id<'documents'>;
 			const latestFileStateAfterPersist = attachedFiles.find((f) => f.localId === localId);
 			if (!latestFileStateAfterPersist || latestFileStateAfterPersist.removed) {
 				// remove record and uploaded file
 				await convex.mutation(api.documents.upload.deleteUploadRecord, {
-					id: docRecord._id
+					id: docRecord
 				});
 				return;
 			}
 			updateAttachment(localId, {
 				status: 'ready',
-				documentId: docRecord._id,
+				documentId: docRecord,
 				abortController: undefined
 			});
 		} catch (error) {
@@ -246,7 +248,9 @@
 
 		try {
 			if (item.documentId) {
-				await convex.mutation(api.documents.upload.deleteUploadRecord, { id: item.documentId });
+				await convex.mutation(api.documents.upload.deleteUploadRecord, {
+					id: item.documentId
+				});
 			} else if (item.storageId) {
 				await convex.mutation(api.documents.upload.deleteStorageObject, {
 					storageId: item.storageId

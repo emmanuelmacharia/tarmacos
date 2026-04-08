@@ -53,6 +53,11 @@ export const registerUpload = mutation({
 				'User not found'
 			);
 
+			const tomorrow = new Date();
+			tomorrow.setDate(tomorrow.getDate() + 1);
+
+			const expiresAt = Math.floor(tomorrow.getTime() / 1000);
+
 			const payload = {
 				userId: user._id,
 				profileId: args.profileId,
@@ -65,7 +70,7 @@ export const registerUpload = mutation({
 				documentType: args.documentType || 'uploaded_resume',
 				createdAt: new Date().getTime(),
 				updatedAt: new Date().getTime(),
-				expiresAt: new Date(new Date().getUTCDate() + 1).getTime()
+				expiresAt: expiresAt
 			};
 			const document = await ctx.db.insert('documents', payload);
 			return ok(document, { message: 'Document upload is complete' });

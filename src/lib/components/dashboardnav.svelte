@@ -24,6 +24,8 @@
 
 	let profilesState: Profile[] = $derived([...profiles]);
 
+	let defaultActiveProfile: Profile = $derived(activeProfile ? activeProfile : profiles[0]);
+
 	const navItems = [
 		{ label: 'Dashboard', href: '/dashboard', icon: Briefcase },
 		// { label: 'Generations', href: '/dashboard/generations', icon: FileText },
@@ -134,7 +136,7 @@
 						onclick={() => activateProfile(profile._id)}
 						class={cn(
 							'flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors',
-							profile._id === activeProfile._id
+							profile._id === defaultActiveProfile._id
 								? 'bg-primary/10 font-medium text-primary'
 								: 'cursor-pointer text-muted-foreground hover:font-bold hover:text-foreground'
 						)}
@@ -143,7 +145,9 @@
 						<span
 							class={cn(
 								'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background-secondary/5 text-lg',
-								profile._id === activeProfile._id ? 'border-primary/30 shadow-sm' : 'border-border'
+								profile._id === defaultActiveProfile._id
+									? 'border-primary/30 shadow-sm'
+									: 'border-border'
 							)}
 						>
 							🎨
@@ -247,7 +251,7 @@
 						onclick={() => activateProfile(profile._id)}
 						class={cn(
 							'flex w-full items-center gap-3 rounded-lg p-2 transition-colors',
-							profile._id === activeProfile._id
+							profile._id === defaultActiveProfile._id
 								? 'bg-primary/10 font-medium text-primary'
 								: 'cursor-pointer text-muted-foreground hover:font-bold hover:text-foreground'
 						)}
@@ -256,7 +260,9 @@
 						<span
 							class={cn(
 								'mx-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background-secondary/5 text-lg md:mx-0 md:h-8 md:w-8 md:text-base',
-								profile._id === activeProfile._id ? 'border-primary/30 shadow-sm' : 'border-border'
+								profile._id === defaultActiveProfile._id
+									? 'border-primary/30 shadow-sm'
+									: 'border-border'
 							)}
 						>
 							🎨
