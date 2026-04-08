@@ -16,10 +16,10 @@ export const createProfile = mutation({
 		preferredTemplateId: v.optional(v.string())
 	},
 	handler: async (ctx, args) => {
-		withAppErrors(async () => {
+		return withAppErrors(async () => {
 			const identity = await ctx.auth.getUserIdentity();
 			if (!identity) {
-				unauthorized('Please log in to continue')
+				unauthorized('Please log in to continue');
 			}
 			const clerkId = identity.subject;
 			const existing = assertFound(
@@ -46,8 +46,12 @@ export const createProfile = mutation({
 				profileReaderVersion: 1,
 				profileWriterVersion: 1
 			};
-			const profile = await ctx.db.insert('profiles', payload);
-			return ok(profile, { message: 'Profile created successfully' });
+			await ctx.db.insert('profiles', payload);
+			const profiles = await ctx.db
+				.query('profiles')
+				.withIndex('by_userId', (q) => q.eq('userId', existing._id))
+				.collect();
+			return ok(profiles, { message: 'Profile created successfully' });
 		});
 	}
 });
@@ -55,7 +59,7 @@ export const createProfile = mutation({
 export const fetchProfile = query({
 	args: { profileId: v.id('profiles') },
 	handler: async (ctx, args) => {
-		withAppErrors(async () => {
+		return withAppErrors(async () => {
 			const identity = assertFound(await ctx.auth.getUserIdentity(), 'Not authorized');
 			const clerkId = identity.subject;
 			const user = assertFound(
@@ -82,21 +86,25 @@ export const fetchProfile = query({
 
 export const fetchUserProfiles = query({
 	handler: async (ctx) => {
-		withAppErrors(async () => {
-			const identity = assertFound(await ctx.auth.getUserIdentity(), 'Not authorized');
+		return withAppErrors(async () => {
+			const identity = await ctx.auth.getUserIdentity();
+			if (!identity) {
+				unauthorized('Please log in to continue');
+			}
 			const clerkId = identity.subject;
-			const user = assertFound(
-				await ctx.db
-					.query('users')
-					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
-					.unique(),
-				'User not found'
-			);
+			const user = await ctx.db
+				.query('users')
+				.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
+				.unique();
+			if (!user) {
+				unauthorized('Please sign up to continue');
+			}
 			const profiles = await ctx.db
 				.query('profiles')
 				.withIndex('by_userId', (q) => q.eq('userId', user._id))
 				.collect();
-			return ok(profiles, { message: 'User profiles fetched successfully' });
+			//return ok(profiles, { message: 'User profiles fetched successfully' });
+			return profiles;
 		});
 	}
 });
