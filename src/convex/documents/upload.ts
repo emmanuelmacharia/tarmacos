@@ -56,7 +56,7 @@ export const registerUpload = mutation({
 			const tomorrow = new Date();
 			tomorrow.setDate(tomorrow.getDate() + 1);
 
-			const expiresAt = Math.floor(tomorrow.getTime() / 1000);
+			const expiresAt = Math.floor(tomorrow.getTime());
 
 			const payload = {
 				userId: user._id,
@@ -120,13 +120,23 @@ export const deleteStorageObject = mutation({
 				unauthorized('Please log in to continue');
 			}
 			const clerkId = identity.subject;
-			assertFound(
+			const user = assertFound(
 				await ctx.db
 					.query('users')
 					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
 					.unique(),
 				'User not found'
 			);
+
+			const document = await ctx.db
+				.query('documents')
+				.withIndex('by_storage_id', (q) => q.eq('storageId', args.storageId))
+				.unique();
+
+			if (document && document.userId !== user._id) {
+				forbidden();
+			}
+
 			await ctx.storage.delete(args.storageId);
 		});
 	}
