@@ -83,3 +83,32 @@ export interface Props {
 }
 
 export type Role = 'writer' | 'reviewer';
+
+export type Level =
+	| 'intern'
+	| 'junior'
+	| 'mid'
+	| 'senior'
+	| 'staff'
+	| 'principal'
+	| 'lead'
+	| 'manager';
+
+export type Profile = {
+	_id: string;
+	userId: string;
+	name: string;
+	summary?: string;
+	primaryFocus?: string;
+	yearsOfExperience?: number;
+	seniorityLevel?: Level;
+	profileWriterPrompt?: string;
+	profileReaderPrompt?: string;
+	profileWriterVersion?: number;
+	profileReaderVersion?: number;
+	preferredTemplateId?: string;
+	isDefault?: boolean;
+	isArchived?: boolean;
+	createdAt: number;
+	updatedAt: number;
+};
