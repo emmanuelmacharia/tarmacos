@@ -24,12 +24,46 @@
 	import { Switch } from './ui/switch';
 	import { Label } from './ui/label';
 	import * as Tooltip from './ui/tooltip';
+	import type { Doc, Id } from '../../convex/_generated/dataModel';
+	import { useConvexClient } from 'convex-svelte';
+	import { api } from '../../convex/_generated/api';
+
+	const convex = useConvexClient();
+
+	type UploadStatus =
+		| 'pending' // uploaded client side
+		| 'requesting_url' // generating convex url
+		| 'uploading' // uploading to convex file storage
+		| 'persisting' // persisting record to documents table
+		| 'ready' //
+		| 'failed'; // failed upload
+
+	type AttachedFile = {
+		localId: string; // stable clientside id for the document
+		file: File;
+		status: UploadStatus;
+		storageId?: Id<'_storage'>;
+		documentId?: Id<'documents'>;
+		abortController?: AbortController;
+		removed?: boolean;
+		error?: string;
+	};
+
+	type PersistedDocument = Doc<'documents'>;
+	type AllowedFileTypes = 'pdf' | 'docx' | 'markdown' | 'txt' | 'json';
+	type ActiveProfile = Doc<'profiles'>;
+
+	type Props = {
+		activeProfile?: ActiveProfile;
+	};
+
+	let uploadWorkerRunning = $state(false);
 
 	// 0 = Normal, 1 = Slightly Expanded, 2 = Fully Expanded
 	let expansionState = $state(0);
 
 	let promptText = $state('');
-	let attachedFiles = $state<File[]>([]);
+	let attachedFiles = $state<AttachedFile[]>([]);
 	let showInstructions = $state(false);
 	let additionalInstructions = $state('');
 	let modelSelections = $state<Record<Role, SelectedModel>>({
@@ -46,6 +80,8 @@
 			config: { search: false, reasoning: false, reasoningEffort: 'None' }
 		}
 	});
+
+	let { activeProfile }: Props = $props();
 	let textareaRef: HTMLTextAreaElement | null = null;
 	let fileInput: HTMLInputElement;
 	let showExpandedIcon = $derived.by(() => {
@@ -58,11 +94,6 @@
 
 	function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
-	}
-
-	function removeFile(index: number) {
-		attachedFiles = attachedFiles.filter((_, i) => i !== index);
-		return null;
 	}
 
 	function toggleExpand() {
@@ -100,10 +131,138 @@
 		}
 	}
 
+	function updateAttachment(localId: string, patch: Partial<AttachedFile>) {
+		attachedFiles = attachedFiles.map((item) =>
+			item.localId === localId ? { ...item, ...patch } : item
+		);
+	}
+
+	function addFiles(files: File[]) {
+		const newItems: AttachedFile[] = files.map((file) => ({
+			localId: crypto.randomUUID(),
+			file,
+			status: 'pending'
+		}));
+		attachedFiles = [...attachedFiles, ...newItems];
+
+		void runUploadQueue();
+	}
+
+	async function runUploadQueue() {
+		if (uploadWorkerRunning) return;
+		uploadWorkerRunning = true;
+
+		try {
+			while (true) {
+				const next = attachedFiles.find((file) => file.status === 'pending' && !file.removed);
+				if (!next) break;
+				await uploadOne(next.localId);
+			}
+		} finally {
+			uploadWorkerRunning = false;
+
+			if (attachedFiles.some((file) => file.status === 'pending' && !file.removed)) {
+				void runUploadQueue();
+			}
+		}
+	}
+
+	async function uploadOne(localId: string) {
+		const file = attachedFiles.find((f) => f.localId === localId);
+		if (!file || file.removed) return;
+
+		try {
+			updateAttachment(localId, { status: 'requesting_url', error: undefined });
+			const uploadUrl = await convex.mutation(api.documents.upload.generateUploadUrl, {});
+			const latestFileStateBeforeUpload = attachedFiles.find((f) => f.localId === localId);
+			if (!latestFileStateBeforeUpload || latestFileStateBeforeUpload.removed) return;
+			const abortController = new AbortController();
+			updateAttachment(localId, { abortController, status: 'uploading' });
+			// upload file
+			const response = await fetch(uploadUrl, {
+				method: 'POST',
+				headers: { 'Content-Type': file.file.type || 'application/octet-stream' },
+				body: file.file,
+				signal: abortController.signal
+			});
+			console.log('upload file response object ------>', response);
+			if (!response.ok) {
+				// we need to throw; we also need to notify user here
+				throw new Error(`Upload failed with status ${response.status}`);
+			}
+			const { storageId } = (await response.json()) as { storageId: Id<'_storage'> };
+			const latestFileStateAfterUpload = attachedFiles.find((f) => f.localId === localId);
+			if (!latestFileStateAfterUpload || latestFileStateAfterUpload.removed) {
+				// remove the uploaded file - since the user has deleted it already
+				await convex.mutation(api.documents.upload.deleteStorageObject, { storageId });
+				return;
+			}
+			// persist record
+			updateAttachment(localId, { storageId, status: 'persisting' });
+			const payload = {
+				profileId: activeProfile ? activeProfile._id : undefined,
+				name: latestFileStateAfterUpload.file.name,
+				fileSize: latestFileStateAfterUpload.file.size,
+				storageId,
+				documentFormat: latestFileStateAfterUpload.file.type as AllowedFileTypes,
+				mimeType: latestFileStateAfterUpload.file.type
+			};
+			const documentRecord = await convex.mutation(api.documents.upload.registerUpload, payload);
+
+			const docRecord: PersistedDocument = documentRecord.data as PersistedDocument;
+			const latestFileStateAfterPersist = attachedFiles.find((f) => f.localId === localId);
+			if (!latestFileStateAfterPersist || latestFileStateAfterPersist.removed) {
+				// remove record and uploaded file
+				await convex.mutation(api.documents.upload.deleteUploadRecord, {
+					id: docRecord._id
+				});
+				return;
+			}
+			updateAttachment(localId, {
+				status: 'ready',
+				documentId: docRecord._id,
+				abortController: undefined
+			});
+		} catch (error) {
+			if (error instanceof DOMException && error.name === 'AbortController') {
+				return;
+			}
+			console.error('Upload failed', error);
+			updateAttachment(localId, { status: 'failed' });
+		}
+	}
+
+	async function removeFile(index: string) {
+		const item = attachedFiles.find((f) => f.localId === index);
+		if (!item) return;
+
+		updateAttachment(item.localId, { removed: true });
+
+		if (item.abortController) {
+			item.abortController.abort();
+		}
+
+		// if db record or storage exists, we need to delete it
+
+		try {
+			if (item.documentId) {
+				await convex.mutation(api.documents.upload.deleteUploadRecord, { id: item.documentId });
+			} else if (item.storageId) {
+				await convex.mutation(api.documents.upload.deleteStorageObject, {
+					storageId: item.storageId
+				});
+			}
+		} catch (error) {
+			console.error('failed to remove file', error);
+		}
+
+		attachedFiles = attachedFiles.filter((file) => file.localId !== item.localId);
+	}
+
 	function handlePaste(event: ClipboardEvent) {
 		if (event.clipboardData && event.clipboardData.files.length > 0) {
 			event.preventDefault();
-			attachedFiles = [...attachedFiles, ...Array.from(event.clipboardData.files)];
+			addFiles(Array.from(event.clipboardData.files));
 		} else if (event.clipboardData && event.clipboardData.getData('text')) {
 			// Normal text paste, allow it but trigger resize
 			setTimeout(handleInput, 0);
@@ -115,7 +274,7 @@
 		const input = event.currentTarget as HTMLInputElement;
 		const files = input.files;
 		if (files) {
-			attachedFiles = [...attachedFiles, ...(Array.from(files) as File[])];
+			addFiles(Array.from(files) as File[]);
 			input.value = '';
 		}
 	}
@@ -208,15 +367,15 @@
 	>
 		{#if attachedFiles.length > 0}
 			<div class="flex shrink-0 flex-wrap gap-2 p-3 pb-0">
-				{#each attachedFiles as file, index (index)}
+				{#each attachedFiles as fileData, index (index)}
 					<div
 						class="group relative flex items-center gap-2 overflow-hidden rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm"
 					>
 						<FileIcon size={16} class="shrink-0 text-primary" />
-						<span class="max-w-37.5 truncate font-medium">{file.name}</span>
+						<span class="max-w-37.5 truncate font-medium">{fileData.file.name}</span>
 						<button
 							type="button"
-							onclick={() => removeFile(index)}
+							onclick={() => removeFile(fileData.localId)}
 							class="ml-1 rounded-full bg-card/80 p-0.5 opacity-60 transition-colors hover:text-destructive hover:opacity-100"
 							title="remove attachment"
 						>
