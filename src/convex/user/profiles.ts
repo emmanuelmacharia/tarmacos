@@ -77,7 +77,7 @@ export const fetchProfile = query({
 				'Profile not found'
 			);
 			if (profile.userId !== user._id) {
-				forbidden('Not authorized to delete this profile');
+				forbidden('Not authorized to access this profile');
 			}
 			return ok(profile, { message: 'Profile fetched successfully' });
 		});
@@ -155,7 +155,7 @@ export const updateProfile = mutation({
 		isArchived: v.optional(v.boolean())
 	},
 	handler: async (ctx, args) => {
-		withAppErrors(async () => {
+		return withAppErrors(async () => {
 			const identity = assertFound(await ctx.auth.getUserIdentity(), 'Not authorized');
 			const clerkId = identity.subject;
 			const user = assertFound(
@@ -175,30 +175,37 @@ export const updateProfile = mutation({
 			if (profile.userId !== user._id) {
 				forbidden('Not authorized to update this profile');
 			}
+
 			const payload = {
 				name: args.name,
-				summary: args.summary,
-				primaryFocus: args.primaryFocus,
-				yearsOfExperience: args.yearsOfExperience,
-				seniorityLevel: args.seniorityLevel,
-				profileWriterPrompt: args.profileWriterPrompt,
-				profileReaderPrompt: args.profileReaderPrompt,
-				preferredTemplateId: args.preferredTemplateId,
-				isDefault: args.isDefault,
-				isArchived: args.isArchived,
-				updatedAt: new Date().getTime(),
-				profileReaderVersion: args.profileReaderPrompt
-					? profile.profileReaderVersion
-						? profile.profileReaderVersion + 1
-						: 1
-					: profile.profileReaderVersion,
-				profileWriterVersion: args.profileWriterPrompt
-					? profile.profileWriterVersion
-						? profile.profileWriterVersion + 1
-						: 1
-					: profile.profileWriterVersion
+				updatedAt: Date.now(),
+				...(args.summary !== undefined ? { summary: args.summary } : {}),
+				...(args.primaryFocus !== undefined ? { primaryFocus: args.primaryFocus } : {}),
+				...(args.yearsOfExperience !== undefined
+					? { yearsOfExperience: args.yearsOfExperience }
+					: {}),
+				...(args.seniorityLevel !== undefined ? { seniorityLevel: args.seniorityLevel } : {}),
+				...(args.preferredTemplateId !== undefined
+					? { preferredTemplateId: args.preferredTemplateId }
+					: {}),
+				...(args.isDefault !== undefined ? { isDefault: args.isDefault } : {}),
+				...(args.isArchived !== undefined ? { isArchived: args.isArchived } : {}),
+				...(args.profileReaderPrompt !== undefined
+					? {
+							profileReaderPrompt: args.profileReaderPrompt,
+							profileReaderVersion: (profile.profileReaderVersion ?? 0) + 1
+						}
+					: {}),
+				...(args.profileWriterPrompt !== undefined
+					? {
+							profileWriterPrompt: args.profileWriterPrompt,
+							profileWriterVersion: (profile.profileWriterVersion ?? 0) + 1
+						}
+					: {})
 			};
-			const updatedProfile = await ctx.db.patch('profiles', args.profileId, payload);
+
+			await ctx.db.patch('profiles', args.profileId, payload);
+			const updatedProfile = await ctx.db.get(profile._id);
 			return ok(updatedProfile, { message: 'Profile updated successfully' });
 		});
 	}

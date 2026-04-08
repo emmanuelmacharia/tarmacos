@@ -5,9 +5,8 @@ import { PUBLIC_CONVEX_URL } from '$env/static/public';
 import { redirect } from '@sveltejs/kit';
 import { parseConvexMessage } from '$lib/utils/errorHandler';
 
-const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
-
 export const load: LayoutServerLoad = async (event) => {
+	const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
 	const auth = await event.locals.auth();
 	const token = await auth.getToken({ template: 'convex' });
 
@@ -23,6 +22,7 @@ export const load: LayoutServerLoad = async (event) => {
 			if (errorObj?.code === 'UNAUTHORIZED' || errorObj?.code === 'FORBIDDEN') {
 				throw redirect(303, '/');
 			}
+			console.error('[dashboard layout] Failed to load profiles:', error.message);
 		}
 	}
 };
