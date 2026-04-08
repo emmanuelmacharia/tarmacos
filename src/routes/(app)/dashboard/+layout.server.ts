@@ -22,6 +22,7 @@ export const load: LayoutServerLoad = async (event) => {
 			if (errorObj?.code === 'UNAUTHORIZED' || errorObj?.code === 'FORBIDDEN') {
 				throw redirect(303, '/');
 			}
+			console.error('[dashboard layout] Failed to load profiles:', error.message);
 		}
 	}
 };
