@@ -77,7 +77,7 @@ export const fetchProfile = query({
 				'Profile not found'
 			);
 			if (profile.userId !== user._id) {
-				forbidden('Not authorized to delete this profile');
+				forbidden('Not authorized to access this profile');
 			}
 			return ok(profile, { message: 'Profile fetched successfully' });
 		});
@@ -155,7 +155,7 @@ export const updateProfile = mutation({
 		isArchived: v.optional(v.boolean())
 	},
 	handler: async (ctx, args) => {
-		withAppErrors(async () => {
+		return withAppErrors(async () => {
 			const identity = assertFound(await ctx.auth.getUserIdentity(), 'Not authorized');
 			const clerkId = identity.subject;
 			const user = assertFound(
