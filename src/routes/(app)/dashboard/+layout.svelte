@@ -1,12 +1,15 @@
 <script lang="ts">
 	import '../../layout.css';
 	import Dashboardnav from '$lib/components/dashboardnav.svelte';
-	let { children } = $props();
+	import type { Profile } from '$lib/data/models.js';
+	let { children, data } = $props();
+	const profiles: Profile[] | undefined = $derived(data.profiles);
+	let activeUserProfile: Profile | undefined = $state();
 </script>
 
 <main class="min-h-screen bg-transparent font-sans text-foreground">
 	<div class="flex min-h-screen flex-col md:flex-row">
-		<Dashboardnav />
+		<Dashboardnav {profiles} bind:activeProfile={activeUserProfile} />
 		<div class="flex flex-1">
 			<div class="mx-auto w-full max-w-4xl px-4 py-6 md:px-8 md:py-10">
 				{@render children()}
