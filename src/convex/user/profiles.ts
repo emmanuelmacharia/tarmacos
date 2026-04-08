@@ -204,7 +204,8 @@ export const updateProfile = mutation({
 					: {})
 			};
 
-			const updatedProfile = await ctx.db.patch('profiles', args.profileId, payload);
+			await ctx.db.patch('profiles', args.profileId, payload);
+			const updatedProfile = await ctx.db.get(profile._id);
 			return ok(updatedProfile, { message: 'Profile updated successfully' });
 		});
 	}
