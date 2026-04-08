@@ -54,7 +54,7 @@
 	"dependencies": {
 		"@openrouter/ai-sdk-provider": "^2.3.3",
 		"@tanstack/svelte-form": "^1.28.6",
-		"convex": "^1.33.1",
+		"convex": "^1.34.1",
 		"convex-svelte": "^0.0.12",
 		"svelte-clerk": "^1.0.2"
 	}

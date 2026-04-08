@@ -15,11 +15,11 @@ importers:
         specifier: ^1.28.6
         version: 1.28.6(svelte@5.53.10)
       convex:
-        specifier: ^1.33.1
-        version: 1.33.1
+        specifier: ^1.34.1
+        version: 1.34.1
       convex-svelte:
         specifier: ^0.0.12
-        version: 0.0.12(convex@1.33.1)(svelte@5.53.10)
+        version: 0.0.12(convex@1.34.1)(svelte@5.53.10)
       svelte-clerk:
         specifier: ^1.0.2
         version: 1.0.2(@sveltejs/kit@2.54.0(@opentelemetry/api@1.9.0)(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.53.10)(vite@7.3.1(@types/node@24.12.0)(jiti@2.6.1)(lightningcss@1.31.1)))(svelte@5.53.10)(typescript@5.9.3)(vite@7.3.1(@types/node@24.12.0)(jiti@2.6.1)(lightningcss@1.31.1)))(svelte@5.53.10)
@@ -1080,8 +1080,8 @@ packages:
       convex: ^1.10.0
       svelte: ^5.0.0
 
-  convex@1.33.1:
-    resolution: {integrity: sha512-mRhR1XqZPLhgJsUepecM/kOgQVRCWKJtHHtyEX/XYY4zmzfItG0D1GNh5fjNEkuO5+72X4PCkzbEFA6327rxog==}
+  convex@1.34.1:
+    resolution: {integrity: sha512-ooyFnZVVq0u6b5zt0Ptq8QB2ixhf/2vXe+PIcUtdtrs0lq/TwpkmmruHdqkFmWgMd6N+Tmfy8AGkz6QnZUYZBA==}
     engines: {node: '>=18.0.0', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
@@ -2658,14 +2658,14 @@ snapshots:
 
   concat-map@0.0.1: {}
 
-  convex-svelte@0.0.12(convex@1.33.1)(svelte@5.53.10):
+  convex-svelte@0.0.12(convex@1.34.1)(svelte@5.53.10):
     dependencies:
-      convex: 1.33.1
+      convex: 1.34.1
       esm-env: 1.2.2
       runed: 0.31.1(svelte@5.53.10)
       svelte: 5.53.10
 
-  convex@1.33.1:
+  convex@1.34.1:
     dependencies:
       esbuild: 0.27.0
       prettier: 3.8.1
