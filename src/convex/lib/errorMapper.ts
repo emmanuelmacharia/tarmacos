@@ -75,7 +75,6 @@ export function assertFound<T>(
 	return value;
 }
 
-
 export async function withAppErrors<T>(fn: () => Promise<T>): Promise<T> {
 	try {
 		return await fn();
