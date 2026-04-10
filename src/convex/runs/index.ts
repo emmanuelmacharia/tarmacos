@@ -63,8 +63,76 @@ export const createRun = mutation({
 					loopCount: run.loopCount,
 					agentConfig: run.agentConfig
 				},
-				{}
+				{ message: 'Run created', statusCode: 201 }
 			);
+		});
+	}
+});
+
+export const updateRun = mutation({
+	args: {
+		runId: v.id('runs'),
+		title: v.optional(v.string()),
+		status: v.optional(runStatus),
+		phase: v.optional(runPhase),
+		currentArtifactId: v.optional(v.string()), // update when we define the artifacts table
+		currentArtifactVersionId: v.optional(v.string()), // update when we define the artifacts versions table
+		finalArtifactVersionId: v.optional(v.string()),
+		parentRunId: v.optional(v.id('runs')),
+		nextMessageSequenceNumber: v.optional(v.number()),
+		loopCount: v.optional(v.number()),
+		agentConfig: v.optional(agentConfig),
+		metadata: v.optional(v.any()),
+		error: v.optional(v.any())
+	},
+	handler: async (ctx, args) => {
+		return withAppErrors(async () => {
+			const identity = assertFound(
+				await ctx.auth.getUserIdentity(),
+				'Please log in to continue',
+				true
+			);
+			const clerkId = identity.subject;
+			const user = assertFound(
+				await ctx.db
+					.query('users')
+					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
+					.unique(),
+				'User not found',
+				true
+			);
+
+			const { runId } = args;
+			const run = assertFound(await ctx.db.get(runId), 'Run not found');
+
+			forbiddenCheck(() => run.userId === user._id);
+
+			const payload = {
+				updatedAt: new Date().getTime(),
+				...Object.fromEntries(
+					Object.entries({
+						title: args.title,
+						status: args.status,
+						phase: args.phase,
+						currentArtifactId: args.currentArtifactId,
+						finalArtifactVersionId: args.finalArtifactVersionId,
+						currentArtifactVersionId: args.currentArtifactVersionId,
+						parentRunId: args.parentRunId,
+						nextMessageSequenceNumber: args.nextMessageSequenceNumber,
+						loopCount: args.loopCount,
+						agentConfig: args.agentConfig,
+						metadata: args.metadata,
+						error: args.error
+					}).filter(([, value]) => value !== undefined)
+				)
+			};
+
+			console.log(payload);
+			await ctx.db.patch('runs', run._id, payload);
+
+			const updatedRun = await ctx.db.get(run._id);
+
+			return ok(updatedRun, { message: 'Run updated successfully', statusCode: 200 });
 		});
 	}
 });
