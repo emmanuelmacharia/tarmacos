@@ -12,6 +12,7 @@ import type * as documents_upload from "../documents/upload.js";
 import type * as lib_errorMapper from "../lib/errorMapper.js";
 import type * as lib_responseMapper from "../lib/responseMapper.js";
 import type * as lib_schemaTypes from "../lib/schemaTypes.js";
+import type * as runs_index from "../runs/index.js";
 import type * as user_preferences from "../user/preferences.js";
 import type * as user_profiles from "../user/profiles.js";
 import type * as user_user from "../user/user.js";
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   "lib/errorMapper": typeof lib_errorMapper;
   "lib/responseMapper": typeof lib_responseMapper;
   "lib/schemaTypes": typeof lib_schemaTypes;
+  "runs/index": typeof runs_index;
   "user/preferences": typeof user_preferences;
   "user/profiles": typeof user_profiles;
   "user/user": typeof user_user;
