@@ -100,7 +100,7 @@ export default defineSchema({
 		mimeType: v.optional(v.string()),
 		documentType: documentType, // 'original_baseline', 'promoted_baseline'
 		// we need to add a run id - we'll expire documents and clean them up if we dont have a run attached
-		// runId: v.optional(v.id('runs'))
+		// runId: v.optional(v.id('runs'))  ----> NO, A document could conceivably be used for multiple runs, we need a join table to allow us to have M2M relationships between documents and runs
 		expiresAt: v.number() // for abandoned uploads to be cleaned up
 	})
 		.index('by_userId', ['userId'])
