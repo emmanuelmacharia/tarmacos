@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { mutation, query } from '../_generated/server';
-import { seniorityLevel } from '../schema';
+import { seniorityLevel } from '../lib/schemaTypes';
 import { assertFound, forbidden, unauthorized, withAppErrors } from '../lib/errorMapper';
 import { ok } from '../lib/responseMapper';
 

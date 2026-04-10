@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
-import { defaultResumeLength } from '../schema';
+import { defaultResumeLength } from '../lib/schemaTypes';
 import { api } from '../_generated/api';
 
 export const createPreferences = mutation({
