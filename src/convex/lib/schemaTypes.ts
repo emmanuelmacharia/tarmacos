@@ -44,7 +44,7 @@ export const runStatus = v.union(
 );
 
 export const runPhase = v.union(
-	v.literal('initiating'),
+	// what happens next
 	v.literal('baseline_review'),
 	v.literal('drafting'),
 	v.literal('reviewing'),
@@ -62,3 +62,33 @@ export const agentConfig = v.object({
 		modelSlug: v.string()
 	})
 });
+
+export const documentPurpose = v.union(
+	v.literal('baseline_resume'),
+	v.literal('job_description'),
+	v.literal('supporting_documents'),
+	v.literal('generated_export')
+);
+
+export const authorType = v.union(v.literal('user'), v.literal('agent'), v.literal('system'));
+
+export const authorRole = v.union(
+	v.literal('user'),
+	v.literal('writer'),
+	v.literal('reviewer'),
+	v.literal('system')
+);
+
+export const messageType = v.union(
+	v.literal('user_prompt'),
+	v.literal('reviewer_summary'),
+	v.literal('draft_announcement'),
+	v.literal('revision_request'),
+	v.literal('approval'),
+	v.literal('system_status'),
+	v.literal('final_message')
+);
+
+export const messageVisibility = v.union(v.literal('user_visible'), v.literal('internal'));
+
+export const messageBodyFormat = v.union(v.literal('text'), v.literal('markdown'));
