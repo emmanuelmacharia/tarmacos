@@ -1,39 +1,15 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
-
-// enums
-const userStatus = v.union(v.literal('active'), v.literal('disabled'));
-export const defaultResumeLength = v.union(
-	v.literal('one_page'),
-	v.literal('two_page'),
-	v.literal('auto')
-);
-
-export const seniorityLevel = v.union(
-	v.literal('intern'),
-	v.literal('junior'),
-	v.literal('mid'),
-	v.literal('senior'),
-	v.literal('staff'),
-	v.literal('principal'),
-	v.literal('lead'),
-	v.literal('manager')
-);
-
-export const documentType = v.union(
-	v.literal('uploaded_resume'),
-	v.literal('promoted_generated_resume'),
-	v.literal('uploaded_coverletter'),
-	v.literal('promoted_generated_coverletter')
-);
-
-export const documentFormat = v.union(
-	v.literal('pdf'),
-	v.literal('docx'),
-	v.literal('markdown'),
-	v.literal('txt'),
-	v.literal('json')
-);
+import {
+	userStatus,
+	defaultResumeLength,
+	seniorityLevel,
+	documentFormat,
+	documentType,
+	runStatus,
+	runPhase,
+	agentConfig
+} from './lib/schemaTypes';
 
 // tables
 export default defineSchema({
@@ -105,6 +81,30 @@ export default defineSchema({
 	})
 		.index('by_userId', ['userId'])
 		.index('by_profileId', ['profileId'])
-		.index('by_storage_id', ['storageId'])
-	// .index('by_runid', ['runId'])
+		.index('by_storage_id', ['storageId']),
+
+	runs: defineTable({
+		userId: v.id('users'),
+		profileId: v.id('profiles'),
+		title: v.string(),
+		status: runStatus,
+		phase: runPhase,
+		currentArtifactId: v.optional(v.string()), // update when we define the artifacts table
+		currentArtifactVersionId: v.optional(v.string()), // update when we define the artifacts versions table
+		finalArtifactVersionId: v.optional(v.string()),
+		parentRunId: v.optional(v.id('runs')),
+		nextMessageSequenceNumber: v.number(),
+		loopCount: v.number(),
+		agentConfig: agentConfig,
+		metadata: v.optional(v.any()),
+		error: v.optional(v.any()),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+		completedAt: v.number()
+	})
+		.index('by_user', ['userId'])
+		.index('by_profile_id', ['profileId'])
+		.index('by_user_updated', ['userId', 'updatedAt'])
+		.index('by_profile_updated', ['profileId', 'updatedAt'])
+		.index('by_parent', ['parentRunId'])
 });
