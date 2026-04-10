@@ -100,7 +100,7 @@ export default defineSchema({
 		error: v.optional(v.any()),
 		createdAt: v.number(),
 		updatedAt: v.number(),
-		completedAt: v.number()
+		completedAt: v.optional(v.number())
 	})
 		.index('by_user', ['userId'])
 		.index('by_profile_id', ['profileId'])
