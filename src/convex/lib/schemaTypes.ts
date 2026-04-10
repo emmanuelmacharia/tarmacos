@@ -44,6 +44,7 @@ export const runStatus = v.union(
 );
 
 export const runPhase = v.union(
+	v.literal('initiating'),
 	v.literal('baseline_review'),
 	v.literal('drafting'),
 	v.literal('reviewing'),
