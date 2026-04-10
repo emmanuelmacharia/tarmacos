@@ -44,7 +44,7 @@ export const createRun = mutation({
 				profileId: profile._id,
 				title: args.title,
 				status: 'created' as const,
-				phase: 'initiating' as const,
+				phase: 'baseline_review' as const,
 				nextMessageSequenceNumber: 0,
 				loopCount: 0,
 				agentConfig: args.agentConfig,
