@@ -8,7 +8,13 @@ import {
 	documentType,
 	runStatus,
 	runPhase,
-	agentConfig
+	agentConfig,
+	documentPurpose,
+	authorType,
+	authorRole,
+	messageType,
+	messageVisibility,
+	messageBodyFormat
 } from './lib/schemaTypes';
 
 // tables
@@ -106,5 +112,32 @@ export default defineSchema({
 		.index('by_profile_id', ['profileId'])
 		.index('by_user_updated', ['userId', 'updatedAt'])
 		.index('by_profile_updated', ['profileId', 'updatedAt'])
-		.index('by_parent', ['parentRunId'])
+		.index('by_parent', ['parentRunId']),
+
+	runDocuments: defineTable({
+		runid: v.id('runs'),
+		documentId: v.id('documents'),
+		purpose: documentPurpose,
+		extractedText: v.optional(v.string()),
+		createdAt: v.number()
+	})
+		.index('by_run', ['runid'])
+		.index('by_document_id', ['documentId'])
+		.index('by_purpose', ['purpose']),
+
+	messages: defineTable({
+		runid: v.id('runs'),
+		sequenceNumber: v.number(),
+		authorType: authorType,
+		authorRole: authorRole,
+		meessageType: messageType,
+		visibility: messageVisibility,
+		bodyFormat: messageBodyFormat,
+		body: v.string(),
+		relatedArtifactVersionId: v.optional(v.string()), // fix when you get the artifact version table
+		relatedReviewid: v.optional(v.string()), // fix when we get the review table
+		createdAt: v.number()
+	})
+		.index('by_run_seq', ['runid', 'sequenceNumber'])
+		.index('by_run_visibility_seq', ['runid', 'visibility', 'sequenceNumber'])
 });
