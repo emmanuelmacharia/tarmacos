@@ -148,3 +148,14 @@ export const operationKind = v.union(
 	v.literal('revision_review'),
 	v.literal('user_feedback_draft')
 );
+
+export const llmContentKind = v.union(
+	v.literal('prompt'),
+	v.literal('raw_request'),
+	v.literal('response'),
+	v.literal('raw_response'),
+	v.literal('reasoning'),
+	v.literal('structured_output')
+);
+
+export const llmContentFormat = v.union(v.literal('json'), v.literal('text'));

@@ -23,7 +23,9 @@ import {
 	reviewDecision,
 	LlmCallStatus,
 	normalizationStatus,
-	operationKind
+	operationKind,
+	llmContentKind,
+	llmContentFormat
 } from './lib/schemaTypes';
 
 // tables
@@ -224,5 +226,16 @@ export default defineSchema({
 		.index('by_run_created_at', ['runId', 'createdAt'])
 		.index('by_run_phase', ['runId', 'phase'])
 		.index('by_open_router_requestid', ['openRouterRequestid'])
-		.index('by_loop_and_operation', ['runId', 'loopNumber', 'operationKind'])
+		.index('by_loop_and_operation', ['runId', 'loopNumber', 'operationKind']),
+
+	llmCallContents: defineTable({
+		llmCallId: v.id('llmCalls'),
+		kind: llmContentKind,
+		format: llmContentFormat,
+		text: v.optional(v.string()),
+		json: v.optional(v.string()),
+		storageKey: v.optional(v.string()),
+		contentBytes: v.optional(v.number()),
+		createdAt: v.number()
+	}).index('by_call_kind', ['llmCallId', 'kind'])
 });
