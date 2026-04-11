@@ -20,7 +20,10 @@ import {
 	artifactVersionOrigin,
 	artifactVersionStatus,
 	reviewType,
-	reviewDecision
+	reviewDecision,
+	LlmCallStatus,
+	normalizationStatus,
+	operationKind
 } from './lib/schemaTypes';
 
 // tables
@@ -168,7 +171,7 @@ export default defineSchema({
 		markdown: v.optional(v.string()),
 		plainText: v.optional(v.string()),
 		contentHash: v.optional(v.string()),
-		sourceLlmCallId: v.optional(v.string()), // fix this when we have the llm call table
+		sourceLlmCallId: v.optional(v.id('llmCalls')),
 		createdAt: v.number()
 	})
 		.index('by_artifact_version', ['artifactId', 'versionNumber'])
@@ -184,9 +187,42 @@ export default defineSchema({
 		summary: v.string(),
 		content: v.string(),
 		schemaVersion: v.string(),
-		sourceLlmCallId: v.optional(v.string()), // fix when you get the LLM table // reviews can come from users
+		sourceLlmCallId: v.optional(v.id('llmCalls')), // reviews can come from users
 		createdAt: v.number()
 	})
 		.index('by_run_created_at', ['runId', 'createdAt'])
-		.index('by_artifact_version', ['artifactVersionId', 'createdAt'])
+		.index('by_artifact_version', ['artifactVersionId', 'createdAt']),
+
+	llmCalls: defineTable({
+		runId: v.id('runs'),
+		openRouterRequestid: v.string(),
+		phase: runPhase,
+		role: authorRole,
+		attemptNumber: v.number(),
+		retryOfCallId: v.optional(v.id('llmCalls')),
+		gatewayProvider: v.string(), // not sure where to get this one
+		modelSlug: v.string(),
+		routedProvider: v.optional(v.string()), // this can be appended on the response from OpenRouter
+		requestParams: v.any(), // we need to type the params we can set here
+		requestedStrategy: v.string(),
+		strategyUsed: v.optional(v.string()),
+		status: LlmCallStatus,
+		latencyMs: v.optional(v.number()),
+		inputTokens: v.optional(v.number()),
+		outputToken: v.optional(v.number()),
+		reasoningToken: v.optional(v.number()),
+		cachedTokens: v.optional(v.number()),
+		costUsd: v.optional(v.number()),
+		finishReason: v.optional(v.string()),
+		normalizationStatus: normalizationStatus,
+		normalizationError: v.string(),
+		createdAt: v.number(),
+		completedAt: v.number(),
+		loopNumber: v.number(),
+		operationKind: operationKind
+	})
+		.index('by_run_created_at', ['runId', 'createdAt'])
+		.index('by_run_phase', ['runId', 'phase'])
+		.index('by_open_router_requestid', ['openRouterRequestid'])
+		.index('by_loop_and_operation', ['runId', 'loopNumber', 'operationKind'])
 });

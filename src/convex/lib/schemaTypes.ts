@@ -125,3 +125,26 @@ export const reviewDecision = v.union(
 	v.literal('revise'),
 	v.literal('approve')
 );
+
+export const LlmCallStatus = v.union(
+	v.literal('queued'),
+	v.literal('running'),
+	v.literal('completed'),
+	v.literal('failed'),
+	v.literal('cancelled')
+);
+
+export const normalizationStatus = v.union(
+	v.literal('pending'),
+	v.literal('succeeded'),
+	v.literal('failed')
+);
+
+export const operationKind = v.union(
+	v.literal('baseline_review'),
+	v.literal('draft_generation'),
+	v.literal('draft_review'),
+	v.literal('draft_revision'),
+	v.literal('revision_review'),
+	v.literal('user_feedback_draft')
+);
