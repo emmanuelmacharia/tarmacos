@@ -117,3 +117,11 @@ export const artifactVersionStatus = v.union(
 	v.literal('approved'),
 	v.literal('finalized')
 );
+
+export const reviewType = v.union(v.literal('baseline_assessment'), v.literal('draft_review'));
+
+export const reviewDecision = v.union(
+	v.literal('approve'),
+	v.literal('revise'),
+	v.literal('approve')
+);

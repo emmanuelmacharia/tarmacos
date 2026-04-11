@@ -18,7 +18,9 @@ import {
 	artifactType,
 	artifactStatus,
 	artifactVersionOrigin,
-	artifactVersionStatus
+	artifactVersionStatus,
+	reviewType,
+	reviewDecision
 } from './lib/schemaTypes';
 
 // tables
@@ -85,8 +87,6 @@ export default defineSchema({
 		documentFormat: documentFormat, // eg pdf, docx etc
 		mimeType: v.optional(v.string()),
 		documentType: documentType, // 'original_baseline', 'promoted_baseline'
-		// we need to add a run id - we'll expire documents and clean them up if we dont have a run attached
-		// runId: v.optional(v.id('runs'))  ----> NO, A document could conceivably be used for multiple runs, we need a join table to allow us to have M2M relationships between documents and runs
 		expiresAt: v.number() // for abandoned uploads to be cleaned up
 	})
 		.index('by_userId', ['userId'])
@@ -99,9 +99,9 @@ export default defineSchema({
 		title: v.string(),
 		status: runStatus,
 		phase: runPhase,
-		currentArtifactId: v.optional(v.string()), // update when we define the artifacts table
-		currentArtifactVersionId: v.optional(v.string()), // update when we define the artifacts versions table
-		finalArtifactVersionId: v.optional(v.string()),
+		currentArtifactId: v.optional(v.id('artifacts')),
+		currentArtifactVersionId: v.optional(v.id('artifactVersions')),
+		finalArtifactVersionId: v.optional(v.id('artifactVersions')),
 		parentRunId: v.optional(v.id('runs')),
 		nextMessageSequenceNumber: v.number(),
 		loopCount: v.number(),
@@ -138,7 +138,7 @@ export default defineSchema({
 		visibility: messageVisibility,
 		bodyFormat: messageBodyFormat,
 		body: v.string(),
-		relatedArtifactVersionId: v.optional(v.string()), // fix when you get the artifact version table
+		relatedArtifactVersionId: v.optional(v.id('artifactVersions')), // fix when you get the artifact version table
 		relatedReviewid: v.optional(v.string()), // fix when we get the review table
 		createdAt: v.number()
 	})
@@ -149,8 +149,8 @@ export default defineSchema({
 		runId: v.id('runs'),
 		artifactType: artifactType,
 		status: artifactStatus,
-		currentVersionId: v.optional(v.string()), // fix this when we we have artifact versions
-		finalVersionId: v.optional(v.string()), // fix this when we we have artifact versions
+		currentVersionId: v.optional(v.id('artifactVersions')),
+		finalVersionId: v.optional(v.id('artifactVersions')),
 		nextVersionNumber: v.number(),
 		createdAt: v.number(),
 		updatedAt: v.number()
@@ -168,11 +168,25 @@ export default defineSchema({
 		markdown: v.optional(v.string()),
 		plainText: v.optional(v.string()),
 		contentHash: v.optional(v.string()),
-		sourceLLMCallId: v.optional(v.string()), // fix this when we have the llm call table
+		sourceLlmCallId: v.optional(v.string()), // fix this when we have the llm call table
 		createdAt: v.number()
 	})
 		.index('by_artifact_version', ['artifactId', 'versionNumber'])
 		.index('by_artifact_created_at', ['artifactId', 'createdAt'])
 		.index('by_base_version', ['basedOnVersionId'])
-		.index('by_run', ['runId'])
+		.index('by_run', ['runId']),
+
+	reviews: defineTable({
+		runId: v.id('runs'),
+		artifactVersionId: v.id('artifactVersions'),
+		reviewKind: reviewType,
+		decision: reviewDecision,
+		summary: v.string(),
+		content: v.string(),
+		schemaVersion: v.string(),
+		sourceLlmCallId: v.optional(v.string()), // fix when you get the LLM table // reviews can come from users
+		createdAt: v.number()
+	})
+		.index('by_run_created_at', ['runId', 'createdAt'])
+		.index('by_artifact_version', ['artifactVersionId', 'createdAt'])
 });
