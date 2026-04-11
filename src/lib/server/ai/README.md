@@ -268,22 +268,22 @@ Top-level workflow container, chat thread, and agent configuration snapshot.
 
 ```typescript
 v.object({
-  reviewer: v.object({
-    modelSlug: v.string(),
-    gatewayProvider: v.string(),
-    systemPromptVersion: v.string(),
-    defaultRequestParams: v.object({
-      /* strict versioned schema */
-    }),
-  }),
-  writer: v.object({
-    modelSlug: v.string(),
-    gatewayProvider: v.string(),
-    systemPromptVersion: v.string(),
-    defaultRequestParams: v.object({
-      /* strict versioned schema */
-    }),
-  }),
+	reviewer: v.object({
+		modelSlug: v.string(),
+		gatewayProvider: v.string(),
+		systemPromptVersion: v.string(),
+		defaultRequestParams: v.object({
+			/* strict versioned schema */
+		})
+	}),
+	writer: v.object({
+		modelSlug: v.string(),
+		gatewayProvider: v.string(),
+		systemPromptVersion: v.string(),
+		defaultRequestParams: v.object({
+			/* strict versioned schema */
+		})
+	})
 });
 ```
 
@@ -811,22 +811,22 @@ Every state-advancing mutation returns a typed instruction telling the app what 
 
 ```typescript
 type NextInstruction =
-  | {
-      action: "call_reviewer";
-      artifactVersionId: Id<"artifactVersions">;
-      reviewKind: "baseline_assessment" | "draft_review";
-    }
-  | {
-      action: "call_writer";
-      reviewId: Id<"reviews">;
-      basedOnVersionId: Id<"artifactVersions">;
-    }
-  | { action: "await_user" }
-  | {
-      action: "generate_export";
-      artifactVersionId: Id<"artifactVersions">;
-    }
-  | { action: "done" };
+	| {
+			action: 'call_reviewer';
+			artifactVersionId: Id<'artifactVersions'>;
+			reviewKind: 'baseline_assessment' | 'draft_review';
+	  }
+	| {
+			action: 'call_writer';
+			reviewId: Id<'reviews'>;
+			basedOnVersionId: Id<'artifactVersions'>;
+	  }
+	| { action: 'await_user' }
+	| {
+			action: 'generate_export';
+			artifactVersionId: Id<'artifactVersions'>;
+	  }
+	| { action: 'done' };
 ```
 
 The app does not need to know the state machine rules. It executes the instruction it receives and reports results back.
@@ -1059,105 +1059,96 @@ Any non-terminal phase may transition to `failed` on unrecoverable error or `can
 The app-side driver is a straightforward loop:
 
 ```typescript
-async function executeRun(runId: Id<"runs">) {
-  let instruction = await convex.mutation(api.runs.startRun, {
-    runId,
-  });
+async function executeRun(runId: Id<'runs'>) {
+	let instruction = await convex.mutation(api.runs.startRun, {
+		runId
+	});
 
-  while (
-    instruction.action !== "done" &&
-    instruction.action !== "await_user"
-  ) {
-    switch (instruction.action) {
-      case "call_reviewer": {
-        const { llmCallId } = await convex.mutation(
-          api.llmCalls.start,
-          {
-            runId,
-            phase: "reviewing",
-            role: "reviewer",
-            /* ... provider config ... */
-          }
-        );
-        try {
-          const raw = await callReviewerLLM(instruction);
-          await convex.mutation(api.llmCalls.complete, {
-            llmCallId,
-            status: "completed",
-            raw,
-          });
-          const canonical = normalizeReview(raw);
-          if (instruction.reviewKind === "baseline_assessment") {
-            instruction = await convex.mutation(
-              api.runs.completeBaselineReview,
-              { runId, llmCallId, canonical }
-            );
-          } else {
-            instruction = await convex.mutation(
-              api.runs.completeReview,
-              { runId, llmCallId, canonical }
-            );
-          }
-        } catch (e) {
-          await convex.mutation(api.llmCalls.complete, {
-            llmCallId,
-            status: "failed",
-            error: e.message,
-          });
-          await handleRetryOrFail(runId, e);
-          return;
-        }
-        break;
-      }
+	while (instruction.action !== 'done' && instruction.action !== 'await_user') {
+		switch (instruction.action) {
+			case 'call_reviewer': {
+				const { llmCallId } = await convex.mutation(api.llmCalls.start, {
+					runId,
+					phase: 'reviewing',
+					role: 'reviewer'
+					/* ... provider config ... */
+				});
+				try {
+					const raw = await callReviewerLLM(instruction);
+					await convex.mutation(api.llmCalls.complete, {
+						llmCallId,
+						status: 'completed',
+						raw
+					});
+					const canonical = normalizeReview(raw);
+					if (instruction.reviewKind === 'baseline_assessment') {
+						instruction = await convex.mutation(api.runs.completeBaselineReview, {
+							runId,
+							llmCallId,
+							canonical
+						});
+					} else {
+						instruction = await convex.mutation(api.runs.completeReview, {
+							runId,
+							llmCallId,
+							canonical
+						});
+					}
+				} catch (e) {
+					await convex.mutation(api.llmCalls.complete, {
+						llmCallId,
+						status: 'failed',
+						error: e.message
+					});
+					await handleRetryOrFail(runId, e);
+					return;
+				}
+				break;
+			}
 
-      case "call_writer": {
-        const { llmCallId } = await convex.mutation(
-          api.llmCalls.start,
-          {
-            runId,
-            phase: "drafting",
-            role: "writer",
-          }
-        );
-        try {
-          const raw = await callWriterLLM(instruction);
-          await convex.mutation(api.llmCalls.complete, {
-            llmCallId,
-            status: "completed",
-            raw,
-          });
-          const canonical = normalizeResume(raw);
-          instruction = await convex.mutation(
-            api.runs.completeDraft,
-            { runId, llmCallId, canonical }
-          );
-        } catch (e) {
-          await convex.mutation(api.llmCalls.complete, {
-            llmCallId,
-            status: "failed",
-            error: e.message,
-          });
-          await handleRetryOrFail(runId, e);
-          return;
-        }
-        break;
-      }
+			case 'call_writer': {
+				const { llmCallId } = await convex.mutation(api.llmCalls.start, {
+					runId,
+					phase: 'drafting',
+					role: 'writer'
+				});
+				try {
+					const raw = await callWriterLLM(instruction);
+					await convex.mutation(api.llmCalls.complete, {
+						llmCallId,
+						status: 'completed',
+						raw
+					});
+					const canonical = normalizeResume(raw);
+					instruction = await convex.mutation(api.runs.completeDraft, {
+						runId,
+						llmCallId,
+						canonical
+					});
+				} catch (e) {
+					await convex.mutation(api.llmCalls.complete, {
+						llmCallId,
+						status: 'failed',
+						error: e.message
+					});
+					await handleRetryOrFail(runId, e);
+					return;
+				}
+				break;
+			}
 
-      case "generate_export": {
-        try {
-          const exportData = await generateExportFile(instruction);
-          instruction = await convex.mutation(
-            api.runs.completeExport,
-            { runId, ...exportData }
-          );
-        } catch (e) {
-          await handleRetryOrFail(runId, e);
-          return;
-        }
-        break;
-      }
-    }
-  }
+			case 'generate_export': {
+				try {
+					const exportData = await generateExportFile(instruction);
+					instruction = await convex.mutation(api.runs.completeExport, { runId, ...exportData });
+				} catch (e) {
+					await handleRetryOrFail(runId, e);
+					return;
+				}
+				break;
+			}
+		}
+	}
 }
 ```
 
@@ -1174,22 +1165,16 @@ The loop exits naturally when the instruction is `await_user`. When the user act
 This can be triggered by an API route handler. The app calls the mutation, receives the instruction, and runs the loop from that point.
 
 ```typescript
-async function handleUserApproval(runId: Id<"runs">) {
-  const instruction = await convex.mutation(api.runs.userApprove, {
-    runId,
-  });
-  await executeRunFromInstruction(runId, instruction);
+async function handleUserApproval(runId: Id<'runs'>) {
+	const instruction = await convex.mutation(api.runs.userApprove, {
+		runId
+	});
+	await executeRunFromInstruction(runId, instruction);
 }
 
-async function handleUserChanges(
-  runId: Id<"runs">,
-  feedback: string
-) {
-  const instruction = await convex.mutation(
-    api.runs.userRequestChanges,
-    { runId, feedback }
-  );
-  await executeRunFromInstruction(runId, instruction);
+async function handleUserChanges(runId: Id<'runs'>, feedback: string) {
+	const instruction = await convex.mutation(api.runs.userRequestChanges, { runId, feedback });
+	await executeRunFromInstruction(runId, instruction);
 }
 ```
 
@@ -1501,30 +1486,30 @@ All defaults are defined as typed constants in code. A narrow set of operational
 // convex/config/workflowDefaults.ts
 
 const WORKFLOW_DEFAULTS = {
-  maxIterations: 5,
-  maxRetriesPerCall: 3,
+	maxIterations: 5,
+	maxRetriesPerCall: 3,
 
-  reviewer: {
-    modelSlug: "anthropic/claude-sonnet-4",
-    gatewayProvider: "openrouter",
-    systemPromptVersion: "reviewer-v1",
-    defaultRequestParams: {
-      temperature: 0.3,
-      maxOutputTokens: 4096,
-      // ... strict versioned fields
-    },
-  },
+	reviewer: {
+		modelSlug: 'anthropic/claude-sonnet-4',
+		gatewayProvider: 'openrouter',
+		systemPromptVersion: 'reviewer-v1',
+		defaultRequestParams: {
+			temperature: 0.3,
+			maxOutputTokens: 4096
+			// ... strict versioned fields
+		}
+	},
 
-  writer: {
-    modelSlug: "anthropic/claude-sonnet-4",
-    gatewayProvider: "openrouter",
-    systemPromptVersion: "writer-v1",
-    defaultRequestParams: {
-      temperature: 0.7,
-      maxOutputTokens: 8192,
-      // ... strict versioned fields
-    },
-  },
+	writer: {
+		modelSlug: 'anthropic/claude-sonnet-4',
+		gatewayProvider: 'openrouter',
+		systemPromptVersion: 'writer-v1',
+		defaultRequestParams: {
+			temperature: 0.7,
+			maxOutputTokens: 8192
+			// ... strict versioned fields
+		}
+	}
 } as const;
 
 export type WorkflowDefaults = typeof WORKFLOW_DEFAULTS;
@@ -1534,42 +1519,30 @@ export type WorkflowDefaults = typeof WORKFLOW_DEFAULTS;
  * Only operational-critical values are overridable via env.
  */
 export function resolveWorkflowConfig(): WorkflowDefaults {
-  return {
-    ...WORKFLOW_DEFAULTS,
-    maxIterations: intEnv(
-      "MAX_ITERATIONS",
-      WORKFLOW_DEFAULTS.maxIterations
-    ),
-    maxRetriesPerCall: intEnv(
-      "MAX_RETRIES_PER_CALL",
-      WORKFLOW_DEFAULTS.maxRetriesPerCall
-    ),
-    reviewer: {
-      ...WORKFLOW_DEFAULTS.reviewer,
-      modelSlug: stringEnv(
-        "REVIEWER_MODEL_SLUG",
-        WORKFLOW_DEFAULTS.reviewer.modelSlug
-      ),
-    },
-    writer: {
-      ...WORKFLOW_DEFAULTS.writer,
-      modelSlug: stringEnv(
-        "WRITER_MODEL_SLUG",
-        WORKFLOW_DEFAULTS.writer.modelSlug
-      ),
-    },
-  };
+	return {
+		...WORKFLOW_DEFAULTS,
+		maxIterations: intEnv('MAX_ITERATIONS', WORKFLOW_DEFAULTS.maxIterations),
+		maxRetriesPerCall: intEnv('MAX_RETRIES_PER_CALL', WORKFLOW_DEFAULTS.maxRetriesPerCall),
+		reviewer: {
+			...WORKFLOW_DEFAULTS.reviewer,
+			modelSlug: stringEnv('REVIEWER_MODEL_SLUG', WORKFLOW_DEFAULTS.reviewer.modelSlug)
+		},
+		writer: {
+			...WORKFLOW_DEFAULTS.writer,
+			modelSlug: stringEnv('WRITER_MODEL_SLUG', WORKFLOW_DEFAULTS.writer.modelSlug)
+		}
+	};
 }
 
 function intEnv(key: string, fallback: number): number {
-  const val = process.env[key];
-  if (val === undefined) return fallback;
-  const parsed = parseInt(val, 10);
-  return Number.isNaN(parsed) ? fallback : parsed;
+	const val = process.env[key];
+	if (val === undefined) return fallback;
+	const parsed = parseInt(val, 10);
+	return Number.isNaN(parsed) ? fallback : parsed;
 }
 
 function stringEnv(key: string, fallback: string): string {
-  return process.env[key]?.trim() || fallback;
+	return process.env[key]?.trim() || fallback;
 }
 ```
 
@@ -1596,14 +1569,14 @@ The resolved config is read once at run creation and snapshotted onto the run's 
 // Inside the createRun mutation
 const config = resolveWorkflowConfig();
 
-const runId = await ctx.db.insert("runs", {
-  // ...
-  loopCount: 0,
-  agentConfig: {
-    reviewer: config.reviewer,
-    writer: config.writer,
-  },
-  // ...
+const runId = await ctx.db.insert('runs', {
+	// ...
+	loopCount: 0,
+	agentConfig: {
+		reviewer: config.reviewer,
+		writer: config.writer
+	}
+	// ...
 });
 ```
 
@@ -1618,10 +1591,10 @@ const runId = await ctx.db.insert("runs", {
 const config = resolveWorkflowConfig();
 
 if (run.loopCount >= config.maxIterations) {
-  // Force-approve: cap reached, present best draft to user
-  // append system message explaining the cap
-  // set phase → user_review, status → awaiting_user
-  // return { next: { action: "await_user" } }
+	// Force-approve: cap reached, present best draft to user
+	// append system message explaining the cap
+	// set phase → user_review, status → awaiting_user
+	// return { next: { action: "await_user" } }
 }
 
 // Otherwise: increment loopCount and continue to revision phase
@@ -1640,21 +1613,21 @@ The `loopCount` field on `runs` tracks completed review→revision cycles. When 
 const config = resolveWorkflowConfig();
 
 async function handleRetryOrFail(
-  runId: Id<"runs">,
-  llmCallId: Id<"llmCalls">,
-  attemptNo: number,
-  error: Error
+	runId: Id<'runs'>,
+	llmCallId: Id<'llmCalls'>,
+	attemptNo: number,
+	error: Error
 ) {
-  if (attemptNo < config.maxRetriesPerCall) {
-    // Retry: create a new llmCalls row with incremented
-    // attemptNo and retryOfCallId pointing to the failed call
-    return;
-  }
-  // Exhausted: fail the run
-  await convex.mutation(api.runs.failRun, {
-    runId,
-    error: `LLM call failed after ${attemptNo} attempts: ${error.message}`,
-  });
+	if (attemptNo < config.maxRetriesPerCall) {
+		// Retry: create a new llmCalls row with incremented
+		// attemptNo and retryOfCallId pointing to the failed call
+		return;
+	}
+	// Exhausted: fail the run
+	await convex.mutation(api.runs.failRun, {
+		runId,
+		error: `LLM call failed after ${attemptNo} attempts: ${error.message}`
+	});
 }
 ```
 
