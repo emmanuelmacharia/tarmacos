@@ -1,8 +1,9 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
 import { assertFound, forbiddenCheck, withAppErrors } from '../lib/errorMapper';
-import { agentConfig, runPhase, runStatus } from '../lib/schemaTypes';
+import { agentConfig, documentPurpose, runPhase, runStatus } from '../lib/schemaTypes';
 import { ok } from '../lib/responseMapper';
+import { internal } from '../_generated/api';
 
 export const createRun = mutation({
 	args: {
@@ -12,7 +13,14 @@ export const createRun = mutation({
 		phase: v.optional(runPhase),
 		parentRunId: v.optional(v.id('runs')),
 		agentConfig: agentConfig,
-		metadata: v.optional(v.any())
+		metadata: v.optional(v.any()),
+		documents: v.array(
+			v.object({
+				documentId: v.id('documents'),
+				purpose: documentPurpose,
+				extractedText: v.optional(v.string())
+			})
+		)
 	},
 	handler: async (ctx, args) => {
 		return withAppErrors(async () => {
@@ -54,6 +62,12 @@ export const createRun = mutation({
 
 			const runid = await ctx.db.insert('runs', payload);
 			const run = assertFound(await ctx.db.get(runid));
+
+			await ctx.runMutation(internal.runs.runDocuments.persistRunDocument, {
+				runId: run._id,
+				documents: args.documents
+			});
+
 			return ok(
 				{
 					id: run._id,
@@ -83,7 +97,16 @@ export const updateRun = mutation({
 		loopCount: v.optional(v.number()),
 		agentConfig: v.optional(agentConfig),
 		metadata: v.optional(v.any()),
-		error: v.optional(v.any())
+		error: v.optional(v.any()),
+		documents: v.optional(
+			v.array(
+				v.object({
+					documentId: v.id('documents'),
+					purpose: documentPurpose,
+					extractedText: v.optional(v.string())
+				})
+			)
+		)
 	},
 	handler: async (ctx, args) => {
 		return withAppErrors(async () => {
@@ -131,6 +154,13 @@ export const updateRun = mutation({
 			await ctx.db.patch('runs', run._id, payload);
 
 			const updatedRun = await ctx.db.get(run._id);
+
+			if (args.documents && args.documents.length > 0) {
+				await ctx.runMutation(internal.runs.runDocuments.persistRunDocument, {
+					runId: run._id,
+					documents: args.documents
+				});
+			}
 
 			return ok(updatedRun, { message: 'Run updated successfully', statusCode: 200 });
 		});
