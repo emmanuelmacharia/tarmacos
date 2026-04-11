@@ -92,3 +92,28 @@ export const messageType = v.union(
 export const messageVisibility = v.union(v.literal('user_visible'), v.literal('internal'));
 
 export const messageBodyFormat = v.union(v.literal('text'), v.literal('markdown'));
+
+export const artifactType = v.union(v.literal('resume'), v.literal('cover_letter'));
+
+export const artifactStatus = v.union(
+	v.literal('in_progress'),
+	v.literal('approved'),
+	v.literal('finalized'),
+	v.literal('abandoned')
+);
+
+export const artifactVersionOrigin = v.union(
+	v.literal('imported_source'),
+	v.literal('agent_draft'),
+	v.literal('agent_revision'),
+	v.literal('user_revisions'),
+	v.literal('system_finalized')
+);
+
+export const artifactVersionStatus = v.union(
+	v.literal('draft'),
+	v.literal('submitted_for_review'),
+	v.literal('revision_requested'),
+	v.literal('approved'),
+	v.literal('finalized')
+);
