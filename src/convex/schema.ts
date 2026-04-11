@@ -14,7 +14,11 @@ import {
 	authorRole,
 	messageType,
 	messageVisibility,
-	messageBodyFormat
+	messageBodyFormat,
+	artifactType,
+	artifactStatus,
+	artifactVersionOrigin,
+	artifactVersionStatus
 } from './lib/schemaTypes';
 
 // tables
@@ -115,18 +119,18 @@ export default defineSchema({
 		.index('by_parent', ['parentRunId']),
 
 	runDocuments: defineTable({
-		runid: v.id('runs'),
+		runId: v.id('runs'),
 		documentId: v.id('documents'),
 		purpose: documentPurpose,
 		extractedText: v.optional(v.string()),
 		createdAt: v.number()
 	})
-		.index('by_run', ['runid'])
+		.index('by_run', ['runId'])
 		.index('by_document_id', ['documentId'])
 		.index('by_purpose', ['purpose']),
 
 	messages: defineTable({
-		runid: v.id('runs'),
+		runId: v.id('runs'),
 		sequenceNumber: v.number(),
 		authorType: authorType,
 		authorRole: authorRole,
@@ -138,6 +142,37 @@ export default defineSchema({
 		relatedReviewid: v.optional(v.string()), // fix when we get the review table
 		createdAt: v.number()
 	})
-		.index('by_run_seq', ['runid', 'sequenceNumber'])
-		.index('by_run_visibility_seq', ['runid', 'visibility', 'sequenceNumber'])
+		.index('by_run_seq', ['runId', 'sequenceNumber'])
+		.index('by_run_visibility_seq', ['runId', 'visibility', 'sequenceNumber']),
+
+	artifacts: defineTable({
+		runId: v.id('runs'),
+		artifactType: artifactType,
+		status: artifactStatus,
+		currentVersionId: v.optional(v.string()), // fix this when we we have artifact versions
+		finalVersionId: v.optional(v.string()), // fix this when we we have artifact versions
+		nextVersionNumber: v.number(),
+		createdAt: v.number(),
+		updatedAt: v.number()
+	}).index('by_run', ['runId']),
+
+	artifactVersions: defineTable({
+		artifactId: v.id('artifacts'),
+		runId: v.id('runs'),
+		versionNumber: v.number(),
+		basedOnVersionId: v.optional(v.number()),
+		origin: artifactVersionOrigin,
+		status: artifactVersionStatus,
+		previewText: v.string(),
+		canonicalJson: v.optional(v.string()),
+		markdown: v.optional(v.string()),
+		plainText: v.optional(v.string()),
+		contentHash: v.optional(v.string()),
+		sourceLLMCallId: v.optional(v.string()), // fix this when we have the llm call table
+		createdAt: v.number()
+	})
+		.index('by_artifact_version', ['artifactId', 'versionNumber'])
+		.index('by_artifact_created_at', ['artifactId', 'createdAt'])
+		.index('by_base_version', ['basedOnVersionId'])
+		.index('by_run', ['runId'])
 });
