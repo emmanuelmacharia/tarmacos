@@ -25,7 +25,9 @@ import {
 	normalizationStatus,
 	operationKind,
 	llmContentKind,
-	llmContentFormat
+	llmContentFormat,
+	exportFormat,
+	exportStatus
 } from './lib/schemaTypes';
 
 // tables
@@ -237,5 +239,22 @@ export default defineSchema({
 		storageKey: v.optional(v.string()),
 		contentBytes: v.optional(v.number()),
 		createdAt: v.number()
-	}).index('by_call_kind', ['llmCallId', 'kind'])
+	}).index('by_call_kind', ['llmCallId', 'kind']),
+
+	exports: defineTable({
+		runId: v.id('runs'),
+		artifactVersionId: v.id('artifactVersions'),
+		format: exportFormat,
+		exporterVersion: v.string(),
+		renderOptionHash: v.string(),
+		status: exportStatus,
+		documentId: v.optional(v.id('documents')),
+		contentHash: v.optional(v.string()),
+		fileSizeBytes: v.number(),
+		mimeType: v.string(),
+		createdAt: v.number(),
+		completedAt: v.optional(v.number())
+	})
+		.index('by_run_createdat', ['runId', 'createdAt'])
+		.index('by_render_key', ['artifactVersionId', 'format', 'exporterVersion'])
 });

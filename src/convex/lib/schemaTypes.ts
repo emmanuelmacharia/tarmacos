@@ -159,3 +159,7 @@ export const llmContentKind = v.union(
 );
 
 export const llmContentFormat = v.union(v.literal('json'), v.literal('text'));
+
+export const exportFormat = v.union(v.literal('pdf'), v.literal('docx'), v.literal('txt'));
+
+export const exportStatus = v.union(v.literal('pending'), v.literal('ready'), v.literal('failed'));
