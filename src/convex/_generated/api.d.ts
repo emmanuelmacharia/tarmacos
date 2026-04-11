@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as artifacts_index from "../artifacts/index.js";
+import type * as artifacts_versions from "../artifacts/versions.js";
 import type * as documents_upload from "../documents/upload.js";
 import type * as lib_errorMapper from "../lib/errorMapper.js";
 import type * as lib_responseMapper from "../lib/responseMapper.js";
@@ -26,6 +28,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "artifacts/index": typeof artifacts_index;
+  "artifacts/versions": typeof artifacts_versions;
   "documents/upload": typeof documents_upload;
   "lib/errorMapper": typeof lib_errorMapper;
   "lib/responseMapper": typeof lib_responseMapper;

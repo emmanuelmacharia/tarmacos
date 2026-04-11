@@ -477,7 +477,7 @@ Logical output produced by a run.
 
 ### Responsibility
 
-Immutable version in the artifact lineage, with content inline.
+Immutable version in the artifact lineage, with content inline. This uses the "AppendOnly" principle, where we don't mutate the record, but add another version of it.
 
 ### Fields
 
