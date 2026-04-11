@@ -20,7 +20,7 @@ export const createMessage = mutation({
 		visibility: messageVisibility,
 		bodyFormat: messageBodyFormat,
 		body: v.string(),
-		relatedArtifactVersionId: v.optional(v.string()), // fix when you get the artifact version table
+		relatedArtifactVersionId: v.optional(v.id('artifactVersions')),
 		relatedReviewid: v.optional(v.string()) // fix when we get the review table
 	},
 	handler: async (ctx, args) => {

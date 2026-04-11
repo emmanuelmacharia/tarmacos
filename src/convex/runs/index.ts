@@ -89,9 +89,9 @@ export const updateRun = mutation({
 		title: v.optional(v.string()),
 		status: v.optional(runStatus),
 		phase: v.optional(runPhase),
-		currentArtifactId: v.optional(v.string()), // update when we define the artifacts table
-		currentArtifactVersionId: v.optional(v.string()), // update when we define the artifacts versions table
-		finalArtifactVersionId: v.optional(v.string()),
+		currentArtifactId: v.optional(v.id('artifacts')),
+		currentArtifactVersionId: v.optional(v.id('artifactVersions')),
+		finalArtifactVersionId: v.optional(v.id('artifactVersions')),
 		parentRunId: v.optional(v.id('runs')),
 		nextMessageSequenceNumber: v.optional(v.number()),
 		loopCount: v.optional(v.number()),
