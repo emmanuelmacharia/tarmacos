@@ -150,7 +150,7 @@ export const aiCall = mutation({
 				inputTokens: args.inputTokens,
 				outputToken: args.outputToken,
 				reasoningToken: args.reasoningToken,
-				cachedToken: args.cachedTokens,
+				cachedTokens: args.cachedTokens,
 				costUsd: args.costUsd,
 				finishReason: args.finishReason,
 				normalizationStatus: args.normalizationStatus,
