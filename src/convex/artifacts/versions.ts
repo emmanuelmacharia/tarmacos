@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
-import { assertFound, forbiddenCheck, withAppErrors } from '../lib/errorMapper';
+import { assertFound, forbiddenCheck, mapConvexError, withAppErrors } from '../lib/errorMapper';
 import { artifactVersionOrigin, artifactVersionStatus } from '../lib/schemaTypes';
 import { ok } from '../lib/responseMapper';
 import { api } from '../_generated/api';
@@ -47,6 +47,18 @@ export const createArtifactVersion = mutation({
 			const artifact = assertFound(await ctx.db.get(args.artifactId));
 			const run = assertFound(await ctx.db.get(artifact.runId));
 			forbiddenCheck(() => run.userId === user._id);
+
+			if (args.basedOnVersionId) {
+				const originalArtifactVersion = assertFound(await ctx.db.get(args.basedOnVersionId));
+				if (originalArtifactVersion.artifactId !== artifact._id) {
+					mapConvexError({
+						status: 412,
+						message: 'Origin artifact version does not belong to this artifact',
+						code: 'BAD_REQUEST',
+						details: null
+					});
+				}
+			}
 
 			// 3
 			const payload = {

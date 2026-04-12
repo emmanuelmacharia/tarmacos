@@ -219,9 +219,9 @@ export default defineSchema({
 		costUsd: v.optional(v.number()),
 		finishReason: v.optional(v.string()),
 		normalizationStatus: normalizationStatus,
-		normalizationError: v.string(),
+		normalizationError: v.optional(v.string()),
 		createdAt: v.number(),
-		completedAt: v.number(),
+		completedAt: v.optional(v.number()),
 		loopNumber: v.number(),
 		operationKind: operationKind
 	})
@@ -256,5 +256,5 @@ export default defineSchema({
 		completedAt: v.optional(v.number())
 	})
 		.index('by_run_createdat', ['runId', 'createdAt'])
-		.index('by_render_key', ['artifactVersionId', 'format', 'renderOptionHash'])
+		.index('by_render_key', ['artifactVersionId', 'format', 'exporterVersion', 'renderOptionHash'])
 });
