@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
-import { assertFound, forbiddenCheck, withAppErrors } from '../lib/errorMapper';
+import { assertFound, forbiddenCheck, mapConvexError, withAppErrors } from '../lib/errorMapper';
 import {
 	reviewType,
 	reviewDecision,
@@ -48,7 +48,18 @@ export const reviews = mutation({
 
 			forbiddenCheck(() => run.userId === user._id);
 
-			assertFound(await ctx.db.get(args.artifactVersionId));
+			const artifactVersion = assertFound(await ctx.db.get(args.artifactVersionId));
+
+			const artifact = assertFound(await ctx.db.get(artifactVersion.artifactId));
+
+			if (artifact.runId !== run._id) {
+				mapConvexError({
+					code: 'BAD_REQUEST',
+					status: 412,
+					message: 'Mismatch on run and artifacts',
+					details: null
+				});
+			}
 
 			const payload = {
 				...args,
@@ -122,7 +133,31 @@ export const aiCall = mutation({
 			forbiddenCheck(() => run.userId === user._id);
 
 			const payload = {
-				...args,
+				runId: run._id,
+				openRouterRequestid: args.openRouterRequestid,
+				phase: args.phase,
+				role: args.role,
+				attemptNumber: args.attemptNumber,
+				retryOfCallId: args.retryOfCallId,
+				gatewayProvider: args.gatewayProvider,
+				modelSlug: args.modelSlug,
+				routerProvider: args.routedProvider,
+				requestParams: args.requestParams,
+				strategyUsed: args.strategyUsed,
+				requestedStrategy: args.requestedStrategy,
+				status: args.status,
+				latencyMs: args.latencyMs,
+				inputTokens: args.inputTokens,
+				outputToken: args.outputToken,
+				reasoningToken: args.reasoningToken,
+				cachedToken: args.cachedTokens,
+				costUsd: args.costUsd,
+				finishReason: args.finishReason,
+				normalizationStatus: args.normalizationStatus,
+				normalizationError: args.normalizationError,
+				completedAt: args.completedAt,
+				loopNumber: args.loopNumber,
+				operationKind: args.operationKind,
 				createdAt: new Date().getTime()
 			};
 
