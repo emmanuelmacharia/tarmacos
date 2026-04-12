@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
 import { assertFound, forbidden, unauthorized, withAppErrors } from '../lib/errorMapper';
-import { documentFormat, documentType } from '../schema';
+import { documentFormat, documentType } from '../lib/schemaTypes';
 import { ok } from '../lib/responseMapper';
 
 export const generateUploadUrl = mutation({

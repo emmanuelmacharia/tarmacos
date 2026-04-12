@@ -8,9 +8,17 @@
  * @module
  */
 
+import type * as ai_index from "../ai/index.js";
+import type * as artifacts_index from "../artifacts/index.js";
+import type * as artifacts_versions from "../artifacts/versions.js";
 import type * as documents_upload from "../documents/upload.js";
+import type * as exports_index from "../exports/index.js";
 import type * as lib_errorMapper from "../lib/errorMapper.js";
 import type * as lib_responseMapper from "../lib/responseMapper.js";
+import type * as lib_schemaTypes from "../lib/schemaTypes.js";
+import type * as messages_index from "../messages/index.js";
+import type * as runs_index from "../runs/index.js";
+import type * as runs_runDocuments from "../runs/runDocuments.js";
 import type * as user_preferences from "../user/preferences.js";
 import type * as user_profiles from "../user/profiles.js";
 import type * as user_user from "../user/user.js";
@@ -22,9 +30,17 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "ai/index": typeof ai_index;
+  "artifacts/index": typeof artifacts_index;
+  "artifacts/versions": typeof artifacts_versions;
   "documents/upload": typeof documents_upload;
+  "exports/index": typeof exports_index;
   "lib/errorMapper": typeof lib_errorMapper;
   "lib/responseMapper": typeof lib_responseMapper;
+  "lib/schemaTypes": typeof lib_schemaTypes;
+  "messages/index": typeof messages_index;
+  "runs/index": typeof runs_index;
+  "runs/runDocuments": typeof runs_runDocuments;
   "user/preferences": typeof user_preferences;
   "user/profiles": typeof user_profiles;
   "user/user": typeof user_user;

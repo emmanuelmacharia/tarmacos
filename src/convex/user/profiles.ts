@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { mutation, query } from '../_generated/server';
-import { seniorityLevel } from '../schema';
+import { seniorityLevel } from '../lib/schemaTypes';
 import { assertFound, forbidden, unauthorized, withAppErrors } from '../lib/errorMapper';
 import { ok } from '../lib/responseMapper';
 
@@ -204,7 +204,7 @@ export const updateProfile = mutation({
 					: {})
 			};
 
-			await ctx.db.patch('profiles', args.profileId, payload);
+			await ctx.db.patch(args.profileId, payload);
 			const updatedProfile = await ctx.db.get(profile._id);
 			return ok(updatedProfile, { message: 'Profile updated successfully' });
 		});

@@ -38,6 +38,13 @@ export function unauthorized(message = 'Unauthorized', details: unknown = {}): n
 	});
 }
 
+export function forbiddenCheck(check: () => boolean) {
+	const authorized = check();
+	if (!authorized) {
+		forbidden();
+	}
+}
+
 export function forbidden(message = 'Forbidden', details: unknown = {}): never {
 	mapConvexError({
 		status: 403,
@@ -62,9 +69,13 @@ export function internalServerError(
 export function assertFound<T>(
 	value: T | null | undefined,
 	message = 'Not Found',
+	isAuth = false,
 	details: unknown = {}
 ): T {
 	if (value === null || value === undefined) {
+		if (isAuth) {
+			unauthorized(message);
+		}
 		mapConvexError({
 			status: 404,
 			message,
