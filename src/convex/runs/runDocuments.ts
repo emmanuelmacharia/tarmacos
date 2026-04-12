@@ -20,16 +20,18 @@ export const persistRunDocument = internalMutation({
 			// internal = no user validation again as validation is done when creating the run;
 			//  and the only surface this is exposed to should be the createRun/updateRun mutation;
 
-			args.documents.map(async (document) => {
-				const payload = {
-					runId: args.runId,
-					documentId: document.documentId,
-					purpose: document.purpose,
-					extractedText: document.extractedText,
-					createdAt: new Date().getTime()
-				};
-				await ctx.db.insert('runDocuments', payload);
-			});
+			await Promise.all(
+				args.documents.map(async (document) => {
+					const payload = {
+						runId: args.runId,
+						documentId: document.documentId,
+						purpose: document.purpose,
+						extractedText: document.extractedText,
+						createdAt: new Date().getTime()
+					};
+					await ctx.db.insert('runDocuments', payload);
+				})
+			);
 		});
 	}
 });

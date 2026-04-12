@@ -19,7 +19,7 @@ export const createExport = mutation({
 		mimeType: v.string()
 	},
 	handler: async (ctx, args) => {
-		withAppErrors(async () => {
+		return withAppErrors(async () => {
 			const identity = assertFound(
 				await ctx.auth.getUserIdentity(),
 				'Please log in to continue',
@@ -67,7 +67,7 @@ export const createExport = mutation({
 				finalArtifactVersionId: artifactVersion._id
 			});
 
-			return ok(exportData, { message: 'Review created successfully', statusCode: 201 });
+			return ok(exportData, { message: 'Export generated successfully', statusCode: 201 });
 		});
 	}
 });

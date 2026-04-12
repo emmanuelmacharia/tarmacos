@@ -64,7 +64,8 @@ export const createArtifactVersion = mutation({
 				artifactId: artifact._id,
 				currentVersionId: artifactVersion,
 				finalVersionId: isFinal ? artifactVersion : undefined,
-				nextVersionNumber: artifact.nextVersionNumber + 1
+				nextVersionNumber: artifact.nextVersionNumber + 1,
+				artifactStatus: 'finalized'
 			};
 			await ctx.runMutation(api.artifacts.index.updateArtifact, { ...propagateVersionUpdates });
 

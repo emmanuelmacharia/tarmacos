@@ -55,6 +55,8 @@ export const createRun = mutation({
 				phase: 'baseline_review' as const,
 				nextMessageSequenceNumber: 0,
 				loopCount: 0,
+				parentRunId: args.parentRunId,
+				metadata: args.metadata,
 				agentConfig: args.agentConfig,
 				createdAt: new Date().getTime(),
 				updatedAt: new Date().getTime()

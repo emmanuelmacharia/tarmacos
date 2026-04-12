@@ -120,11 +120,7 @@ export const artifactVersionStatus = v.union(
 
 export const reviewType = v.union(v.literal('baseline_assessment'), v.literal('draft_review'));
 
-export const reviewDecision = v.union(
-	v.literal('approve'),
-	v.literal('revise'),
-	v.literal('approve')
-);
+export const reviewDecision = v.union(v.literal('approve'), v.literal('revise'));
 
 export const LlmCallStatus = v.union(
 	v.literal('queued'),

@@ -141,7 +141,7 @@ export default defineSchema({
 		sequenceNumber: v.number(),
 		authorType: authorType,
 		authorRole: authorRole,
-		meessageType: messageType,
+		messageType: messageType,
 		visibility: messageVisibility,
 		bodyFormat: messageBodyFormat,
 		body: v.string(),
@@ -167,7 +167,7 @@ export default defineSchema({
 		artifactId: v.id('artifacts'),
 		runId: v.id('runs'),
 		versionNumber: v.number(),
-		basedOnVersionId: v.optional(v.number()),
+		basedOnVersionId: v.optional(v.id('artifactVersions')),
 		origin: artifactVersionOrigin,
 		status: artifactVersionStatus,
 		previewText: v.string(),
@@ -256,5 +256,5 @@ export default defineSchema({
 		completedAt: v.optional(v.number())
 	})
 		.index('by_run_createdat', ['runId', 'createdAt'])
-		.index('by_render_key', ['artifactVersionId', 'format', 'exporterVersion'])
+		.index('by_render_key', ['artifactVersionId', 'format', 'renderOptionHash'])
 });

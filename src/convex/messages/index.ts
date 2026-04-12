@@ -53,7 +53,7 @@ export const createMessage = mutation({
 				authorType: args.authorType,
 				body: args.body,
 				bodyFormat: args.bodyFormat,
-				meessageType: args.messageType,
+				messageType: args.messageType,
 				relatedArtifactVersionId: args.relatedArtifactVersionId,
 				relatedReviewId: args.relatedReviewid,
 				visibility: args.visibility,
