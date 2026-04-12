@@ -21,7 +21,7 @@ export const createMessage = mutation({
 		bodyFormat: messageBodyFormat,
 		body: v.string(),
 		relatedArtifactVersionId: v.optional(v.id('artifactVersions')),
-		relatedReviewid: v.optional(v.string()) // fix when we get the review table
+		relatedReviewid: v.optional(v.id('reviews')) // fix when we get the review table
 	},
 	handler: async (ctx, args) => {
 		return withAppErrors(async () => {

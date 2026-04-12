@@ -146,7 +146,7 @@ export default defineSchema({
 		bodyFormat: messageBodyFormat,
 		body: v.string(),
 		relatedArtifactVersionId: v.optional(v.id('artifactVersions')), // fix when you get the artifact version table
-		relatedReviewid: v.optional(v.string()), // fix when we get the review table
+		relatedReviewid: v.optional(v.id('reviews')),
 		createdAt: v.number()
 	})
 		.index('by_run_seq', ['runId', 'sequenceNumber'])
