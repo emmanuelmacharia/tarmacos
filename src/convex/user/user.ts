@@ -16,7 +16,7 @@ export const createUser = mutation({
 			.unique();
 
 		if (existing) {
-			await ctx.db.patch('users', existing._id, {
+			await ctx.db.patch(existing._id, {
 				lastSeenAt: new Date().getTime(),
 				email: identity.email!,
 				fullName: identity.name!,

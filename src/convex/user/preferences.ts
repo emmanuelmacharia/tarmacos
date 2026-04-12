@@ -81,7 +81,7 @@ export const patchProfile = mutation({
 			const payload = {
 				...args
 			};
-			await ctx.db.patch('userPreferences', preferences._id, payload);
+			await ctx.db.patch(preferences._id, payload);
 		} catch (error) {
 			console.log(error);
 		}

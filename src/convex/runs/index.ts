@@ -151,7 +151,7 @@ export const updateRun = mutation({
 			};
 
 			console.log(payload);
-			await ctx.db.patch('runs', run._id, payload);
+			await ctx.db.patch(run._id, payload);
 
 			const updatedRun = await ctx.db.get(run._id);
 
