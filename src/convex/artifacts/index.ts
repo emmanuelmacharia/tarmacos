@@ -114,7 +114,7 @@ export const updateArtifact = mutation({
 
 			console.log(payload);
 
-			await ctx.db.patch('artifacts', artifact._id, payload);
+			await ctx.db.patch(artifact._id, payload);
 
 			const updatedArtifact = await ctx.db.get(artifact._id);
 
