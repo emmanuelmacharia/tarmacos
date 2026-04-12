@@ -8,7 +8,7 @@ import { api } from '../_generated/api';
 export const createArtifactVersion = mutation({
 	args: {
 		artifactId: v.id('artifacts'),
-		basedOnVersionId: v.optional(v.number()),
+		basedOnVersionId: v.optional(v.id('artifactVersions')),
 		origin: artifactVersionOrigin,
 		status: artifactVersionStatus,
 		previewText: v.string(),
