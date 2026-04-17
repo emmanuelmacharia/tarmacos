@@ -16,19 +16,13 @@ export const CritiqueAndPlanSchema = z.object({
 	writerStrategy: z.array(z.string().min(1).max(500)).max(12),
 	factualGuardrails: z.array(z.string().min(1).max(300)).max(12),
 	suggestedResumeFocus: z.string().min(1).max(1000),
-	confidenceScore: z.number().min(0).max(100)
+	resumeAlignmentScore: z.number().min(0).max(100),
+	keywordMatchScore: z.number().min(0).max(100),
+	yearsOfExperienceScore: z.number().min(0).max(100)
+	// confidence score is an aggregate of all the scores in the resume - it's a ui only thing
 });
 
 export type CritiquePlan = z.infer<typeof CritiqueAndPlanSchema>;
-
-// export const ReviewSchema = z.object({
-// 	verdict: z.enum(['approved', 'revise']),
-// 	summary: z.string().min(1).max(4000),
-// 	blockingIssues: z.array(BlockingIssueSchema).max(10),
-// 	handoffInstructions: z.array(z.string().min(1).max(500)).max(10),
-// 	approvalReason: z.string().max(2000).optional(),
-// 	confidenceScore: z.number().min(0).max(100)
-// });
 
 export const ReviewSchema = z.discriminatedUnion('verdict', [
 	z.object({
@@ -37,7 +31,9 @@ export const ReviewSchema = z.discriminatedUnion('verdict', [
 		blockingIssues: z.array(BlockingIssueSchema).max(10),
 		handoffInstructions: z.array(z.string().min(1).max(500)).max(10),
 		approvalReason: z.string().min(1).max(2000),
-		confidenceScore: z.number().min(0).max(100)
+		resumeAlignmentScore: z.number().min(0).max(100),
+		keywordMatchScore: z.number().min(0).max(100),
+		yearsOfExperienceScore: z.number().min(0).max(100)
 	}),
 	z.object({
 		verdict: z.literal('revise'),
@@ -45,11 +41,15 @@ export const ReviewSchema = z.discriminatedUnion('verdict', [
 		blockingIssues: z.array(BlockingIssueSchema).min(1).max(10),
 		handoffInstructions: z.array(z.string().min(1).max(500)).min(1).max(10),
 		approvalReason: z.string().max(2000).optional(),
-		confidenceScore: z.number().min(0).max(100)
+		resumeAlignmentScore: z.number().min(0).max(100),
+		keywordMatchScore: z.number().min(0).max(100),
+		yearsOfExperienceScore: z.number().min(0).max(100)
 	})
 ]);
 
 export type ReviewResult = z.infer<typeof ReviewSchema>;
+
+export const WriterDraftSchema = z.object({}); // I'm thinking of creating an output schema for the writer as well
 
 export const WorkflowRequestSchema = z.object({
 	profileId: z.string().optional(), // these need to be set before any run starts - they shouldnt be optional
