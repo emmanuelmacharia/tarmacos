@@ -199,12 +199,12 @@ export default defineSchema({
 
 	llmCalls: defineTable({
 		runId: v.id('runs'),
-		openRouterRequestid: v.string(),
+		openRouterRequestId: v.optional(v.string()),
 		phase: runPhase,
 		role: authorRole,
 		attemptNumber: v.number(),
 		retryOfCallId: v.optional(v.id('llmCalls')),
-		gatewayProvider: v.string(), // not sure where to get this one
+		gatewayProvider: v.optional(v.string()), // not sure where to get this one
 		modelSlug: v.string(),
 		routedProvider: v.optional(v.string()), // this can be appended on the response from OpenRouter
 		requestParams: v.any(), // we need to type the params we can set here
@@ -213,8 +213,8 @@ export default defineSchema({
 		status: LlmCallStatus,
 		latencyMs: v.optional(v.number()),
 		inputTokens: v.optional(v.number()),
-		outputToken: v.optional(v.number()),
-		reasoningToken: v.optional(v.number()),
+		outputTokens: v.optional(v.number()),
+		reasoningTokens: v.optional(v.number()),
 		cachedTokens: v.optional(v.number()),
 		costUsd: v.optional(v.number()),
 		finishReason: v.optional(v.string()),
@@ -227,7 +227,7 @@ export default defineSchema({
 	})
 		.index('by_run_created_at', ['runId', 'createdAt'])
 		.index('by_run_phase', ['runId', 'phase'])
-		.index('by_open_router_requestid', ['openRouterRequestid'])
+		.index('by_open_router_requestid', ['openRouterRequestId'])
 		.index('by_loop_and_operation', ['runId', 'loopNumber', 'operationKind']),
 
 	llmCallContents: defineTable({
