@@ -26,9 +26,10 @@ export type LLMCallRole = 'writer' | 'reviewer';
 
 export type LLMCallPhase =
 	| 'baseline_review'
-	| 'draft_generation'
+	| 'drafting'
 	| 'reviewing'
 	| 'revision'
+	| 'user_review'
 	| 'finalizing';
 
 export type OutputStrategy = 'native_structured' | 'prompted_json' | 'freeform_text';
@@ -62,4 +63,73 @@ export interface AgentConfig {
 	maxIterations: number;
 	maxRetriesPerCall: number;
 	maxNormalizationRepairs: number;
+}
+
+export type operationKind =
+	| 'baseline_review'
+	| 'draft_generation'
+	| 'draft_review'
+	| 'draft_revision'
+	| 'revision_review'
+	| 'user_feedback_draft';
+
+export type llmContentKind =
+	| 'prompt'
+	| 'raw_request'
+	| 'response'
+	| 'raw_response'
+	| 'reasoning'
+	| 'structured_output';
+
+export type llmContentFormat = 'json' | 'text';
+
+/**
+ * Payload passed to convex for create llm call mutation ; we'll add llmContents to this
+ */
+export interface StartLLMCallParams {
+	runId: Id<'runs'>;
+	phase: LLMCallPhase;
+	role: LLMCallRole;
+	modelSlug: string;
+	requestParams: ModelRequestParameters;
+	requestedStrategy: OutputStrategy;
+	attemptNumber: number;
+	retryOfCallId?: Id<'llmCalls'>;
+	loopNumber: number;
+	operationKind: operationKind;
+}
+
+/**
+ * Payload passed to modify llm call mutation after llm response
+ */
+
+export interface CompleteLLMCallParams {
+	llmCallId: Id<'llmCalls'>;
+	openRouterRequestid?: string;
+	routedProvider?: string;
+	status: 'completed' | 'failed' | 'cancelled';
+	latencyMs?: number;
+	inputTokens?: number;
+	outputTokens?: number;
+	reasoningTokens?: number;
+	cachedTokens?: number;
+	costUsd?: number;
+	finishReason?: string;
+	normalizationStatus?: 'pending' | 'succeeded' | 'failed';
+	normalizationError?: string;
+	completedAt?: number;
+	attemptNumber: number;
+	loopNumber?: number;
+	retryOfCallId?: Id<'llmCalls'>;
+	gatewayProvider?: string;
+	strategyUsed?: OutputStrategy;
+}
+
+// content to be maintained in the llm call content table
+export interface LLMCallContent {
+	kind: llmContentKind;
+	format: llmContentFormat;
+	text?: string;
+	json?: string;
+	contentBytes?: number;
 }
