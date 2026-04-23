@@ -159,3 +159,38 @@ export const llmContentFormat = v.union(v.literal('json'), v.literal('text'));
 export const exportFormat = v.union(v.literal('pdf'), v.literal('docx'), v.literal('txt'));
 
 export const exportStatus = v.union(v.literal('pending'), v.literal('ready'), v.literal('failed'));
+
+export const llmRequestKind = v.union(
+	v.literal('initial_draft'),
+	v.literal('review_revision'),
+	v.literal('user_feedback_revision')
+);
+
+export const nextInstructions = v.union(
+	v.object({
+		action: v.literal('call_reviewer'),
+		artifactVersionId: v.id('artifactVersions'),
+		reviewKind: v.union(v.literal('baseline_assessment'), v.literal('draft_review'))
+	}),
+	v.object({
+		action: v.literal('call_writer'),
+		requestKind: v.union(
+			v.literal('initial_draft'),
+			v.literal('review_revision'),
+			v.literal('user_feedback_revision')
+		),
+		reviewId: v.union(v.id('reviews'), v.null()),
+		basedOnVersionId: v.id('artifactVersions'),
+		userMessageId: v.optional(v.id('messages'))
+	}),
+	v.object({
+		action: v.literal('await_user')
+	}),
+	v.object({
+		action: v.literal('generate_export'),
+		artifactVersionId: v.id('artifactVersions')
+	}),
+	v.object({
+		action: v.literal('done')
+	})
+);
