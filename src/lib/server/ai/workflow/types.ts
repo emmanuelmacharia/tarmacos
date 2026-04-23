@@ -1,4 +1,5 @@
 import type { Id } from '../../../../convex/_generated/dataModel';
+import type { NormalizedCritiquePlan, NormalizedReviewResult } from './normalization';
 
 export type NextInstruction =
 	| {
@@ -132,4 +133,51 @@ export interface LLMCallContent {
 	text?: string;
 	json?: string;
 	contentBytes?: number;
+}
+
+export interface ConvexClient {
+	mutation<Args, Result>(fn: unknown, args: Args): Promise<Result>;
+	query<Args, Result>(fn: unknown, args: Args): Promise<Result>;
+}
+
+export interface InstructionExecutionClaim {
+	runId: Id<'runs'>;
+	executionId: string;
+	instruction: NextInstruction;
+}
+
+export interface ReviewerPlanContext {
+	agent: AgentRoleConfig;
+	jobDescription: string;
+	baselineCv: string;
+	jobInstructions: string;
+	profileInstructions: string;
+	loopNumber: number;
+}
+
+export interface ReviewerReviewContext {
+	agent: AgentRoleConfig;
+	jobDescription: string;
+	baselineCv: string;
+	jobInstructions: string;
+	profileInstructions: string;
+	critiquePlan: NormalizedCritiquePlan;
+	currentDraftMarkdown: string;
+	currentIteration: number;
+	loopNumber: number;
+}
+
+export interface WriterContext {
+	agent: AgentRoleConfig;
+	jobDescription: string;
+	baselineCv: string;
+	jobInstructions: string;
+	profileInstructions: string;
+	critiquePlan: NormalizedCritiquePlan;
+	requestKind: 'initial_draft' | 'review_revision' | 'user_feedback_revision';
+	previousDraftMarkdown?: string;
+	latestReview?: NormalizedReviewResult;
+	latestUserFeedback?: string;
+	currentIteration: number;
+	loopNumber: number;
 }
