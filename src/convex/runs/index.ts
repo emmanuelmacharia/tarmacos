@@ -1,7 +1,14 @@
 import { v } from 'convex/values';
-import { mutation } from '../_generated/server';
+import { mutation, query } from '../_generated/server';
 import { assertFound, forbiddenCheck, withAppErrors } from '../lib/errorMapper';
-import { agentConfig, documentPurpose, runPhase, runStatus } from '../lib/schemaTypes';
+import {
+	agentConfig,
+	documentPurpose,
+	llmRequestKind,
+	nextInstructions,
+	runPhase,
+	runStatus
+} from '../lib/schemaTypes';
 import { ok } from '../lib/responseMapper';
 import { internal } from '../_generated/api';
 
@@ -166,5 +173,73 @@ export const updateRun = mutation({
 
 			return ok(updatedRun, { message: 'Run updated successfully', statusCode: 200 });
 		});
+	}
+});
+
+export const getReviewerPlanContext = query({
+	args: {
+		runId: v.id('runs'),
+		artifactVersionId: v.id('artifactVersions')
+	},
+	handler: async (ctx, args) => {
+		void args;
+		void ctx;
+	}
+});
+
+export const getReviewerReviewContext = query({
+	args: {
+		runId: v.id('runs'),
+		artifactVersionId: v.id('artifactVersions')
+	},
+	handler: async (ctx, args) => {
+		void ctx;
+		void args;
+	}
+});
+
+export const getWriterContext = query({
+	args: {
+		runId: v.id('runs'),
+		basedOnVersionId: v.id('artifactVersions'),
+		reviewId: v.id('reviews'),
+		requestKind: llmRequestKind,
+		userMessageId: v.optional(v.id('messages'))
+	},
+	handler: async (ctx, args) => {
+		void ctx;
+		void args;
+	}
+});
+
+export const claimInstructionExecution = mutation({
+	args: {
+		runId: v.id('runs'),
+		executionId: v.string(),
+		instruction: nextInstructions
+	},
+	handler: async (ctx, args) => {
+		void ctx;
+		void args;
+	}
+});
+
+export const releaseInstructionExecution = mutation({
+	args: {
+		runId: v.id('runs'),
+		executionId: v.string(),
+		outcome: v.union(v.literal('completed'), v.literal('failed'), v.literal('cancelled'))
+	},
+	handler: async (ctx, args) => {
+		void ctx;
+		void args;
+	}
+});
+
+export const getNextInstruction = query({
+	args: { runId: v.id('runs') },
+	handler: async (ctx, args) => {
+		void ctx;
+		void args;
 	}
 });
