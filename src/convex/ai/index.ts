@@ -76,12 +76,12 @@ export const reviews = mutation({
 export const aiCall = mutation({
 	args: {
 		runId: v.id('runs'),
-		openRouterRequestid: v.string(),
+		openRouterRequestId: v.optional(v.string()),
 		phase: runPhase,
 		role: authorRole,
 		attemptNumber: v.number(),
 		retryOfCallId: v.optional(v.id('llmCalls')),
-		gatewayProvider: v.string(),
+		gatewayProvider: v.optional(v.string()),
 		modelSlug: v.string(),
 		routedProvider: v.optional(v.string()),
 		requestParams: v.any(),
@@ -90,8 +90,8 @@ export const aiCall = mutation({
 		status: LlmCallStatus,
 		latencyMs: v.optional(v.number()),
 		inputTokens: v.optional(v.number()),
-		outputToken: v.optional(v.number()),
-		reasoningToken: v.optional(v.number()),
+		outputTokens: v.optional(v.number()),
+		reasoningTokens: v.optional(v.number()),
 		cachedTokens: v.optional(v.number()),
 		costUsd: v.optional(v.number()),
 		finishReason: v.optional(v.string()),
@@ -134,7 +134,7 @@ export const aiCall = mutation({
 
 			const payload = {
 				runId: run._id,
-				openRouterRequestid: args.openRouterRequestid,
+				openRouterRequestId: args.openRouterRequestId,
 				phase: args.phase,
 				role: args.role,
 				attemptNumber: args.attemptNumber,
@@ -148,8 +148,8 @@ export const aiCall = mutation({
 				status: args.status,
 				latencyMs: args.latencyMs,
 				inputTokens: args.inputTokens,
-				outputToken: args.outputToken,
-				reasoningToken: args.reasoningToken,
+				outputTokens: args.outputTokens,
+				reasoningTokens: args.reasoningTokens,
 				cachedTokens: args.cachedTokens,
 				costUsd: args.costUsd,
 				finishReason: args.finishReason,
@@ -164,6 +164,80 @@ export const aiCall = mutation({
 			const llmCallId = await ctx.db.insert('llmCalls', payload);
 
 			return ok(llmCallId, { message: 'Call created successfully', statusCode: 201 });
+		});
+	}
+});
+
+export const modifyAiCall = mutation({
+	args: {
+		llmCallId: v.id('llmCalls'),
+		openRouterRequestId: v.optional(v.string()),
+		attemptNumber: v.number(),
+		retryOfCallId: v.optional(v.id('llmCalls')),
+		gatewayProvider: v.optional(v.string()),
+		routedProvider: v.optional(v.string()),
+		strategyUsed: v.optional(v.string()),
+		latencyMs: v.optional(v.number()),
+		inputTokens: v.optional(v.number()),
+		outputTokens: v.optional(v.number()),
+		reasoningTokens: v.optional(v.number()),
+		cachedTokens: v.optional(v.number()),
+		costUsd: v.optional(v.number()),
+		finishReason: v.optional(v.string()),
+		normalizationStatus: v.optional(normalizationStatus),
+		normalizationError: v.optional(v.string()),
+		completedAt: v.optional(v.number()),
+		loopNumber: v.optional(v.number()),
+		status: v.optional(LlmCallStatus)
+	},
+	handler: async (ctx, args) => {
+		return withAppErrors(async () => {
+			const identity = assertFound(
+				await ctx.auth.getUserIdentity(),
+				'Please log in to continue',
+				true
+			);
+			const clerkId = identity.subject;
+			const user = assertFound(
+				await ctx.db
+					.query('users')
+					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
+					.unique(),
+				'User not found',
+				true
+			);
+			const llmCall = assertFound(await ctx.db.get(args.llmCallId));
+			const run = assertFound(await ctx.db.get(llmCall.runId));
+			forbiddenCheck(() => run.userId === user._id);
+
+			const payload = {
+				...Object.fromEntries(
+					Object.entries({
+						openRouterRequestId: args.openRouterRequestId,
+						attemptNumber: args.attemptNumber,
+						retryOfCallId: args.retryOfCallId,
+						gatewayProvider: args.gatewayProvider,
+						routedProvider: args.routedProvider,
+						strategyUsed: args.strategyUsed,
+						latencyMs: args.latencyMs,
+						inputTokens: args.inputTokens,
+						outputTokens: args.outputTokens,
+						reasoningTokens: args.reasoningTokens,
+						cachedTokens: args.cachedTokens,
+						costUsd: args.costUsd,
+						finishReason: args.finishReason,
+						normalizationStatus: args.normalizationStatus,
+						normalizationError: args.normalizationError,
+						completedAt: args.completedAt,
+						loopNumber: args.loopNumber
+					}).filter(([, value]) => value !== undefined)
+				)
+			};
+
+			await ctx.db.patch(llmCall._id, payload);
+			const updatedCall = await ctx.db.get(llmCall._id);
+
+			return ok(updatedCall, { message: 'Call updated successfully', statusCode: 200 });
 		});
 	}
 });
