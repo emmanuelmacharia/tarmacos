@@ -19,6 +19,7 @@ import type * as lib_schemaTypes from "../lib/schemaTypes.js";
 import type * as messages_index from "../messages/index.js";
 import type * as runs_index from "../runs/index.js";
 import type * as runs_runDocuments from "../runs/runDocuments.js";
+import type * as runs_utils from "../runs/utils.js";
 import type * as user_preferences from "../user/preferences.js";
 import type * as user_profiles from "../user/profiles.js";
 import type * as user_user from "../user/user.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   "messages/index": typeof messages_index;
   "runs/index": typeof runs_index;
   "runs/runDocuments": typeof runs_runDocuments;
+  "runs/utils": typeof runs_utils;
   "user/preferences": typeof user_preferences;
   "user/profiles": typeof user_profiles;
   "user/user": typeof user_user;
