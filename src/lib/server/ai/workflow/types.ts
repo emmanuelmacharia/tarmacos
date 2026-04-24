@@ -1,5 +1,9 @@
 import type { Id } from '../../../../convex/_generated/dataModel';
-import type { NormalizedCritiquePlan, NormalizedReviewResult } from './normalization';
+import type {
+	NormalizedCritiquePlan,
+	NormalizedDraft,
+	NormalizedReviewResult
+} from './normalization';
 
 export type NextInstruction =
 	| {
@@ -133,6 +137,26 @@ export interface LLMCallContent {
 	text?: string;
 	json?: string;
 	contentBytes?: number;
+}
+
+export interface CanonicalBaselineReview {
+	summary: string;
+	content: NormalizedCritiquePlan;
+	schemaVersion: string;
+}
+
+export interface CanonicalDraft {
+	canonicalJson: NormalizedDraft['canonicalJson'];
+	markdown: string;
+	plainText: string;
+	previewText: string;
+}
+
+export interface CanonicalReview {
+	decision: 'approve' | 'revise';
+	summary: string;
+	content: NormalizedReviewResult;
+	schemaVersion: string;
 }
 
 export interface ConvexClient {
