@@ -16,9 +16,9 @@ export const CritiqueAndPlanSchema = z.object({
 	writerStrategy: z.array(z.string().min(1).max(500)).max(12),
 	factualGuardrails: z.array(z.string().min(1).max(300)).max(12),
 	suggestedResumeFocus: z.string().min(1).max(1000),
-	resumeAlignmentScore: z.number().min(0).max(100),
-	keywordMatchScore: z.number().min(0).max(100),
-	yearsOfExperienceScore: z.number().min(0).max(100)
+	resumeAlignmentScore: z.number().min(0).max(1),
+	keywordMatchScore: z.number().min(0).max(1),
+	yearsOfExperienceScore: z.number().min(0).max(1)
 	// confidence score is an aggregate of all the scores in the resume - it's a ui only thing
 });
 
@@ -52,8 +52,8 @@ export type ReviewResult = z.infer<typeof ReviewSchema>;
 export const WriterDraftSchema = z.object({}); // I'm thinking of creating an output schema for the writer as well
 
 export const WorkflowRequestSchema = z.object({
-	profileId: z.string().optional(), // these need to be set before any run starts - they shouldnt be optional
-	projectId: z.string().optional(),
+	profileId: z.string(), // not optional anymore
+	// projectId: z.string().optional(), // what was this one for?
 
 	jobDescription: z.string().min(1).max(20_000),
 	baselineCv: z.string().min(1).max(30_000),
