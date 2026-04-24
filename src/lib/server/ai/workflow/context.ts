@@ -60,5 +60,5 @@ export async function getNextInstructionForRun(
 	convex: ConvexClient,
 	runId: Id<'runs'>
 ): Promise<NextInstruction> {
-	return convex.query(api.runs.index.getNextInstruction, { runId });
+	return await convex.query(api.runs.index.getNextInstruction, { runId });
 }
