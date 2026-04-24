@@ -130,11 +130,13 @@ export default defineSchema({
 		documentId: v.id('documents'),
 		purpose: documentPurpose,
 		extractedText: v.optional(v.string()),
+		extractedTextSource: v.optional(v.id('documents')),
 		createdAt: v.number()
 	})
 		.index('by_run', ['runId'])
 		.index('by_document_id', ['documentId'])
-		.index('by_purpose', ['purpose']),
+		.index('by_purpose', ['purpose'])
+		.index('by_purpose_run_id', ['runId', 'purpose']),
 
 	messages: defineTable({
 		runId: v.id('runs'),
@@ -149,6 +151,7 @@ export default defineSchema({
 		relatedReviewId: v.optional(v.id('reviews')),
 		createdAt: v.number()
 	})
+		.index('by_run', ['runId'])
 		.index('by_run_seq', ['runId', 'sequenceNumber'])
 		.index('by_run_visibility_seq', ['runId', 'visibility', 'sequenceNumber']),
 
