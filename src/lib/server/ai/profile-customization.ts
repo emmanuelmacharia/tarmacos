@@ -1,7 +1,7 @@
 import type { Role } from '$lib/data/models';
 import { sanitizeUserText } from './prompt-builder';
 
-async function loadUserJobProfileInstructions(args: { userId: string; profileId: string }) {
+async function loadUserJobProfileInstructions(args: { profileId: string }) {
 	/**
 	 * It fetches the custom instructions the user creates when creating a profile
 	 * Profiles are sandboxes that users can bundle up job runs that allow easy navigation and management
@@ -30,14 +30,12 @@ async function loadUserJobProfileInstructions(args: { userId: string; profileId:
  */
 
 export async function resolveCustomProfileInstructions(args: {
-	userId: string;
 	role: Role;
-	profileId?: string;
+	profileId: string;
 }): Promise<string | null> {
 	if (!args.profileId) return null;
 
 	const profile = await loadUserJobProfileInstructions({
-		userId: args.userId,
 		profileId: args.profileId
 	});
 
