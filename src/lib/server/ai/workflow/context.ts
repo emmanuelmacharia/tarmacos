@@ -1,64 +1,99 @@
+import type { ConvexHttpClient } from 'convex/browser';
 import { api } from '../../../../convex/_generated/api';
 import type { Id } from '../../../../convex/_generated/dataModel';
 import type {
-	ConvexClient,
 	InstructionExecutionClaim,
-	NextInstruction,
 	ReviewerPlanContext,
 	ReviewerReviewContext,
 	WriterContext
 } from './types';
+import { handleErrorsFromConvexTransactions } from '$lib/utils/errorHandler';
+import type { NextInstruction } from '../../../../convex/lib/schemaTypes';
 
 export async function getReviewerPlanContext(
-	convex: ConvexClient,
+	convex: ConvexHttpClient,
 	runId: Id<'runs'>,
 	artifactVersionId: Id<'artifactVersions'>
 ): Promise<ReviewerPlanContext> {
-	return convex.query(api.runs.index.getReviewerPlanContext, { runId, artifactVersionId });
+	try {
+		const result = await convex.action(api.runs.actions.getReviewerPlanContext, {
+			runId,
+			artifactVersionId
+		});
+		return result.data as ReviewerPlanContext;
+	} catch (error) {
+		throw handleErrorsFromConvexTransactions(error);
+	}
 }
 
 export async function getReviewerReviewContext(
-	convex: ConvexClient,
+	convex: ConvexHttpClient,
 	runId: Id<'runs'>,
 	artifactVersionId: Id<'artifactVersions'>
 ): Promise<ReviewerReviewContext> {
-	return convex.query(api.runs.index.getReviewerReviewContext, { runId, artifactVersionId });
+	try {
+		const result = await convex.action(api.runs.actions.getReviewerReviewContext, {
+			runId,
+			artifactVersionId
+		});
+		return result.data as ReviewerReviewContext;
+	} catch (error) {
+		throw handleErrorsFromConvexTransactions(error);
+	}
 }
 
 export async function getWriterContext(
-	convex: ConvexClient,
+	convex: ConvexHttpClient,
 	args: {
 		runId: Id<'runs'>;
 		basedOnVersionId: Id<'artifactVersions'>;
 		reviewId: Id<'reviews'>;
-		requestKind: 'initial_draft' | 'review_revisions' | 'user_feedback_revision';
-		userMessageId: Id<'messages'>;
+		requestKind: 'initial_draft' | 'review_revision' | 'user_feedback_revision';
+		userMessageId?: Id<'messages'>;
 	}
 ): Promise<WriterContext> {
-	return convex.query(api.runs.index.getWriterContext, args);
+	try {
+		const result = await convex.action(api.runs.actions.getWriterContext, args);
+		return result.data as WriterContext;
+	} catch (error) {
+		throw handleErrorsFromConvexTransactions(error);
+	}
 }
 
 export async function claimInstructionExecution(
-	convex: ConvexClient,
+	convex: ConvexHttpClient,
 	claim: InstructionExecutionClaim
 ): Promise<void> {
-	await convex.mutation(api.runs.index.claimInstructionExecution, claim);
+	try {
+		await convex.mutation(api.runs.index.claimInstructionExecution, claim);
+	} catch (error) {
+		handleErrorsFromConvexTransactions(error);
+	}
 }
 
 export async function releaseInstructionExecution(
-	convex: ConvexClient,
+	convex: ConvexHttpClient,
 	args: {
 		runId: Id<'runs'>;
 		executionId: string;
 		outcome: 'completed' | 'failed' | 'cancelled';
 	}
 ): Promise<void> {
-	await convex.mutation(api.runs.index.releaseInstructionExecution, args);
+	try {
+		await convex.mutation(api.runs.index.releaseInstructionExecution, args);
+	} catch (error) {
+		handleErrorsFromConvexTransactions(error);
+	}
 }
 
 export async function getNextInstructionForRun(
-	convex: ConvexClient,
+	convex: ConvexHttpClient,
 	runId: Id<'runs'>
 ): Promise<NextInstruction> {
-	return await convex.query(api.runs.index.getNextInstruction, { runId });
+	try {
+		const result = await convex.query(api.runs.index.getNextInstruction, { runId });
+		return result;
+	} catch (error) {
+		throw handleErrorsFromConvexTransactions(error);
+	}
 }
