@@ -111,6 +111,17 @@ export default defineSchema({
 		finalArtifactVersionId: v.optional(v.id('artifactVersions')),
 		parentRunId: v.optional(v.id('runs')),
 		nextMessageSequenceNumber: v.number(),
+		instructionSnapshot: v.optional(
+			v.object({
+				profile: v.optional(
+					v.object({
+						writer: v.optional(v.string()),
+						reviewer: v.optional(v.string())
+					})
+				),
+				job: v.optional(v.string())
+			})
+		),
 		loopCount: v.number(),
 		agentConfig: agentConfig,
 		metadata: v.optional(v.any()),
@@ -130,7 +141,14 @@ export default defineSchema({
 		documentId: v.id('documents'),
 		purpose: documentPurpose,
 		extractedText: v.optional(v.string()),
-		extractedTextSource: v.optional(v.id('documents')),
+		extractedTextSource: v.optional(
+			v.object({
+				kind: v.literal('storage'),
+				storageId: v.id('_storage'),
+				mimeType: v.literal('text/plain'),
+				byteLength: v.number()
+			})
+		),
 		createdAt: v.number()
 	})
 		.index('by_run', ['runId'])
