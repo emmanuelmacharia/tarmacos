@@ -1,4 +1,5 @@
 import { v } from 'convex/values';
+import type { Id } from '../_generated/dataModel';
 
 // enums
 export const userStatus = v.union(v.literal('active'), v.literal('disabled'));
@@ -53,15 +54,52 @@ export const runPhase = v.union(
 	v.literal('finalizing')
 );
 
-// TODO: follow architecture doc for more indepth configs for our agents
-export const agentConfig = v.object({
-	reviewer: v.object({
-		modelSlug: v.string()
-	}),
-	writer: v.object({
-		modelSlug: v.string()
-	})
+export const ModelRequestParametersValidator = v.object({
+	temperature: v.number(),
+	topP: v.number(),
+	maxOutputTokens: v.optional(v.number()),
+	seed: v.optional(v.number()),
+	stopSequences: v.optional(v.array(v.string())),
+	responseFormat: v.optional(v.union(v.literal('text'), v.literal('json'))),
+	reasoning: v.optional(
+		v.union(
+			v.object({
+				effort: v.union(v.literal('low'), v.literal('medium'), v.literal('high'))
+			}),
+			v.null()
+		)
+	),
+	routing: v.optional(
+		v.object({
+			order: v.optional(v.array(v.string())),
+			requireParameters: v.optional(v.boolean())
+		})
+	)
 });
+
+export const AgentRoleConfigValidator = v.object({
+	modelSlug: v.string(),
+	gatewayProvider: v.optional(v.string()),
+	promptVersions: v.object({
+		system: v.string(),
+		planning: v.optional(v.string()),
+		drafting: v.optional(v.string()),
+		review: v.optional(v.string()),
+		revision: v.optional(v.string()),
+		rolePromptVersion: v.string()
+	}),
+	defaultRequestParams: ModelRequestParametersValidator
+});
+
+export const AgentConfigValidator = v.object({
+	reviewer: AgentRoleConfigValidator,
+	writer: AgentRoleConfigValidator,
+	maxIterations: v.number(),
+	maxRetriesPerCall: v.number(),
+	maxNormalizationRepairs: v.number()
+});
+
+export const agentConfig = AgentConfigValidator;
 
 export const documentPurpose = v.union(
 	v.literal('baseline_resume'),
@@ -194,3 +232,23 @@ export const nextInstructions = v.union(
 		action: v.literal('done')
 	})
 );
+
+export type NextInstruction =
+	| {
+			action: 'call_reviewer';
+			artifactVersionId: Id<'artifactVersions'>;
+			reviewKind: 'baseline_assessment' | 'draft_review';
+	  }
+	| {
+			action: 'call_writer';
+			reviewId: Id<'reviews'> | null;
+			basedOnVersionId: Id<'artifactVersions'>;
+			requestKind: 'initial_draft' | 'review_revision' | 'user_feedback_revision';
+			userMessageId?: Id<'messages'>;
+	  }
+	| { action: 'await_user' }
+	| {
+			action: 'generate_export';
+			artifactVersionId: Id<'artifactVersions'>;
+	  }
+	| { action: 'done' };
