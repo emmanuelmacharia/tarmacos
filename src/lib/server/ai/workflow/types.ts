@@ -1,31 +1,10 @@
 import type { Id } from '../../../../convex/_generated/dataModel';
+import type { NextInstruction } from '../../../../convex/lib/schemaTypes';
 import type {
 	NormalizedCritiquePlan,
 	NormalizedDraft,
 	NormalizedReviewResult
 } from './normalization';
-
-export type NextInstruction =
-	| {
-			action: 'call_reviewer';
-			artifactVersionId: Id<'artifactVersions'>;
-			reviewKind: 'baseline_review' | 'draft_review';
-	  }
-	| {
-			ation: 'call_writer';
-			requestKind: 'initial_draft' | 'review_revision' | 'user_feedback_revision';
-			reviewId: Id<'reviews'>;
-			basedOnVersionId: Id<'artifactVersions'>;
-			userMessageId?: Id<'messages'>;
-	  }
-	| {
-			action: 'await_user';
-	  }
-	| {
-			action: 'generate_export';
-			artifactVersionId: Id<'artifactVersions'>;
-	  }
-	| { action: 'done' };
 
 export type LLMCallRole = 'writer' | 'reviewer';
 
