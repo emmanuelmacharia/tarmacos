@@ -152,8 +152,8 @@ export function buildWriterTaskMessage(args: BuildWriterTaskArgs): string {
 		section('job_description', args.jobDescription),
 		section('baseline_cv', args.baselineCv),
 		jsonSection('critique_plan_json', args.critiquePlan),
-		jsonSection('review', args.latestReview),
-		jsonSection('user_feedback', args.latestUserFeedback)
+		...(args.latestReview ? [jsonSection('review', args.latestReview)] : ''),
+		...(args.latestUserFeedback ? [section('user_feedback', args.latestUserFeedback)] : '')
 	];
 
 	if (args.previousDraft) {
