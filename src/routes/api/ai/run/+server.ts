@@ -1,6 +1,6 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { WorkflowRequestSchema, type WorkflowEvent } from '$lib/server/ai/schemas';
-import { runWriterReviewerWorkflow } from '$lib/server/ai/workflow';
+// import { runWriterReviewerWorkflow } from '$lib/server/ai/workflow';
 import { ZodError } from 'zod';
 
 function toNdJSONLine(event: WorkflowEvent): Uint8Array {
@@ -37,12 +37,12 @@ export const POST: RequestHandler = async ({ request }) => {
 			};
 
 			try {
-				await runWriterReviewerWorkflow({
-					userId,
-					input: parsed.data,
-					signal: request.signal,
-					emit: send
-				});
+				// await runWriterReviewerWorkflow({
+				// 	userId,
+				// 	input: parsed.data,
+				// 	signal: request.signal,
+				// 	emit: send
+				// });
 			} catch (error) {
 				const message =
 					error instanceof ZodError
