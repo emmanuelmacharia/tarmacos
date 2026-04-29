@@ -103,7 +103,7 @@ export async function callStructuredOutput<T>(
 					 */
 					await completeCall(args.convex, {
 						llmCallId,
-						openRouterRequestid: result.outcome.openRouterRequestId ?? '',
+						openRouterRequestId: result.outcome.openRouterRequestId ?? '',
 						routedProvider: result.outcome.routedProvider,
 						status: 'failed',
 						completedAt: result.outcome.completedAt,
@@ -114,8 +114,8 @@ export async function callStructuredOutput<T>(
 						reasoningTokens: result.outcome.reasoningTokens ?? 0,
 						cachedTokens: result.outcome.cachedTokens ?? 0,
 						finishReason: result.outcome.finishReason ?? '',
-						normalizationStatus: 'succeeded',
-						normalizationError: validated.success ? undefined : 'Output did not match schema',
+						normalizationStatus: 'failed',
+						normalizationError: 'Output did not match schema',
 						gatewayProvider: args.gatewayProvider ?? 'openrouter',
 						strategyUsed: strategy,
 						loopNumber: args.loopNumber,
@@ -133,11 +133,12 @@ export async function callStructuredOutput<T>(
 					previousCallId = llmCallId;
 					attemptNumber++;
 					if (retry < args.maxRetries - 1) await sleep(backOffMs(retry));
+					continue;
 				}
 
 				await completeCall(args.convex, {
 					llmCallId,
-					openRouterRequestid: result.outcome.openRouterRequestId ?? '',
+					openRouterRequestId: result.outcome.openRouterRequestId ?? '',
 					routedProvider: result.outcome.routedProvider,
 					status: 'completed',
 					completedAt: result.outcome.completedAt,
@@ -231,7 +232,7 @@ export async function callFreeform(args: BaseCallArgs): Promise<LLMCallResult<st
 			await completeCall(args.convex, {
 				llmCallId,
 				status: 'completed',
-				openRouterRequestid: result.outcome.openRouterRequestId ?? '',
+				openRouterRequestId: result.outcome.openRouterRequestId ?? '',
 				routedProvider: result.outcome.routedProvider,
 				strategyUsed: 'freeform_text',
 				latencyMs: result.outcome.latencyMs,
@@ -533,5 +534,5 @@ function sleep(ms: number): Promise<void> {
 }
 
 function backOffMs(attempt: number): number {
-	return Math.min(1000 & (2 ** attempt), 8000);
+	return Math.min(1000 * 2 ** attempt, 8000);
 }

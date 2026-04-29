@@ -96,7 +96,7 @@ export interface StartLLMCallParams {
 
 export interface CompleteLLMCallParams {
 	llmCallId: Id<'llmCalls'>;
-	openRouterRequestid?: string;
+	openRouterRequestId?: string;
 	routedProvider?: string;
 	status: 'completed' | 'failed' | 'cancelled';
 	latencyMs?: number;
