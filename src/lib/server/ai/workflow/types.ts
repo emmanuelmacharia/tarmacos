@@ -37,7 +37,14 @@ export interface ModelRequestParameters {
 export interface AgentRoleConfig {
 	modelSlug: string;
 	gatewayProvider: string;
-	systemPromptVersion: string;
+	promptVersions: {
+		system: string;
+		planning?: string;
+		drafting?: string;
+		review?: string;
+		revision?: string;
+		rolePormptVersion?: string;
+	};
 	defaultRequestParameters: ModelRequestParameters;
 }
 
@@ -156,18 +163,26 @@ export interface ReviewerPlanContext {
 	jobInstructions: string;
 	profileInstructions: string;
 	loopNumber: number;
+	supportingDocuments?: {
+		extractedText: string;
+		purpose: string;
+	}[];
 }
 
 export interface ReviewerReviewContext {
 	agent: AgentRoleConfig;
 	jobDescription: string;
 	baselineCv: string;
-	jobInstructions: string;
-	profileInstructions: string;
+	jobInstructions?: string;
+	profileInstructions?: string;
 	critiquePlan: NormalizedCritiquePlan;
 	currentDraftMarkdown: string;
 	currentIteration: number;
 	loopNumber: number;
+	supportingDocuments?: {
+		extractedText: string;
+		purpose: string;
+	}[];
 }
 
 export interface WriterContext {
