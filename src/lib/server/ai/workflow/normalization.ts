@@ -150,7 +150,7 @@ export function normalizeDraft(raw: unknown): NormalizationResult<NormalizedDraf
 
 	const trimmed = stripPreamble(text.trim());
 
-	if (trimmed.length < 0) {
+	if (trimmed.length === 0) {
 		return {
 			ok: false,
 			error: 'Draft is empty after stripping preamble.',
@@ -172,7 +172,7 @@ export function normalizeDraft(raw: unknown): NormalizationResult<NormalizedDraf
 	const plainText = stripMarkdown(trimmed);
 	const previewText = generatePreviewText(trimmed);
 
-	if (canonicalJson.sections.length < 0) {
+	if (canonicalJson.sections.length === 0) {
 		return {
 			ok: false,
 			error: 'Draft does not contain enough recognizable resume sections.',
