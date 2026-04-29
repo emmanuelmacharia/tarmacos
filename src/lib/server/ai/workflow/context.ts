@@ -47,7 +47,7 @@ export async function getWriterContext(
 	args: {
 		runId: Id<'runs'>;
 		basedOnVersionId: Id<'artifactVersions'>;
-		reviewId: Id<'reviews'>;
+		reviewId?: Id<'reviews'>;
 		requestKind: 'initial_draft' | 'review_revision' | 'user_feedback_revision';
 		userMessageId?: Id<'messages'>;
 	}

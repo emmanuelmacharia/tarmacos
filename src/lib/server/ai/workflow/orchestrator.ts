@@ -436,7 +436,7 @@ async function handleWriterInstruction(
 	const context = await getWriterContext(convex, {
 		runId,
 		basedOnVersionId: instruction.basedOnVersionId,
-		reviewId: instruction.reviewId as Id<'reviews'>,
+		reviewId: instruction.reviewId ?? undefined,
 		requestKind: instruction.requestKind,
 		userMessageId: instruction.userMessageId
 	});

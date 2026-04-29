@@ -281,7 +281,7 @@ export const getWriterContext = action({
 	args: {
 		runId: v.id('runs'),
 		basedOnVersionId: v.id('artifactVersions'),
-		reviewId: v.id('reviews'),
+		reviewId: v.optional(v.id('reviews')),
 		requestKind: llmRequestKind,
 		userMessageId: v.optional(v.id('messages'))
 	},
