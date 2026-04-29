@@ -114,12 +114,20 @@ export interface CompleteLLMCallParams {
 	retryOfCallId?: Id<'llmCalls'>;
 	gatewayProvider?: string;
 	strategyUsed?: OutputStrategy;
+	content: LLMCallContent & {
+		systemPrompt: string;
+		userPrompt: string;
+		rawResponse?: unknown;
+		structuredOutput?: unknown;
+		reasoning?: string;
+		error?: unknown;
+	};
 }
 
 // content to be maintained in the llm call content table
 export interface LLMCallContent {
-	kind: llmContentKind;
-	format: llmContentFormat;
+	kind?: llmContentKind;
+	format?: llmContentFormat;
 	text?: string;
 	json?: string;
 	contentBytes?: number;
