@@ -184,7 +184,7 @@ export const getReviewerPlanContext = action({
 				agent: run.agentConfig.reviewer,
 				profileInstructions: run.instructionSnapshot?.profile?.reviewer,
 				jobInstructions: run.instructionSnapshot?.job,
-				loopCount: run.loopCount,
+				loopNumber: run.agentConfig.maxIterations,
 				baselineCv: extractedBaselineResume,
 				jobDescription: extractedJobDescription,
 				supportingDocuments: supportingDocuments,
@@ -254,22 +254,22 @@ export const getReviewerReviewContext = action({
 				.filter((review) => review.reviewKind === 'baseline_assessment')
 				.at(-1);
 
-			const currentDraft = artifactVersionToPromptText(artifactVersion);
+			const currentDraftMarkdown = artifactVersionToPromptText(artifactVersion);
+
+			const critiquePlan = latestAssessment ? JSON.parse(latestAssessment.content) : '';
 
 			return ok(
 				{
-					runId: run._id,
-					artifactVersionId: artifactVersion._id,
 					agent: run.agentConfig.reviewer,
-					reviewer: run.agentConfig.reviewer,
-					loopCount: run.loopCount,
-					baselineCv: extractedBaselineResume,
 					jobDescription: extractedJobDescription,
-					supportingDocuments,
-					critiquePlan: latestAssessment?.content,
+					baselineCv: extractedBaselineResume,
 					profileInstructions: run.instructionSnapshot?.profile?.reviewer,
 					jobInstructions: run.instructionSnapshot?.job,
-					currentDraft
+					critiquePlan,
+					currentDraftMarkdown,
+					currentIteration: run.loopCount,
+					loopNumber: run.agentConfig.maxIterations,
+					supportingDocuments
 				},
 				{ message: 'Review context found' }
 			);
