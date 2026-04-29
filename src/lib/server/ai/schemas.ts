@@ -55,8 +55,19 @@ export const WorkflowRequestSchema = z.object({
 	profileId: z.string(), // not optional anymore
 	// projectId: z.string().optional(), // what was this one for?
 
-	jobDescription: z.string().min(1).max(20_000),
-	baselineCv: z.string().min(1).max(30_000),
+	// TODO: we need to check into this one again
+	jobDescription: z.object({
+		extractedText: z.string().min(1).max(20_000),
+		extractedTextSource: z.optional(z.string()),
+		id: z.string(),
+		purpose: z.literal('job_description')
+	}),
+	baselineCv: z.object({
+		extractedText: z.string().min(1).max(30_000),
+		extractedTextSource: z.optional(z.string()),
+		id: z.string(),
+		purpose: z.literal('baseline_resume')
+	}),
 	jobInstructions: z.string().max(4_000).optional(),
 
 	maxIterations: z.number().int().min(1).max(6).default(4),
@@ -69,7 +80,8 @@ export const WorkflowRequestSchema = z.object({
 	reviewer: z.object({
 		modelId: z.string().min(2).max(100),
 		instructions: z.string().max(4_000).optional()
-	})
+	}),
+	signal: z.instanceof(AbortSignal)
 });
 
 export type WorkflowRequest = z.infer<typeof WorkflowRequestSchema>;
