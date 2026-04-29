@@ -198,7 +198,7 @@ export const completeAiCall = mutation({
 			systemPrompt: v.string(),
 			userPrompt: v.string(),
 			rawResponse: v.string(),
-			structuredOutput: v.optional(v.any()),
+			structuredOutput: v.optional(v.string()),
 			reasoning: v.optional(v.string()),
 			error: v.optional(v.any())
 		})
@@ -308,12 +308,16 @@ export const completeAiCall = mutation({
 			}
 
 			if (args.content.error) {
+				const errorText =
+					typeof args.content.error === 'string'
+						? args.content.error
+						: JSON.stringify(args.content.error);
 				await insertLlmCallContentIfMissing(ctx, {
 					llmCallId: args.llmCallId,
 					kind: 'raw_response',
 					format: 'text',
-					text: args.content.error,
-					contentBytes: byteLength(args.content.error),
+					text: errorText,
+					contentBytes: byteLength(errorText),
 					createdAt: now
 				});
 			}
@@ -455,7 +459,7 @@ async function insertLlmCallContentIfMissing(
 			| 'structured_output';
 		format: 'text' | 'json';
 		text?: string;
-		json?: unknown;
+		json?: string;
 		contentBytes?: number;
 		createdAt: number;
 	}
@@ -472,7 +476,7 @@ async function insertLlmCallContentIfMissing(
 		kind: doc.kind,
 		format: doc.format,
 		text: doc.text,
-		json: doc.json as string,
+		json: doc.json,
 		storageKey: undefined,
 		contentBytes: doc.contentBytes,
 		createdAt: doc.createdAt
