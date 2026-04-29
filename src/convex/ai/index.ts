@@ -288,3 +288,75 @@ export const aiCallContent = mutation({
 		});
 	}
 });
+
+export const updateNormalization = mutation({
+	args: {
+		llmCallId: v.id('llmCalls'),
+		normalizationStatus: v.union(v.literal('succeeded'), v.literal('failed')),
+		normalizationError: v.optional(v.string())
+	},
+	handler: async (ctx, args) => {
+		withAppErrors(async () => {
+			const identity = assertFound(
+				await ctx.auth.getUserIdentity(),
+				'Please log in to continue',
+				true
+			);
+
+			const clerkId = identity.subject;
+			// get the user
+			const user = assertFound(
+				await ctx.db
+					.query('users')
+					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
+					.unique(),
+				'User not found',
+				true
+			);
+
+			const llmCall = assertFound(await ctx.db.get(args.llmCallId), 'LLM call not found');
+
+			const run = assertFound(await ctx.db.get(llmCall.runId), 'Run not found');
+
+			forbiddenCheck(() => run.userId === user._id);
+
+			if (llmCall.status !== 'completed') {
+				mapConvexError({
+					status: 400,
+					message: `Cannot update normalization for llmCall with status ${llmCall.status}`,
+					code: 'BAD_REQUEST',
+					details: ''
+				});
+			}
+
+			if (llmCall.normalizationStatus === 'succeeded' && args.normalizationStatus !== 'succeeded') {
+				mapConvexError({
+					status: 400,
+					message: `Cannot downgrade normalization status from succeeded to failed`,
+					code: 'BAD_REQUEST',
+					details: ''
+				});
+			}
+
+			if (
+				args.normalizationStatus === 'failed' &&
+				(!args.normalizationError || args.normalizationError.trim().length === 0)
+			) {
+				mapConvexError({
+					status: 400,
+					message: 'normalizationError is required when normalizationStatus is failed',
+					code: 'BAD_REQUEST',
+					details: ''
+				});
+			}
+
+			await ctx.db.patch(args.llmCallId, {
+				normalizationStatus: args.normalizationStatus,
+				normalizationError:
+					args.normalizationStatus === 'failed' ? args.normalizationError : undefined
+			});
+
+			return { ok: true };
+		});
+	}
+});
