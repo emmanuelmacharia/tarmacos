@@ -120,7 +120,13 @@ export async function callStructuredOutput<T>(
 						strategyUsed: strategy,
 						loopNumber: args.loopNumber,
 						retryOfCallId: previousCallId,
-						attemptNumber
+						attemptNumber,
+						content: {
+							systemPrompt: args.system,
+							userPrompt: args.prompt,
+							rawResponse: result.outcome.output,
+							error: validated.error
+						}
 					});
 
 					lastError = new Error(validated.error.message);
@@ -148,7 +154,13 @@ export async function callStructuredOutput<T>(
 					strategyUsed: strategy,
 					loopNumber: args.loopNumber,
 					retryOfCallId: previousCallId,
-					attemptNumber
+					attemptNumber,
+					content: {
+						systemPrompt: args.system,
+						userPrompt: args.prompt,
+						rawResponse: result.outcome.output,
+						structuredOutput: validated.data
+					}
 				});
 
 				return {
@@ -166,7 +178,12 @@ export async function callStructuredOutput<T>(
 					status: 'cancelled',
 					loopNumber: retry,
 					retryOfCallId: previousCallId,
-					attemptNumber
+					attemptNumber,
+					content: {
+						systemPrompt: args.system,
+						userPrompt: args.prompt,
+						error: result.error
+					}
 				});
 				throw result.error;
 			}
@@ -177,7 +194,12 @@ export async function callStructuredOutput<T>(
 				loopNumber: retry,
 				retryOfCallId: previousCallId,
 				latencyMs: result.latencyMs,
-				attemptNumber
+				attemptNumber,
+				content: {
+					systemPrompt: args.system,
+					userPrompt: args.prompt,
+					error: result.error
+				}
 			});
 			lastError = result.error;
 			previousCallId = llmCallId;
@@ -224,7 +246,12 @@ export async function callFreeform(args: BaseCallArgs): Promise<LLMCallResult<st
 				costUsd: result.outcome.costUsd ?? 0,
 				loopNumber: args.loopNumber,
 				retryOfCallId: previousCallId,
-				attemptNumber
+				attemptNumber,
+				content: {
+					systemPrompt: args.system,
+					userPrompt: args.prompt,
+					rawResponse: result.outcome.rawText
+				}
 			});
 
 			return {
@@ -243,7 +270,12 @@ export async function callFreeform(args: BaseCallArgs): Promise<LLMCallResult<st
 				strategyUsed: 'freeform_text',
 				loopNumber: retry,
 				retryOfCallId: previousCallId,
-				attemptNumber
+				attemptNumber,
+				content: {
+					systemPrompt: args.system,
+					userPrompt: args.prompt,
+					error: result.error
+				}
 			});
 			throw result.error;
 		}
@@ -255,7 +287,12 @@ export async function callFreeform(args: BaseCallArgs): Promise<LLMCallResult<st
 			loopNumber: retry,
 			retryOfCallId: previousCallId,
 			latencyMs: result.latencyMs,
-			attemptNumber
+			attemptNumber,
+			content: {
+				systemPrompt: args.system,
+				userPrompt: args.prompt,
+				error: result.error
+			}
 		});
 
 		lastError = result.error;
@@ -435,7 +472,17 @@ async function executeFreeformCall(args: BaseCallArgs): Promise<AttemptOutcome> 
 
 async function completeCall(convex: ConvexHttpClient, args: CompleteLLMCallParams): Promise<void> {
 	try {
-		await convex.mutation(api.ai.index.modifyAiCall, args);
+		const { content } = args;
+		const completeCallContent = {
+			...content,
+			rawResponse: content.rawResponse ? String(content.rawResponse) : '',
+			structuredOutput: content.structuredOutput
+				? typeof content.structuredOutput === 'string'
+					? content.structuredOutput
+					: JSON.stringify(content.structuredOutput)
+				: ''
+		};
+		await convex.mutation(api.ai.index.completeAiCall, { ...args, content: completeCallContent });
 	} catch (error) {
 		console.log('Error completing LLM call:', error);
 		throw error;
