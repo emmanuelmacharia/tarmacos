@@ -1,4 +1,3 @@
-import { api } from '../../_generated/api';
 import type { Doc, Id } from '../../_generated/dataModel';
 import type { QueryCtx, MutationCtx, ActionCtx } from '../../_generated/server';
 import { assertFound, mapConvexError } from '../errorMapper';
@@ -116,9 +115,10 @@ export async function deriveNextInstructionForRun(
 				};
 			}
 
-			const messages = await ctx.runQuery(api.messages.index.getMessagesByRunId, {
-				runId: run._id
-			});
+			const messages = await ctx.db
+				.query('messages')
+				.withIndex('by_run', (q) => q.eq('runId', run._id))
+				.collect();
 
 			const userMessages = messages.filter((message) => message.authorType === 'user');
 
