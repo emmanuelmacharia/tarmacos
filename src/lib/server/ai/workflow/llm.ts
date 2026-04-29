@@ -1,4 +1,4 @@
-import type { ConvexClient } from 'convex/browser';
+import type { ConvexHttpClient } from 'convex/browser';
 import type { Id } from '../../../../convex/_generated/dataModel';
 import type {
 	CompleteLLMCallParams,
@@ -14,7 +14,7 @@ import { getChatModel } from '../openrouter';
 import { generateText, Output } from 'ai';
 
 export interface BaseCallArgs {
-	convex: ConvexClient;
+	convex: ConvexHttpClient;
 	runId: Id<'runs'>;
 	phase: LLMCallPhase;
 	role: LLMCallRole;
@@ -433,7 +433,7 @@ async function executeFreeformCall(args: BaseCallArgs): Promise<AttemptOutcome> 
 	};
 }
 
-async function completeCall(convex: ConvexClient, args: CompleteLLMCallParams): Promise<void> {
+async function completeCall(convex: ConvexHttpClient, args: CompleteLLMCallParams): Promise<void> {
 	try {
 		await convex.mutation(api.ai.index.modifyAiCall, args);
 	} catch (error) {
