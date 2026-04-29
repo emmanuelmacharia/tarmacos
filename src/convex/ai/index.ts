@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { mutation } from '../_generated/server';
+import { mutation, type MutationCtx } from '../_generated/server';
 import { assertFound, forbiddenCheck, mapConvexError, withAppErrors } from '../lib/errorMapper';
 import {
 	reviewType,
@@ -13,6 +13,8 @@ import {
 	llmContentFormat
 } from '../lib/schemaTypes';
 import { ok } from '../lib/responseMapper';
+import { buildPromptText, byteLength } from '../lib/ai/utils';
+import type { Id } from '../_generated/dataModel';
 
 export const reviews = mutation({
 	args: {
@@ -168,15 +170,16 @@ export const aiCall = mutation({
 	}
 });
 
-export const modifyAiCall = mutation({
+export const completeAiCall = mutation({
 	args: {
 		llmCallId: v.id('llmCalls'),
+		status: v.optional(LlmCallStatus),
 		openRouterRequestId: v.optional(v.string()),
+		strategyUsed: v.optional(v.string()),
 		attemptNumber: v.number(),
 		retryOfCallId: v.optional(v.id('llmCalls')),
 		gatewayProvider: v.optional(v.string()),
 		routedProvider: v.optional(v.string()),
-		strategyUsed: v.optional(v.string()),
 		latencyMs: v.optional(v.number()),
 		inputTokens: v.optional(v.number()),
 		outputTokens: v.optional(v.number()),
@@ -188,7 +191,17 @@ export const modifyAiCall = mutation({
 		normalizationError: v.optional(v.string()),
 		completedAt: v.optional(v.number()),
 		loopNumber: v.optional(v.number()),
-		status: v.optional(LlmCallStatus)
+		content: v.object({
+			kind: v.optional(llmContentKind),
+			format: v.optional(llmContentFormat),
+			storageKey: v.optional(v.string()),
+			systemPrompt: v.string(),
+			userPrompt: v.string(),
+			rawResponse: v.string(),
+			structuredOutput: v.optional(v.any()),
+			reasoning: v.optional(v.string()),
+			error: v.optional(v.any())
+		})
 	},
 	handler: async (ctx, args) => {
 		return withAppErrors(async () => {
@@ -209,6 +222,15 @@ export const modifyAiCall = mutation({
 			const llmCall = assertFound(await ctx.db.get(args.llmCallId));
 			const run = assertFound(await ctx.db.get(llmCall.runId));
 			forbiddenCheck(() => run.userId === user._id);
+
+			if (llmCall.status !== 'running') {
+				mapConvexError({
+					code: 'BAD_REQUEST',
+					status: 400,
+					details: ``,
+					message: `Expected running status, got ${llmCall.status}`
+				});
+			}
 
 			const payload = {
 				...Object.fromEntries(
@@ -236,6 +258,64 @@ export const modifyAiCall = mutation({
 
 			await ctx.db.patch(llmCall._id, payload);
 			const updatedCall = await ctx.db.get(llmCall._id);
+
+			const now = Date.now();
+
+			const promptText = buildPromptText(args.content.systemPrompt, args.content.userPrompt);
+
+			if (promptText) {
+				await insertLlmCallContentIfMissing(ctx, {
+					llmCallId: args.llmCallId,
+					kind: 'prompt' as const,
+					format: 'text',
+					text: promptText,
+					createdAt: now
+				});
+			}
+
+			if (args.content.rawResponse) {
+				await insertLlmCallContentIfMissing(ctx, {
+					llmCallId: args.llmCallId,
+					kind: 'response',
+					format: 'text',
+					text: args.content.rawResponse,
+					contentBytes: byteLength(args.content.rawResponse),
+					createdAt: now
+				});
+			}
+
+			if (args.content.structuredOutput !== undefined) {
+				await insertLlmCallContentIfMissing(ctx, {
+					llmCallId: args.llmCallId,
+					kind: 'structured_output',
+					format: 'json',
+					json: args.content.structuredOutput,
+					contentBytes: byteLength(JSON.stringify(args.content.structuredOutput)),
+					createdAt: now
+				});
+			}
+
+			if (args.content.reasoning) {
+				await insertLlmCallContentIfMissing(ctx, {
+					llmCallId: args.llmCallId,
+					kind: 'reasoning',
+					format: 'text',
+					text: args.content.reasoning,
+					contentBytes: byteLength(args.content.reasoning),
+					createdAt: now
+				});
+			}
+
+			if (args.content.error) {
+				await insertLlmCallContentIfMissing(ctx, {
+					llmCallId: args.llmCallId,
+					kind: 'raw_response',
+					format: 'text',
+					text: args.content.error,
+					contentBytes: byteLength(args.content.error),
+					createdAt: now
+				});
+			}
 
 			return ok(updatedCall, { message: 'Call updated successfully', statusCode: 200 });
 		});
@@ -360,3 +440,40 @@ export const updateNormalization = mutation({
 		});
 	}
 });
+
+async function insertLlmCallContentIfMissing(
+	ctx: MutationCtx,
+	doc: {
+		llmCallId: Id<'llmCalls'>;
+		kind:
+			| 'prompt'
+			| 'raw_request'
+			| 'response'
+			| 'raw_response'
+			| 'reasoning'
+			| 'structured_output';
+		format: 'text' | 'json';
+		text?: string;
+		json?: unknown;
+		contentBytes?: number;
+		createdAt: number;
+	}
+) {
+	const existing = await ctx.db
+		.query('llmCallContents')
+		.withIndex('by_call_kind', (q) => q.eq('llmCallId', doc.llmCallId).eq('kind', doc.kind))
+		.first();
+
+	if (existing) return;
+
+	await ctx.db.insert('llmCallContents', {
+		llmCallId: doc.llmCallId,
+		kind: doc.kind,
+		format: doc.format,
+		text: doc.text,
+		json: doc.json as string,
+		storageKey: undefined,
+		contentBytes: doc.contentBytes,
+		createdAt: doc.createdAt
+	});
+}
