@@ -158,7 +158,11 @@ export const artifactVersionStatus = v.union(
 
 export const reviewType = v.union(v.literal('baseline_assessment'), v.literal('draft_review'));
 
-export const reviewDecision = v.union(v.literal('approve'), v.literal('revise'));
+export const reviewDecision = v.union(
+	v.literal('no-decision'),
+	v.literal('approve'),
+	v.literal('revise')
+); // no decision for baseline assessments
 
 export const LlmCallStatus = v.union(
 	v.literal('queued'),
@@ -252,3 +256,61 @@ export type NextInstruction =
 			artifactVersionId: Id<'artifactVersions'>;
 	  }
 	| { action: 'done' };
+
+export const CritiquePlan = v.object({
+	candidateFitSummary: v.string(),
+	strengthsToEmphasize: v.array(v.string()),
+	gapsOrRisks: v.array(
+		v.object({
+			title: v.string(),
+			explanation: v.string(),
+			suggestedFix: v.string(),
+			severity: v.union(v.literal('low'), v.literal('medium'), v.literal('high'))
+		})
+	),
+	targetKeywords: v.array(v.string()),
+	experiencePriorities: v.array(v.string()),
+	writerStrategy: v.array(v.string()),
+	factualGuardrails: v.array(v.string()),
+	suggestedResumeFocus: v.string(),
+	resumeAlignmentScore: v.number(),
+	keywordMatchScore: v.number(),
+	yearsOfExperienceScore: v.number()
+});
+
+export const ReviewValidator = v.union(
+	v.object({
+		verdict: v.literal('approved'),
+		summary: v.string(),
+		blockingIssues: v.array(
+			v.object({
+				title: v.string(),
+				explanation: v.string(),
+				suggestedFix: v.string(),
+				severity: v.union(v.literal('low'), v.literal('medium'), v.literal('high'))
+			})
+		),
+		handoffInstructions: v.array(v.string()),
+		approvalReason: v.string(),
+		resumeAlignmentScore: v.number(),
+		keywordMatchScore: v.number(),
+		yearsOfExperienceScore: v.number()
+	}),
+	v.object({
+		verdict: v.literal('revise'),
+		summary: v.string(),
+		blockingIssues: v.array(
+			v.object({
+				title: v.string(),
+				explanation: v.string(),
+				suggestedFix: v.string(),
+				severity: v.union(v.literal('low'), v.literal('medium'), v.literal('high'))
+			})
+		),
+		handoffInstructions: v.array(v.string()),
+		approvalReason: v.optional(v.string()),
+		resumeAlignmentScore: v.number(),
+		keywordMatchScore: v.number(),
+		yearsOfExperienceScore: v.number()
+	})
+);
