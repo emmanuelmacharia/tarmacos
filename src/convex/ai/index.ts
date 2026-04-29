@@ -173,7 +173,7 @@ export const aiCall = mutation({
 export const completeAiCall = mutation({
 	args: {
 		llmCallId: v.id('llmCalls'),
-		status: v.optional(LlmCallStatus),
+		status: LlmCallStatus,
 		openRouterRequestId: v.optional(v.string()),
 		strategyUsed: v.optional(v.string()),
 		attemptNumber: v.number(),
@@ -251,7 +251,8 @@ export const completeAiCall = mutation({
 						normalizationStatus: args.normalizationStatus,
 						normalizationError: args.normalizationError,
 						completedAt: args.completedAt,
-						loopNumber: args.loopNumber
+						loopNumber: args.loopNumber,
+						status: args.status
 					}).filter(([, value]) => value !== undefined)
 				)
 			};
