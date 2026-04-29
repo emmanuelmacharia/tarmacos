@@ -303,7 +303,7 @@ export const completeBaselineReview = mutation({
 			const updatedRun = await ctx.db.get(run._id);
 
 			return {
-				next: deriveNextInstructionForRun(ctx, updatedRun!)
+				next: await deriveNextInstructionForRun(ctx, updatedRun!)
 			};
 		});
 	}
@@ -431,7 +431,7 @@ export const completeDraft = mutation({
 
 			return {
 				artifactVersionId,
-				next: deriveNextInstructionForRun(ctx, updatedRun!)
+				next: await deriveNextInstructionForRun(ctx, updatedRun!)
 			};
 		});
 	}
