@@ -1,11 +1,11 @@
 import { v } from 'convex/values';
-import { mutation } from '../_generated/server';
+import { internalMutation, mutation } from '../_generated/server';
 import { assertFound, forbiddenCheck, withAppErrors } from '../lib/errorMapper';
 import { artifactStatus, artifactType } from '../lib/schemaTypes';
 import { ok } from '../lib/responseMapper';
 import { api } from '../_generated/api';
 
-export const createArtifact = mutation({
+export const createArtifact = internalMutation({
 	args: {
 		runId: v.id('runs'),
 		artifactType: artifactType,

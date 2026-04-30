@@ -111,6 +111,17 @@ export default defineSchema({
 		finalArtifactVersionId: v.optional(v.id('artifactVersions')),
 		parentRunId: v.optional(v.id('runs')),
 		nextMessageSequenceNumber: v.number(),
+		instructionSnapshot: v.optional(
+			v.object({
+				profile: v.optional(
+					v.object({
+						writer: v.optional(v.string()),
+						reviewer: v.optional(v.string())
+					})
+				),
+				job: v.optional(v.string())
+			})
+		),
 		loopCount: v.number(),
 		agentConfig: agentConfig,
 		metadata: v.optional(v.any()),
@@ -130,11 +141,20 @@ export default defineSchema({
 		documentId: v.id('documents'),
 		purpose: documentPurpose,
 		extractedText: v.optional(v.string()),
+		extractedTextSource: v.optional(
+			v.object({
+				kind: v.literal('storage'),
+				storageId: v.id('_storage'),
+				mimeType: v.literal('text/plain'),
+				byteLength: v.number()
+			})
+		),
 		createdAt: v.number()
 	})
 		.index('by_run', ['runId'])
 		.index('by_document_id', ['documentId'])
-		.index('by_purpose', ['purpose']),
+		.index('by_purpose', ['purpose'])
+		.index('by_purpose_run_id', ['runId', 'purpose']),
 
 	messages: defineTable({
 		runId: v.id('runs'),
@@ -149,6 +169,7 @@ export default defineSchema({
 		relatedReviewId: v.optional(v.id('reviews')),
 		createdAt: v.number()
 	})
+		.index('by_run', ['runId'])
 		.index('by_run_seq', ['runId', 'sequenceNumber'])
 		.index('by_run_visibility_seq', ['runId', 'visibility', 'sequenceNumber']),
 
@@ -199,12 +220,12 @@ export default defineSchema({
 
 	llmCalls: defineTable({
 		runId: v.id('runs'),
-		openRouterRequestid: v.string(),
+		openRouterRequestId: v.optional(v.string()),
 		phase: runPhase,
 		role: authorRole,
 		attemptNumber: v.number(),
 		retryOfCallId: v.optional(v.id('llmCalls')),
-		gatewayProvider: v.string(), // not sure where to get this one
+		gatewayProvider: v.optional(v.string()), // not sure where to get this one
 		modelSlug: v.string(),
 		routedProvider: v.optional(v.string()), // this can be appended on the response from OpenRouter
 		requestParams: v.any(), // we need to type the params we can set here
@@ -213,8 +234,8 @@ export default defineSchema({
 		status: LlmCallStatus,
 		latencyMs: v.optional(v.number()),
 		inputTokens: v.optional(v.number()),
-		outputToken: v.optional(v.number()),
-		reasoningToken: v.optional(v.number()),
+		outputTokens: v.optional(v.number()),
+		reasoningTokens: v.optional(v.number()),
 		cachedTokens: v.optional(v.number()),
 		costUsd: v.optional(v.number()),
 		finishReason: v.optional(v.string()),
@@ -227,7 +248,7 @@ export default defineSchema({
 	})
 		.index('by_run_created_at', ['runId', 'createdAt'])
 		.index('by_run_phase', ['runId', 'phase'])
-		.index('by_open_router_requestid', ['openRouterRequestid'])
+		.index('by_open_router_requestid', ['openRouterRequestId'])
 		.index('by_loop_and_operation', ['runId', 'loopNumber', 'operationKind']),
 
 	llmCallContents: defineTable({

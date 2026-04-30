@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { mutation } from '../_generated/server';
+import { mutation, query } from '../_generated/server';
 import { assertFound, forbiddenCheck, withAppErrors } from '../lib/errorMapper';
 import {
 	authorRole,
@@ -70,6 +70,73 @@ export const createMessage = mutation({
 			});
 
 			return ok(message, { message: 'Message created', statusCode: 201 });
+		});
+	}
+});
+
+export const getMessagesByRunId = query({
+	args: { runId: v.id('runs') },
+	handler: async (ctx, args) => {
+		return withAppErrors(async () => {
+			const identity = assertFound(
+				await ctx.auth.getUserIdentity(),
+				'Please log in to continue',
+				true
+			);
+
+			const clerkId = identity.subject;
+			// get the user
+			const user = assertFound(
+				await ctx.db
+					.query('users')
+					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
+					.unique(),
+				'User not found',
+				true
+			);
+
+			const run = assertFound(await ctx.db.get(args.runId));
+
+			forbiddenCheck(() => run.userId === user._id);
+
+			const messages = await ctx.db
+				.query('messages')
+				.withIndex('by_run', (q) => q.eq('runId', args.runId))
+				.collect();
+
+			return messages;
+		});
+	}
+});
+
+export const getMessageById = query({
+	args: { messageId: v.id('messages') },
+	handler: async (ctx, args) => {
+		return withAppErrors(async () => {
+			const identity = assertFound(
+				await ctx.auth.getUserIdentity(),
+				'Please log in to continue',
+				true
+			);
+
+			const clerkId = identity.subject;
+			// get the user
+			const user = assertFound(
+				await ctx.db
+					.query('users')
+					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
+					.unique(),
+				'User not found',
+				true
+			);
+
+			const message = assertFound(await ctx.db.get(args.messageId));
+
+			const run = assertFound(await ctx.db.get(message?.runId));
+
+			forbiddenCheck(() => run.userId === user._id);
+
+			return message;
 		});
 	}
 });

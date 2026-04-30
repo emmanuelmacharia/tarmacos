@@ -31,6 +31,7 @@ type BuildWriterTaskArgs = SharedTaskArgs & {
 	critiquePlan: CritiquePlan | string;
 	previousDraft?: string;
 	latestReview?: ReviewResult | string | null;
+	latestUserFeedback?: string;
 };
 
 type BuildReviewerReviewTaskArgs = SharedTaskArgs & {
@@ -150,7 +151,9 @@ export function buildWriterTaskMessage(args: BuildWriterTaskArgs): string {
 		section('job_run_instructions', args.jobInstructions),
 		section('job_description', args.jobDescription),
 		section('baseline_cv', args.baselineCv),
-		jsonSection('critique_plan_json', args.critiquePlan)
+		jsonSection('critique_plan_json', args.critiquePlan),
+		...(args.latestReview ? [jsonSection('review', args.latestReview)] : ''),
+		...(args.latestUserFeedback ? [section('user_feedback', args.latestUserFeedback)] : '')
 	];
 
 	if (args.previousDraft) {

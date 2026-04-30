@@ -16,19 +16,13 @@ export const CritiqueAndPlanSchema = z.object({
 	writerStrategy: z.array(z.string().min(1).max(500)).max(12),
 	factualGuardrails: z.array(z.string().min(1).max(300)).max(12),
 	suggestedResumeFocus: z.string().min(1).max(1000),
-	confidenceScore: z.number().min(0).max(100)
+	resumeAlignmentScore: z.number().min(0).max(1),
+	keywordMatchScore: z.number().min(0).max(1),
+	yearsOfExperienceScore: z.number().min(0).max(1)
+	// confidence score is an aggregate of all the scores in the resume - it's a ui only thing
 });
 
 export type CritiquePlan = z.infer<typeof CritiqueAndPlanSchema>;
-
-// export const ReviewSchema = z.object({
-// 	verdict: z.enum(['approved', 'revise']),
-// 	summary: z.string().min(1).max(4000),
-// 	blockingIssues: z.array(BlockingIssueSchema).max(10),
-// 	handoffInstructions: z.array(z.string().min(1).max(500)).max(10),
-// 	approvalReason: z.string().max(2000).optional(),
-// 	confidenceScore: z.number().min(0).max(100)
-// });
 
 export const ReviewSchema = z.discriminatedUnion('verdict', [
 	z.object({
@@ -37,7 +31,9 @@ export const ReviewSchema = z.discriminatedUnion('verdict', [
 		blockingIssues: z.array(BlockingIssueSchema).max(10),
 		handoffInstructions: z.array(z.string().min(1).max(500)).max(10),
 		approvalReason: z.string().min(1).max(2000),
-		confidenceScore: z.number().min(0).max(100)
+		resumeAlignmentScore: z.number().min(0).max(1),
+		keywordMatchScore: z.number().min(0).max(1),
+		yearsOfExperienceScore: z.number().min(0).max(1)
 	}),
 	z.object({
 		verdict: z.literal('revise'),
@@ -45,18 +41,33 @@ export const ReviewSchema = z.discriminatedUnion('verdict', [
 		blockingIssues: z.array(BlockingIssueSchema).min(1).max(10),
 		handoffInstructions: z.array(z.string().min(1).max(500)).min(1).max(10),
 		approvalReason: z.string().max(2000).optional(),
-		confidenceScore: z.number().min(0).max(100)
+		resumeAlignmentScore: z.number().min(0).max(1),
+		keywordMatchScore: z.number().min(0).max(1),
+		yearsOfExperienceScore: z.number().min(0).max(1)
 	})
 ]);
 
 export type ReviewResult = z.infer<typeof ReviewSchema>;
 
-export const WorkflowRequestSchema = z.object({
-	profileId: z.string().optional(), // these need to be set before any run starts - they shouldnt be optional
-	projectId: z.string().optional(),
+export const WriterDraftSchema = z.object({}); // I'm thinking of creating an output schema for the writer as well
 
-	jobDescription: z.string().min(1).max(20_000),
-	baselineCv: z.string().min(1).max(30_000),
+export const WorkflowRequestSchema = z.object({
+	profileId: z.string(), // not optional anymore
+	// projectId: z.string().optional(), // what was this one for?
+
+	// TODO: we need to check into this one again
+	jobDescription: z.object({
+		extractedText: z.string().min(1).max(20_000),
+		extractedTextSource: z.optional(z.string()),
+		id: z.string(),
+		purpose: z.literal('job_description')
+	}),
+	baselineCv: z.object({
+		extractedText: z.string().min(1).max(30_000),
+		extractedTextSource: z.optional(z.string()),
+		id: z.string(),
+		purpose: z.literal('baseline_resume')
+	}),
 	jobInstructions: z.string().max(4_000).optional(),
 
 	maxIterations: z.number().int().min(1).max(6).default(4),
@@ -69,7 +80,8 @@ export const WorkflowRequestSchema = z.object({
 	reviewer: z.object({
 		modelId: z.string().min(2).max(100),
 		instructions: z.string().max(4_000).optional()
-	})
+	}),
+	signal: z.instanceof(AbortSignal)
 });
 
 export type WorkflowRequest = z.infer<typeof WorkflowRequestSchema>;

@@ -1,3 +1,4 @@
+import { error as throwError } from '@sveltejs/kit';
 import type { ConvexErrorData } from '../../convex/lib/errorMapper';
 
 export function isAppError(error: unknown): error is Error & { data: ConvexErrorData } {
@@ -43,4 +44,19 @@ export function getAppErrorMessage(error: unknown): string {
 	}
 
 	return 'An unexpected error occurred. Please try again.';
+}
+
+export function handleErrorsFromConvexTransactions(error: unknown) {
+	if (error instanceof Error) {
+		const errorobj = parseConvexMessage(error.message);
+		if (errorobj?.code === 'UNAUTHORIZED') {
+			throwError(401, errorobj.message);
+		}
+		if (errorobj?.code === 'FORBIDDEN') {
+			throwError(403, errorobj.message);
+		}
+		throwError(400, errorobj?.message);
+	}
+	console.error(error);
+	throwError(500, { message: 'Something went wrong' });
 }
