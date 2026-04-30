@@ -43,13 +43,13 @@ export interface AgentRoleConfig {
 		drafting?: string;
 		review?: string;
 		revision?: string;
-		rolePormptVersion?: string;
+		rolePromptVersion?: string;
 	};
 	defaultRequestParameters: ModelRequestParameters;
 }
 
 export interface AgentConfig {
-	reivewer: AgentRoleConfig;
+	reviewer: AgentRoleConfig;
 	writer: AgentRoleConfig;
 	maxIterations: number;
 	maxRetriesPerCall: number;
