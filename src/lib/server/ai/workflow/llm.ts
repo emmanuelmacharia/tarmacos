@@ -476,12 +476,17 @@ async function completeCall(convex: ConvexHttpClient, args: CompleteLLMCallParam
 		const { content } = args;
 		const completeCallContent = {
 			...content,
-			rawResponse: content.rawResponse ? String(content.rawResponse) : '',
 			structuredOutput: content.structuredOutput
 				? typeof content.structuredOutput === 'string'
 					? content.structuredOutput
 					: JSON.stringify(content.structuredOutput)
-				: ''
+				: '',
+			rawResponse:
+				content.rawResponse === undefined
+					? ''
+					: typeof content.rawResponse === 'string'
+						? content.rawResponse
+						: JSON.stringify(content.rawResponse)
 		};
 		await convex.mutation(api.ai.index.completeAiCall, { ...args, content: completeCallContent });
 	} catch (error) {
