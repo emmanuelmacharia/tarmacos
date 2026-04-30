@@ -291,7 +291,7 @@ export const completeAiCall = mutation({
 					kind: 'structured_output',
 					format: 'json',
 					json: args.content.structuredOutput,
-					contentBytes: byteLength(JSON.stringify(args.content.structuredOutput)),
+					contentBytes: byteLength(args.content.structuredOutput),
 					createdAt: now
 				});
 			}
@@ -503,7 +503,7 @@ export const updateAICall = mutation({
 						outputTokens: args.outputTokens,
 						reasoningTokens: args.reasoningTokens,
 						cachedTokens: args.cachedTokens,
-						costUsd: args.cachedTokens,
+						costUsd: args.costUsd,
 						finishReason: args.finishReason,
 						normalizationStatus: args.normalizationStatus,
 						normalizationError: args.normalizationError,

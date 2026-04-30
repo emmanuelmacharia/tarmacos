@@ -349,8 +349,8 @@ async function runSingleAttempt(
 	const startedAt = Date.now();
 
 	try {
+		await updateCallStatus(args.convex, 'running', callId);
 		const outcome = await args.executor();
-		updateCallStatus(args.convex, 'running', callId);
 		return { llmCallId: callId, result: { kind: 'success', outcome } };
 	} catch (error) {
 		const latencyMs = Date.now() - startedAt;
