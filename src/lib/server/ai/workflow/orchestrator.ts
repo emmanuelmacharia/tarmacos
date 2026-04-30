@@ -263,11 +263,6 @@ async function executeLoop(
 				throw resolved;
 			}
 
-			await convex.mutation(api.runs.index.failRun, {
-				runId,
-				error: resolved
-			});
-
 			throw resolved;
 		}
 	}
