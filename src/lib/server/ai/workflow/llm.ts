@@ -177,7 +177,7 @@ export async function callStructuredOutput<T>(
 				await completeCall(args.convex, {
 					llmCallId,
 					status: 'cancelled',
-					loopNumber: retry,
+					loopNumber: args.loopNumber,
 					retryOfCallId: previousCallId,
 					attemptNumber,
 					content: {
@@ -192,7 +192,7 @@ export async function callStructuredOutput<T>(
 				llmCallId,
 				status: 'failed',
 				strategyUsed: strategy,
-				loopNumber: retry,
+				loopNumber: args.loopNumber,
 				retryOfCallId: previousCallId,
 				latencyMs: result.latencyMs,
 				attemptNumber,
@@ -269,7 +269,7 @@ export async function callFreeform(args: BaseCallArgs): Promise<LLMCallResult<st
 				llmCallId,
 				status: 'cancelled',
 				strategyUsed: 'freeform_text',
-				loopNumber: retry,
+				loopNumber: args.loopNumber,
 				retryOfCallId: previousCallId,
 				attemptNumber,
 				content: {
@@ -285,7 +285,7 @@ export async function callFreeform(args: BaseCallArgs): Promise<LLMCallResult<st
 			llmCallId,
 			status: 'failed',
 			strategyUsed: 'freeform_text',
-			loopNumber: retry,
+			loopNumber: args.loopNumber,
 			retryOfCallId: previousCallId,
 			latencyMs: result.latencyMs,
 			attemptNumber,
