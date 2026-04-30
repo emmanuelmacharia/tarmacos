@@ -348,6 +348,14 @@ export const completeDraft = mutation({
 					details: ''
 				});
 			}
+			if (run.phase !== 'drafting' && run.phase !== 'revision') {
+				mapConvexError({
+					status: 400,
+					message: `Run is in: ${run.phase} state. Cannot complete drafting`,
+					code: 'BAD_REQUEST',
+					details: ''
+				});
+			}
 
 			if (!run.currentArtifactId || !run.currentArtifactVersionId) {
 				mapConvexError({
@@ -388,6 +396,12 @@ export const completeDraft = mutation({
 			const origin =
 				run.phase === 'drafting' ? ('agent_draft' as const) : ('agent_revision' as const);
 
+			const canonicalJson = args.canonical.canonicalJson
+				? typeof args.canonical.canonicalJson !== 'string'
+					? JSON.stringify(args.canonical.canonicalJson)
+					: args.canonical.canonicalJson
+				: '';
+
 			const artifactVersionId = await ctx.db.insert('artifactVersions', {
 				artifactId: artifact._id,
 				runId: run._id,
@@ -399,6 +413,7 @@ export const completeDraft = mutation({
 				markdown: args.canonical.markdown,
 				plainText: args.canonical.plainText,
 				sourceLlmCallId: args.llmCallId,
+				canonicalJson,
 				createdAt: now
 			});
 
