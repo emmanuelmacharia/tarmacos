@@ -366,10 +366,9 @@ export const getWriterContext = action({
 				/**
 				 * I think we should just ignore it instead of throwing an error here
 				 *  */
-				if (run._id !== message.runId) {
-					userReview = null;
+				if (message && run._id === message.runId) {
+					userReview = message;
 				}
-				userReview = message;
 			}
 
 			return ok(
