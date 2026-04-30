@@ -594,12 +594,6 @@ async function generateStructuredWithRepair<T>(args: {
 
 		lastError = normalized.error;
 
-		await finalizeNormalization(args.convex, {
-			llmCallId: result.llmCallId,
-			normalizationStatus: 'failed',
-			normalizationError: normalized.error
-		});
-
 		if (!normalized.repairable || repairAttempt === args.maxNormalizationRepairs) {
 			throw new Error(normalized.error);
 		}
