@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { internal } from '../_generated/api';
+import { api, internal } from '../_generated/api';
 import { action } from '../_generated/server';
 import { withAppErrors, assertFound, forbiddenCheck } from '../lib/errorMapper';
 import {
@@ -335,13 +335,42 @@ export const getWriterContext = action({
 				runId: args.runId
 			});
 
-			const baselineAssessment = reviews
-				.filter((review) => review.reviewKind === 'baseline_assessment')
-				.at(-1);
+			let baselineAssessment = null;
+			let latestAssessment = null;
+			let currentPassedReview = null;
 
-			const latestAssessment = reviews
-				.filter((review) => review.reviewKind === 'draft_review')
-				.at(-1);
+			if (args.requestKind && args.requestKind === 'initial_draft') {
+				baselineAssessment = reviews
+					.filter((review) => review.reviewKind === 'baseline_assessment')
+					.at(-1);
+			}
+
+			if (args.requestKind && args.requestKind === 'review_revision') {
+				latestAssessment = reviews.filter((review) => review.reviewKind === 'draft_review').at(-1);
+			}
+
+			if (args.reviewId) {
+				currentPassedReview = reviews.find((review) => review._id === args.reviewId);
+				if (!currentPassedReview) {
+					currentPassedReview = latestAssessment;
+				}
+			} else {
+				currentPassedReview = latestAssessment;
+			}
+
+			let userReview = null;
+			if (args.userMessageId) {
+				const message = await ctx.runQuery(api.messages.index.getMessageById, {
+					messageId: args.userMessageId
+				});
+				/**
+				 * I think we should just ignore it instead of throwing an error here
+				 *  */
+				if (run._id !== message.runId) {
+					userReview = null;
+				}
+				userReview = message;
+			}
 
 			return ok(
 				{
@@ -358,7 +387,11 @@ export const getWriterContext = action({
 					profileInstructions: run.instructionSnapshot?.profile?.writer,
 					jobInstructions: run.instructionSnapshot?.job,
 					latestAssessment:
-						latestAssessment?._id !== baselineAssessment?._id ? latestAssessment?.content : ''
+						currentPassedReview?._id !== baselineAssessment?._id
+							? currentPassedReview?.content
+							: '',
+					currentPassedReview: currentPassedReview?.content,
+					userReview: userReview?.body || ''
 				},
 				{ message: 'Writer context found' }
 			);

@@ -108,3 +108,35 @@ export const getMessagesByRunId = query({
 		});
 	}
 });
+
+export const getMessageById = query({
+	args: { messageId: v.id('messages') },
+	handler: async (ctx, args) => {
+		return withAppErrors(async () => {
+			const identity = assertFound(
+				await ctx.auth.getUserIdentity(),
+				'Please log in to continue',
+				true
+			);
+
+			const clerkId = identity.subject;
+			// get the user
+			const user = assertFound(
+				await ctx.db
+					.query('users')
+					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
+					.unique(),
+				'User not found',
+				true
+			);
+
+			const message = assertFound(await ctx.db.get(args.messageId));
+
+			const run = assertFound(await ctx.db.get(message?.runId));
+
+			forbiddenCheck(() => run.userId === user._id);
+
+			return message;
+		});
+	}
+});
