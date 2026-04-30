@@ -259,7 +259,9 @@ export const completeBaselineReview = mutation({
 
 			forbiddenCheck(() => run._id === artifactVersion.runId);
 
-			assertFound(await ctx.db.get(args.llmCallId));
+			const llmCall = assertFound(await ctx.db.get(args.llmCallId));
+
+			forbiddenCheck(() => llmCall.runId === run._id);
 
 			const reviewPayload = {
 				runId: run._id,
@@ -377,6 +379,9 @@ export const completeDraft = mutation({
 			forbiddenCheck(() => basedOnVersion.runId === run._id);
 
 			forbiddenCheck(() => basedOnVersion.artifactId === artifact._id);
+
+			const llmCall = assertFound(await ctx.db.get(args.llmCallId), 'LLM call not found');
+			forbiddenCheck(() => llmCall.runId === run._id);
 
 			const versionNo = artifact.nextVersionNumber;
 
