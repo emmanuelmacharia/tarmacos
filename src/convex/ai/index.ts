@@ -446,6 +446,79 @@ export const updateNormalization = mutation({
 	}
 });
 
+export const updateAICall = mutation({
+	args: {
+		id: v.id('llmCalls'),
+		status: LlmCallStatus,
+		openRouterRequestId: v.optional(v.string()),
+		strategyUsed: v.optional(v.string()),
+		attemptNumber: v.optional(v.number()),
+		retryOfCallId: v.optional(v.id('llmCalls')),
+		gatewayProvider: v.optional(v.string()),
+		routedProvider: v.optional(v.string()),
+		latencyMs: v.optional(v.number()),
+		inputTokens: v.optional(v.number()),
+		outputTokens: v.optional(v.number()),
+		reasoningTokens: v.optional(v.number()),
+		cachedTokens: v.optional(v.number()),
+		costUsd: v.optional(v.number()),
+		finishReason: v.optional(v.string()),
+		normalizationStatus: v.optional(normalizationStatus),
+		normalizationError: v.optional(v.string()),
+		completedAt: v.optional(v.number()),
+		loopNumber: v.optional(v.number())
+	},
+	handler: async (ctx, args) => {
+		return withAppErrors(async () => {
+			const identity = assertFound(
+				await ctx.auth.getUserIdentity(),
+				'Please log in to continue',
+				true
+			);
+			const clerkId = identity.subject;
+			const user = assertFound(
+				await ctx.db
+					.query('users')
+					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
+					.unique(),
+				'User not found',
+				true
+			);
+			const llmCall = assertFound(await ctx.db.get(args.id));
+			const run = assertFound(await ctx.db.get(llmCall.runId));
+			forbiddenCheck(() => run.userId === user._id);
+
+			const payload = {
+				...Object.fromEntries(
+					Object.entries({
+						status: args.status,
+						openRouterRequestId: args.openRouterRequestId,
+						strategyUsed: args.strategyUsed,
+						attemptNumber: args.attemptNumber,
+						retryOfCallId: args.retryOfCallId,
+						gatewayProvider: args.gatewayProvider,
+						routedProvider: args.routedProvider,
+						latencyMs: args.latencyMs,
+						inputTokens: args.inputTokens,
+						outputTokens: args.outputTokens,
+						reasoningTokens: args.reasoningTokens,
+						cachedTokens: args.cachedTokens,
+						costUsd: args.cachedTokens,
+						finishReason: args.finishReason,
+						normalizationStatus: args.normalizationStatus,
+						normalizationError: args.normalizationError,
+						loopNumber: args.loopNumber
+					}).filter(([, value]) => value !== undefined)
+				)
+			};
+
+			await ctx.db.patch(llmCall._id, payload);
+
+			return ok({ updated: true }, {});
+		});
+	}
+});
+
 async function insertLlmCallContentIfMissing(
 	ctx: MutationCtx,
 	doc: {

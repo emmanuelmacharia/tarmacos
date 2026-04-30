@@ -4,6 +4,7 @@ import type {
 	CompleteLLMCallParams,
 	LLMCallPhase,
 	LLMCallRole,
+	llmCallStatus,
 	ModelRequestParameters,
 	operationKind,
 	OutputStrategy
@@ -349,6 +350,7 @@ async function runSingleAttempt(
 
 	try {
 		const outcome = await args.executor();
+		updateCallStatus(args.convex, 'running', callId);
 		return { llmCallId: callId, result: { kind: 'success', outcome } };
 	} catch (error) {
 		const latencyMs = Date.now() - startedAt;
@@ -469,6 +471,14 @@ async function executeFreeformCall(args: BaseCallArgs): Promise<AttemptOutcome> 
 		status: 'completed',
 		completedAt: Date.now()
 	};
+}
+
+async function updateCallStatus(
+	convex: ConvexHttpClient,
+	status: llmCallStatus,
+	llmCallId: Id<'llmCalls'>
+): Promise<void> {
+	await convex.mutation(api.ai.index.updateAICall, { id: llmCallId, status });
 }
 
 async function completeCall(convex: ConvexHttpClient, args: CompleteLLMCallParams): Promise<void> {

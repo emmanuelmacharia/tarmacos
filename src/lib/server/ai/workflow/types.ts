@@ -74,6 +74,8 @@ export type llmContentKind =
 
 export type llmContentFormat = 'json' | 'text';
 
+export type llmCallStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
+
 /**
  * Payload passed to convex for create llm call mutation ; we'll add llmContents to this
  */
