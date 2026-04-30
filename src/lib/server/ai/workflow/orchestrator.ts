@@ -119,8 +119,8 @@ async function persistRun(
 				promptVersions: {
 					system: 'system-v1',
 					planning: 'reviewer-plan-v1',
-					review: 'reviewer-draft-v1',
-					rolePromptVersion: 'writer-role-v1'
+					review: 'reviewer-review-v1',
+					rolePromptVersion: 'reviewer-role-v1'
 				},
 				defaultRequestParams: {
 					temperature: 0,
