@@ -1,5 +1,5 @@
 import type { ConvexHttpClient } from 'convex/browser';
-import type { Id } from '../../../../convex/_generated/dataModel';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import type {
 	CompleteLLMCallParams,
 	LLMCallPhase,
@@ -10,8 +10,8 @@ import type {
 	OutputStrategy
 } from './types';
 import type z from 'zod';
-import { api } from '../../../../convex/_generated/api';
-import { getChatModel } from '../openrouter';
+import { api } from '../../../../../convex/_generated/api';
+import { getChatModel } from '../../openrouter';
 import { generateText, Output } from 'ai';
 
 export interface BaseCallArgs {

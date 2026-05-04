@@ -6,7 +6,7 @@ import {
 	ReviewSchema,
 	type CritiquePlan,
 	type ReviewResult
-} from '../schemas';
+} from '../../schemas';
 
 export type NormalizedCritiquePlan = CritiquePlan;
 export type NormalizedReviewResult = ReviewResult;

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { error as throwError } from '@sveltejs/kit';
-import { api } from '../../../../convex/_generated/api';
-import type { Id, Doc } from '../../../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
+import type { Id, Doc } from '../../../../../convex/_generated/dataModel';
 import { OPERATION_KIND, SCHEMA_VERSIONS } from './constants';
 import {
 	claimInstructionExecution,
@@ -25,16 +25,16 @@ import {
 	type NormalizationResult,
 	type NormalizedDraft
 } from './normalization';
-import { assertModelAllowedForRole } from '../models';
-import { resolveCustomProfileInstructions } from '../profile-customization';
+import { assertModelAllowedForRole } from '../../models';
+import { resolveCustomProfileInstructions } from '../../profile-customization';
 import {
 	buildReviewerPlanTaskMessage,
 	buildReviewerReviewTaskMessage,
 	buildSystemPrompt,
 	buildWriterTaskMessage,
 	sanitizeUserText
-} from '../prompt-builder';
-import { CritiqueAndPlanSchema, ReviewSchema, type WorkflowRequest } from '../schemas';
+} from '../../prompt-builder';
+import { CritiqueAndPlanSchema, ReviewSchema, type WorkflowRequest } from '../../schemas';
 import type {
 	CanonicalBaselineReview,
 	CanonicalDraft,
@@ -43,7 +43,7 @@ import type {
 } from './types';
 import { parseConvexMessage } from '$lib/utils/errorHandler';
 import type { ConvexHttpClient } from 'convex/browser';
-import type { NextInstruction } from '../../../../convex/lib/schemaTypes';
+import type { NextInstruction } from '../../../../../convex/lib/schemaTypes';
 
 export interface StartWorkflowResult {
 	runId: Id<'runs'>;

@@ -1,6 +1,6 @@
 import type { ConvexHttpClient } from 'convex/browser';
-import { api } from '../../../../convex/_generated/api';
-import type { Id } from '../../../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import type {
 	InstructionExecutionClaim,
 	ReviewerPlanContext,
@@ -8,7 +8,7 @@ import type {
 	WriterContext
 } from './types';
 import { handleErrorsFromConvexTransactions } from '$lib/utils/errorHandler';
-import type { NextInstruction } from '../../../../convex/lib/schemaTypes';
+import type { NextInstruction } from '../../../../../convex/lib/schemaTypes';
 
 export async function getReviewerPlanContext(
 	convex: ConvexHttpClient,
