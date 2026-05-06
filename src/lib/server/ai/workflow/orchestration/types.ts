@@ -1,5 +1,5 @@
-import type { Id } from '../../../../convex/_generated/dataModel';
-import type { NextInstruction } from '../../../../convex/lib/schemaTypes';
+import type { Id } from '../../../../../convex/_generated/dataModel';
+import type { NextInstruction } from '../../../../../convex/lib/schemaTypes';
 import type {
 	NormalizedCritiquePlan,
 	NormalizedDraft,
