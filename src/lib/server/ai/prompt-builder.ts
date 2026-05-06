@@ -195,3 +195,40 @@ export function buildReviewerReviewTaskMessage(args: BuildReviewerReviewTaskArgs
 		.filter(Boolean)
 		.join('\n\n');
 }
+
+/**
+ * Profiling prompt
+ *
+ */
+export function buildProfilerTaskMesage(input: { resume: string; jobDescription: string }): string {
+	return [
+		section(
+			'task_instructions',
+			`
+		Create a job profile from the baseline resume and job description.
+
+		Return only valid JSON matching ProfileCreationSchema:
+		{
+		"profileName": string,
+		"profileSummary": string,
+		"primaryFocus": string,
+		"yearsOfExperience": number,
+		"seniorityLevel": "intern" | "junior" | "mid" | "senior" | "lead" | "manager"
+		}
+
+		Requirements:
+		- Base profileName, primaryFocus, and seniorityLevel primarily on the job description.
+		- Treat seniorityLevel as the target role level, not the candidate's current level.
+		- Use the resume as the factual source for profileSummary and yearsOfExperience.
+		- Do not invent experience, tools, credentials, employers, dates, or achievements.
+		- If the job description and resume differ, preserve the job target in profileName/seniorityLevel, but keep profileSummary factually supported by the resume.
+		- Estimate yearsOfExperience conservatively from relevant resume experience; use 0 if unclear.
+		- Do not include markdown, explanations, comments, or extra fields.
+		`.trim()
+		),
+		section('baseline_resume', input.resume),
+		section('job_descripton', input.jobDescription)
+	]
+		.filter(Boolean)
+		.join('\n\n');
+}
