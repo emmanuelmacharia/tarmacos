@@ -38,7 +38,7 @@
 		| 'ready' //
 		| 'failed'; // failed upload
 
-	type AttachedFile = {
+	export type AttachedFile = {
 		localId: string; // stable clientside id for the document
 		file: File;
 		status: UploadStatus;
@@ -54,6 +54,13 @@
 
 	type Props = {
 		activeProfile?: ActiveProfile;
+		onsubmit: (data: {
+			jobDescription: string;
+			jobInstructions: string;
+			models: Record<Role, SelectedModel>;
+			resume: AttachedFile;
+			supportingDocuments: AttachedFile[];
+		}) => void | Promise<void>;
 	};
 
 	let uploadWorkerRunning = $state(false);
@@ -77,10 +84,16 @@
 			name: null,
 			id: null,
 			config: { search: false, reasoning: false, reasoningEffort: 'None' }
+		},
+		profiler: {
+			provider: null,
+			name: null,
+			id: null,
+			config: { search: false, reasoning: false, reasoningEffort: 'None' }
 		}
 	});
 
-	let { activeProfile }: Props = $props();
+	let { activeProfile, onsubmit }: Props = $props();
 	let textareaRef: HTMLTextAreaElement | null = null;
 	let fileInput: HTMLInputElement;
 	let showExpandedIcon = $derived.by(() => {
@@ -93,6 +106,8 @@
 
 	function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
+		// call submitPrompt
+		submitPrompt();
 	}
 
 	function toggleExpand() {
@@ -108,6 +123,15 @@
 	function submitPrompt() {
 		if (!promptText.trim() && !attachedFiles.length) return;
 		// begin a run
+		const payload = {
+			jobDescription: promptText,
+			jobInstructions: additionalInstructions,
+			models: modelSelections,
+			resume: attachedFiles[0],
+			supportingDocuments: attachedFiles.slice(1, attachedFiles.length - 1)
+		};
+
+		onsubmit(payload);
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
@@ -451,6 +475,7 @@
 		>
 			<div class="flex flex-row gap-1 border-r border-border/50 md:gap-2">
 				<button
+					type="button"
 					class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-background/50 hover:text-foreground"
 					onclick={() => fileInput.click()}
 					title="Attach files"
@@ -539,7 +564,7 @@
 				<ModelSelection {providers} {models} bind:modelSelections />
 			{/if}
 
-			<Button class="flex gap-4">
+			<Button class="flex gap-4" type="submit">
 				<SendHorizontal size={18} />
 				<span class="block sm:hidden">Tailor resume</span>
 			</Button>
