@@ -32,7 +32,8 @@ export const documentFormat = v.union(
 	v.literal('docx'),
 	v.literal('markdown'),
 	v.literal('txt'),
-	v.literal('json')
+	v.literal('json'),
+	v.literal('md')
 );
 
 export const runStatus = v.union(
