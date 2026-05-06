@@ -210,6 +210,12 @@
 			provider: null,
 			id: null,
 			config: { ...DEFAULT_MODEL_CONFIG.config }
+		},
+		profiler: {
+			name: null,
+			provider: null,
+			id: null,
+			config: { ...DEFAULT_MODEL_CONFIG.config }
 		}
 	});
 
