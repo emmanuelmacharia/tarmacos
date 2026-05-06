@@ -46,12 +46,17 @@ export const createProfile = mutation({
 				profileReaderVersion: 1,
 				profileWriterVersion: 1
 			};
-			await ctx.db.insert('profiles', payload);
+			const created = await ctx.db.insert('profiles', payload);
 			const profiles = await ctx.db
 				.query('profiles')
 				.withIndex('by_userId', (q) => q.eq('userId', existing._id))
 				.collect();
-			return ok(profiles, { message: 'Profile created successfully' });
+
+			// type CreateProfileData = {
+			// 	created: Id<'profiles'>;
+			// 	profiles: Doc<'profiles'>[];
+			// };
+			return ok({ created, profiles }, { message: 'Profile created successfully' });
 		});
 	}
 });
