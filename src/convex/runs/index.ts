@@ -311,6 +311,24 @@ export const completeBaselineReview = mutation({
 	}
 });
 
+export const completeReview = mutation({
+	args: {
+		runId: v.id('runs'),
+		llmCallId: v.id('llmCalls'),
+		canonical: v.any(),
+		messageSummary: v.string(),
+		maxIterationsMessage: v.optional(v.string())
+	},
+	handler: async (ctx, args) => {
+		console.log(ctx);
+		console.log(args);
+
+		const run = assertFound(await ctx.db.get(args.runId));
+
+		return { next: deriveNextInstructionForRun(ctx, run) };
+	}
+});
+
 export const completeDraft = mutation({
 	args: {
 		runId: v.id('runs'),
