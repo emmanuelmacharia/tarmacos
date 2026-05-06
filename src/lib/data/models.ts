@@ -82,7 +82,7 @@ export interface Props {
 	modelSelections: Record<Role, SelectedModel>;
 }
 
-export type Role = 'writer' | 'reviewer';
+export type Role = 'writer' | 'reviewer' | 'profiler';
 
 export type Level =
 	| 'intern'
