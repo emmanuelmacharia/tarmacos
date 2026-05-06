@@ -1,7 +1,73 @@
 <script lang="ts">
-	import MainPrompt from '$lib/components/main-prompt.svelte';
+	import MainPrompt, { type AttachedFile } from '$lib/components/main-prompt.svelte';
+	import type { Role, SelectedModel } from '$lib/data/models';
+	import type { StartWorkflowApiRequest } from '$lib/server/ai/workflow/api/types';
+
+	async function handleSubmit(data: {
+		jobDescription: string;
+		jobInstructions: string;
+		models: Record<Role, SelectedModel>;
+		resume: AttachedFile;
+		supportingDocuments: AttachedFile[];
+	}) {
+		console.log('in the parent ===>', data.resume);
+
+		console.log('the resume text ----->', await data.resume.file.text());
+
+		const supportingDocumentsData = await Promise.all(
+			data.supportingDocuments.map(async (doc) => {
+				return {
+					documentId: doc.documentId,
+					fileName: doc.file.name,
+					mimeType: doc.file.type || doc.file.name.split('.')[-1],
+					purpose: 'supporting' as const,
+					base64: await doc.file.text()
+				};
+			})
+		);
+
+		const payload: StartWorkflowApiRequest = {
+			jobDescription: data.jobDescription,
+			models: {
+				reviewerModelSlug: data.models.reviewer.name ?? undefined,
+				writerModelSlug: data.models.reviewer.name ?? undefined
+			},
+			jobInstructions: data.jobInstructions,
+			baselineCv: {
+				documentId: data.resume.documentId,
+				fileName: data.resume.file.name,
+				mimeType:
+					data.resume.file.type ||
+					data.resume.file.name.split('.')[data.resume.file.name.split('.').length - 1],
+				purpose: 'resume' as const,
+				base64: await data.resume.file.text()
+			},
+			supportingDocuments: supportingDocumentsData
+		};
+
+		console.log(
+			'weve got the payload right here ----> are we setting the file type correctly?',
+			payload
+		);
+		startWorkflow(payload);
+	}
+
+	async function startWorkflow(payload: StartWorkflowApiRequest) {
+		const url = '/api/ai/runs';
+		const response = await fetch(url, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(payload)
+		});
+
+		if (!response.ok || !response.body) {
+			console.log(response);
+		}
+	}
 </script>
 
 <div class="flex min-h-full flex-col justify-center">
-	<MainPrompt />
+	<MainPrompt onsubmit={handleSubmit} />
 </div>
