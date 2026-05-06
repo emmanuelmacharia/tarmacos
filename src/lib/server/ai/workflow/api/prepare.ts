@@ -28,13 +28,14 @@ export async function prepareWorkflowStart(args: {
 
 	const jobDescriptionDoc = await createFileFromJD(convex, {
 		text: job.jobDescriptionText,
-		filename: title
+		filename: title,
+		profileId: input.profileId
 	});
 
 	console.log('our jd name ====>', jobDescriptionDoc.filename);
 
 	const jd: PreparedDocument = {
-		documentId: jobDescriptionDoc.storageId,
+		documentId: jobDescriptionDoc.documentId,
 		extractedText: job.jobDescriptionText,
 		fileName: jobDescriptionDoc.filename,
 		mimeType: jobDescriptionDoc.contentType
