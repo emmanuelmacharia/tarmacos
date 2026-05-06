@@ -367,6 +367,36 @@ async function runSingleAttempt(
 	}
 }
 
+export async function profileCreationInference<T>(input: {
+	systemPrompt: string;
+	profileCreationPrompt: string;
+	strategy: OutputStrategy;
+	schema: z.ZodType<T>;
+	modelSlug: string;
+}) {
+	const result = await generateText({
+		model: getChatModel(input.modelSlug),
+		system: input.systemPrompt,
+		prompt: input.profileCreationPrompt,
+		temperature: 0.1,
+		topP: 0.4,
+		maxOutputTokens: 5000,
+		output: Output.object({
+			schema: input.schema
+		}),
+		providerOptions: {
+			openrouter: {
+				provider: {
+					require_parameters: true,
+					order: ['deepinfra/bf16']
+				}
+			}
+		}
+	});
+
+	return result.output;
+}
+
 async function executeStructuredCall<T>(
 	args: StructuredCallArgs<T>,
 	strategy: OutputStrategy
