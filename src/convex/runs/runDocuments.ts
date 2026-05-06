@@ -88,6 +88,9 @@ export const saveTextFile = action({
 
 			return {
 				storageId,
+				size: blob.size,
+				format: blob.type,
+				mimeType: blob.type,
 				filename: args.filename ?? 'pasted-text.txt',
 				contentType: 'text/plain;charset=utf-8'
 			};
