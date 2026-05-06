@@ -1,8 +1,9 @@
 import { v } from 'convex/values';
-import { internalMutation } from '../_generated/server';
+import { action, internalMutation } from '../_generated/server';
 import { documentPurpose } from '../lib/schemaTypes';
-import { withAppErrors } from '../lib/errorMapper';
+import { assertFound, withAppErrors } from '../lib/errorMapper';
 import type { Id } from '../_generated/dataModel';
+import { internal } from '../_generated/api';
 
 export type DocumentSnapShot = {
 	documentId: Id<'documents'>;
@@ -56,6 +57,40 @@ export const persistRunDocument = internalMutation({
 					await ctx.db.insert('runDocuments', payload);
 				})
 			);
+		});
+	}
+});
+
+export const saveTextFile = action({
+	args: {
+		text: v.string(),
+		filename: v.optional(v.string())
+	},
+	handler: async (ctx, args) => {
+		return withAppErrors(async () => {
+			const identity = assertFound(
+				await ctx.auth.getUserIdentity(),
+				'Please log in to continue',
+				true
+			);
+			const clerkId = identity.subject;
+			assertFound(
+				await ctx.runQuery(internal.runs.internals.getUser, { clerkId }),
+				'User not found',
+				true
+			);
+
+			const blob = new Blob([args.text], {
+				type: 'text/plain;charset=utf-8'
+			});
+
+			const storageId = await ctx.storage.store(blob);
+
+			return {
+				storageId,
+				filename: args.filename ?? 'pasted-text.txt',
+				contentType: 'text/plain;charset=utf-8'
+			};
 		});
 	}
 });
