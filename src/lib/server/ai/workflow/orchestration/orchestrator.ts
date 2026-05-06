@@ -337,7 +337,7 @@ async function handleBaselineAssessment(
 
 	const messageSummary = buildBaselineAssessmentMessage(normalized.data);
 
-	const { next } = await convex.mutation(api.runs.completeBaselineReview, {
+	const { next } = await convex.mutation(api.runs.index.completeBaselineReview, {
 		runId,
 		llmCallId: normalized.llmCallId,
 		canonical,
@@ -411,7 +411,7 @@ async function handleDraftReview(
 			? buildMaxIterationsMessage(context.currentIteration)
 			: undefined;
 
-	const { next } = await convex.mutation(api.runs.completeReview, {
+	const { next } = await convex.mutation(api.runs.index.completeReview, {
 		runId,
 		llmCallId: normalized.llmCallId,
 		canonical,
