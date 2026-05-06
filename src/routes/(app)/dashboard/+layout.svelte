@@ -2,15 +2,20 @@
 	import '../../layout.css';
 	import Dashboardnav from '$lib/components/dashboardnav.svelte';
 	import type { Profile } from '$lib/data/models.js';
-	import { setContext } from 'svelte';
+	import { setProfileState } from '$lib/context/profile-state.js';
+	import { useQuery } from 'convex-svelte';
+	import { api } from '../../../convex/_generated/api.js';
 	let { children, data } = $props();
-	const profiles: Profile[] | undefined = $derived(data.profiles);
+
+	const reactiveProfiles = useQuery(api.user.profiles.fetchUserProfiles);
+
+	const profiles: Profile[] | undefined = $derived(reactiveProfiles.data ?? data.profiles);
 
 	const sharedProfileState = $state({
 		activeUserProfile: null as Profile | null
 	});
 
-	setContext('profile-state', sharedProfileState);
+	setProfileState(sharedProfileState);
 </script>
 
 <main class="min-h-screen bg-transparent font-sans text-foreground">

@@ -1,7 +1,12 @@
 <script lang="ts">
 	import MainPrompt, { type AttachedFile } from '$lib/components/main-prompt.svelte';
+	import { getProfileState } from '$lib/context/profile-state';
 	import type { Role, SelectedModel } from '$lib/data/models';
 	import type { StartWorkflowApiRequest } from '$lib/server/ai/workflow/api/types';
+
+	const profileState = getProfileState();
+
+	let activeUserProfile = $derived(profileState.activeUserProfile);
 
 	async function handleSubmit(data: {
 		jobDescription: string;
@@ -27,6 +32,7 @@
 		);
 
 		const payload: StartWorkflowApiRequest = {
+			profileId: activeUserProfile?._id,
 			jobDescription: data.jobDescription,
 			models: {
 				reviewerModelSlug: data.models.reviewer.name ?? undefined,
