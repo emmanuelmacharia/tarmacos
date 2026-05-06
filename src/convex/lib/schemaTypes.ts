@@ -24,7 +24,9 @@ export const documentType = v.union(
 	v.literal('uploaded_resume'),
 	v.literal('promoted_generated_resume'),
 	v.literal('uploaded_coverletter'),
-	v.literal('promoted_generated_coverletter')
+	v.literal('promoted_generated_coverletter'),
+	v.literal('job_description'),
+	v.literal('supporting_documents')
 );
 
 export const documentFormat = v.union(
