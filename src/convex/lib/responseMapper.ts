@@ -1,6 +1,6 @@
-export function ok(data: unknown, meta: Record<string, unknown>) {
+export function ok<TData, TMeta extends Record<string, unknown>>(data: TData, meta: TMeta) {
 	return {
-		ok: true,
+		ok: true as const,
 		data,
 		meta
 	};
