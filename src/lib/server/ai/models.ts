@@ -6,6 +6,17 @@ type ModelPolicy = {
 	supportsStructuredOutput: boolean;
 };
 
+export const PROFILE_INFERENCE_MODEL = {
+	slug: 'openai/gpt-oss-120b'
+};
+
+export const DEFAULT_MAX_ITERATIONS = 3;
+
+export const DEFAULT_MODELS = {
+	writer: 'openai/gpt-oss-120b',
+	reviewer: 'openai/gpt-oss-120b'
+};
+
 export const MODEL_POLICY: Record<string, ModelPolicy> = {
 	'minimax/minimax-m2.5:free': {
 		enabled: true,
