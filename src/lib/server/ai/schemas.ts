@@ -1,5 +1,20 @@
 import { z } from 'zod';
 
+export const ProfileCreationSchema = z.object({
+	profileName: z.string().min(1).max(200),
+	profileSummary: z.string().min(1).max(2000),
+	primaryFocus: z.string().min(1).max(500),
+	yearsOfExperience: z.number(),
+	seniorityLevel: z.union([
+		z.literal('intern'),
+		z.literal('junior'),
+		z.literal('mid'),
+		z.literal('senior'),
+		z.literal('lead'),
+		z.literal('manager')
+	])
+});
+
 const BlockingIssueSchema = z.object({
 	title: z.string().min(1).max(200),
 	severity: z.enum(['low', 'medium', 'high']),
@@ -52,10 +67,16 @@ export type ReviewResult = z.infer<typeof ReviewSchema>;
 export const WriterDraftSchema = z.object({}); // I'm thinking of creating an output schema for the writer as well
 
 export const WorkflowRequestSchema = z.object({
+	// <- request you send to the orchestration layer
 	profileId: z.string(), // not optional anymore
 	// projectId: z.string().optional(), // what was this one for?
 
 	// TODO: we need to check into this one again
+	/**
+	 * We could use the JD as a simple string - use it that way = the problem is where it would live
+	 * Run documents need to be maintained in storage
+	 * Unless we create a file from the pasted text JD - we'll need to rethink this one
+	 */
 	jobDescription: z.object({
 		extractedText: z.string().min(1).max(20_000),
 		extractedTextSource: z.optional(z.string()),
@@ -86,7 +107,12 @@ export const WorkflowRequestSchema = z.object({
 
 export type WorkflowRequest = z.infer<typeof WorkflowRequestSchema>;
 
-export type WorkflowPhase = 'reviewerPlan' | 'writerDraft' | 'writerRevise' | 'reviewerReview';
+export type WorkflowPhase =
+	| 'reviewerPlan'
+	| 'writerDraft'
+	| 'writerRevise'
+	| 'reviewerReview'
+	| 'preflight'; // preflight for profile creeation or other llm calls that dont work within a phase
 
 export type WorkflowEvent =
 	| {
