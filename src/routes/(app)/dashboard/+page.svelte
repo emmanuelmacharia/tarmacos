@@ -8,6 +8,8 @@
 
 	let activeUserProfile = $derived(profileState.activeUserProfile);
 
+	$effect(() => console.log(activeUserProfile, profileState));
+
 	async function handleSubmit(data: {
 		jobDescription: string;
 		jobInstructions: string;
@@ -15,10 +17,6 @@
 		resume: AttachedFile;
 		supportingDocuments: AttachedFile[];
 	}) {
-		console.log('in the parent ===>', data.resume);
-
-		console.log('the resume text ----->', await data.resume.file.text());
-
 		const supportingDocumentsData = await Promise.all(
 			data.supportingDocuments.map(async (doc) => {
 				return {

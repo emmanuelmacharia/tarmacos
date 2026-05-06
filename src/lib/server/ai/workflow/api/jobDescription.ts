@@ -8,12 +8,13 @@ type AllowedFileTypes = 'pdf' | 'docx' | 'markdown' | 'txt' | 'json';
 
 export async function createFileFromJD(
 	convex: ConvexHttpClient,
-	args: { text: string; filename: string; profileId?: Id<'profiles'> }
+	args: { text: string; filename: string },
+	profileId?: Id<'profiles'>
 ) {
 	const file = await convex.action(api.runs.runDocuments.saveTextFile, { ...args });
 
 	const persistedDoc = await persistJDtoDB(convex, {
-		profileId: args.profileId,
+		profileId: profileId,
 		fileName: file.filename,
 		fileSize: file.size,
 		storageId: file.storageId,

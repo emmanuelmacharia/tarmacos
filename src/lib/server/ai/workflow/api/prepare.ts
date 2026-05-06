@@ -26,11 +26,14 @@ export async function prepareWorkflowStart(args: {
 
 	console.log('our title ====>', title);
 
-	const jobDescriptionDoc = await createFileFromJD(convex, {
-		text: job.jobDescriptionText,
-		filename: title,
-		profileId: input.profileId
-	});
+	const jobDescriptionDoc = await createFileFromJD(
+		convex,
+		{
+			text: job.jobDescriptionText,
+			filename: title
+		},
+		input.profileId
+	);
 
 	console.log('our jd name ====>', jobDescriptionDoc.filename);
 
