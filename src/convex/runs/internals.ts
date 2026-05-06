@@ -102,6 +102,25 @@ export const createRunWithDocumentsAndArtifact = internalMutation({
 	}
 });
 
+export const getUser = internalQuery({
+	args: {
+		clerkId: v.string()
+	},
+	handler: async (ctx, args) => {
+		const user = assertFound(
+			await ctx.db
+				.query('users')
+				.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkId))
+				.unique(),
+			'User not found',
+			true
+		);
+		return {
+			user
+		};
+	}
+});
+
 export const getCreateRunAuthContext = internalQuery({
 	args: {
 		clerkId: v.string(),
