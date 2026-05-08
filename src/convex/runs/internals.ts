@@ -76,6 +76,7 @@ export const createRunWithDocumentsAndArtifact = internalMutation({
 		};
 
 		const runid = await ctx.db.insert('runs', payload);
+
 		const run = assertFound(await ctx.db.get(runid));
 
 		await ctx.runMutation(internal.runs.runDocuments.persistRunDocument, {
@@ -90,15 +91,7 @@ export const createRunWithDocumentsAndArtifact = internalMutation({
 			versionData: { ...args.artifact.data }
 		});
 
-		return {
-			id: run._id,
-			title: run.title,
-			status: run.status,
-			phase: run.phase,
-			loopCount: run.loopCount,
-			agentConfig: run.agentConfig,
-			nextMessageSequenceNumber: run.nextMessageSequenceNumber
-		};
+		return run;
 	}
 });
 
