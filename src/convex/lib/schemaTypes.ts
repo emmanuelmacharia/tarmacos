@@ -196,7 +196,8 @@ export const llmContentKind = v.union(
 	v.literal('response'),
 	v.literal('raw_response'),
 	v.literal('reasoning'),
-	v.literal('structured_output')
+	v.literal('structured_output'),
+	v.literal('error')
 );
 
 export const llmContentFormat = v.union(v.literal('json'), v.literal('text'));
