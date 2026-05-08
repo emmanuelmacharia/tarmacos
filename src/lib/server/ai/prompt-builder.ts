@@ -73,9 +73,11 @@ function section(label: string, value?: string): string {
  * To keep the handoff precise across agent turns.
  */
 function jsonSection(label: string, value: unknown): string {
-	const serialized = JSON.stringify(value, null, 2)
-		.replace(/</g, '\\u003c')
-		.replace(/>/g, '\\u003e');
+	const isString = typeof value === 'string';
+
+	const serialized = !isString
+		? JSON.stringify(value, null, 2).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')
+		: value.replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 	return [`<${label}>`, serialized, `</${label}>`].join('\n');
 }
 
@@ -141,6 +143,8 @@ export function buildReviewerPlanTaskMessage(args: BuildReviewerPlanTaskArgs): s
  * - critiquePlan remains included so the writer keeps the original strategy
  */
 export function buildWriterTaskMessage(args: BuildWriterTaskArgs): string {
+	console.log('building the writer prompt');
+	console.log(args);
 	const parts = [
 		'Produce a tailored resume draft for the target job.',
 		'Use the critique plan as your main steering artifact.',
