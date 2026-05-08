@@ -15,7 +15,16 @@ import {
 	artifactType,
 	llmRequestKind
 } from '../lib/schemaTypes';
-import { ok } from '../lib/responseMapper';
+import { ok, type OkResponse } from '../lib/responseMapper';
+import type { Doc } from '../_generated/dataModel';
+
+type CreateRunResponse = OkResponse<
+	Doc<'runs'>,
+	{
+		message: string;
+		status: number;
+	}
+>;
 
 export const createRun = action({
 	args: {
@@ -55,7 +64,7 @@ export const createRun = action({
 			})
 		})
 	},
-	handler: async (ctx, args): Promise<ReturnType<typeof ok>> => {
+	handler: async (ctx, args): Promise<CreateRunResponse> => {
 		return withAppErrors(async () => {
 			const identity = assertFound(
 				await ctx.auth.getUserIdentity(),
@@ -106,7 +115,10 @@ export const createRun = action({
 				}
 			);
 
-			return ok(result, { message: 'Run created', status: 201 });
+			return ok<Doc<'runs'>, { message: string; status: number }>(result, {
+				message: 'Run created',
+				status: 201
+			});
 		});
 	}
 });
@@ -190,6 +202,8 @@ export const getReviewerPlanContext = action({
 				supportingDocuments: supportingDocuments,
 				artifactVersionId: artifactVersion._id
 			};
+
+			console.log('Get reviewer plan context =================>', result);
 			return ok(result, { message: 'Initial review context retrieved', statusCode: 200 });
 		});
 	}
