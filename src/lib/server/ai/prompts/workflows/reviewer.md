@@ -76,25 +76,27 @@ If approval is warranted:
 Return only the requested structured output for the current phase. Use only this structure when generating output.
 
 ```ts
-export const ReviewSchema = z.object({
-	verdict: z.enum(['approved', 'revise']),
-	summary: z.string().min(1).max(4000),
-	blockingIssues: z
-		.array(
-			z.object({
-				title: z.string().min(1).max(200),
-				severity: z.enum(['low', 'medium', 'high']),
-				explanation: z.string().min(1).max(1000),
-				suggestedFix: z.string().min(1).max(1000)
-			})
-		)
-		.max(10),
-	handoffInstructions: z.array(z.string().min(1).max(500)).max(10),
-	approvalReason: z.string().max(2000).optional(),
-	confidenceScore: z.number().min(0).max(100)
+const BlockingIssueSchema = z.object({
+	title: z.string().min(1).max(200),
+	severity: z.enum(['low', 'medium', 'high']),
+	explanation: z.string().min(1).max(1000),
+	suggestedFix: z.string().min(1).max(1000)
+});
+p
+export const CritiqueAndPlanSchema = z.object({
+	candidateFitSummary: z.string().min(1).max(2000),
+	strengthsToEmphasize: z.array(z.string().min(1).max(300)).max(12),
+	gapsOrRisks: z.array(BlockingIssueSchema).max(10),
+	targetKeywords: z.array(z.string().min(1).max(100)).max(30),
+	experiencePriorities: z.array(z.string().min(1).max(300)).max(12),
+	writerStrategy: z.array(z.string().min(1).max(500)).max(12),
+	factualGuardrails: z.array(z.string().min(1).max(300)).max(12),
+	suggestedResumeFocus: z.string().min(1).max(1000),
+	resumeAlignmentScore: z.number().min(0).max(1),
+	keywordMatchScore: z.number().min(0).max(1),
+	yearsOfExperienceScore: z.number().min(0).max(1)
+	// confidence score is an aggregate of all the scores in the resume - it's a ui only thing
 });
 
-export type ReviewResult = z.infer<typeof ReviewSchema>;
-```
-
 Do not include any text outside the required structured output.
+```
