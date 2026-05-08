@@ -231,7 +231,6 @@ export const completeAiCall = mutation({
 					message: `Expected running status, got ${llmCall.status}`
 				});
 			}
-
 			const payload = {
 				...Object.fromEntries(
 					Object.entries({
@@ -314,7 +313,7 @@ export const completeAiCall = mutation({
 						: JSON.stringify(args.content.error);
 				await insertLlmCallContentIfMissing(ctx, {
 					llmCallId: args.llmCallId,
-					kind: 'raw_response',
+					kind: 'error',
 					format: 'text',
 					text: errorText,
 					contentBytes: byteLength(errorText),
@@ -529,7 +528,8 @@ async function insertLlmCallContentIfMissing(
 			| 'response'
 			| 'raw_response'
 			| 'reasoning'
-			| 'structured_output';
+			| 'structured_output'
+			| 'error';
 		format: 'text' | 'json';
 		text?: string;
 		json?: string;
@@ -544,7 +544,7 @@ async function insertLlmCallContentIfMissing(
 
 	if (existing) return;
 
-	await ctx.db.insert('llmCallContents', {
+	const content = await ctx.db.insert('llmCallContents', {
 		llmCallId: doc.llmCallId,
 		kind: doc.kind,
 		format: doc.format,
@@ -554,4 +554,6 @@ async function insertLlmCallContentIfMissing(
 		contentBytes: doc.contentBytes,
 		createdAt: doc.createdAt
 	});
+
+	await ctx.db.get(content);
 }
