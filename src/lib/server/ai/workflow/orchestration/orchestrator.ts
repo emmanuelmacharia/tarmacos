@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { error as throwError } from '@sveltejs/kit';
 import { api } from '../../../../../convex/_generated/api';
-import type { Id, Doc } from '../../../../../convex/_generated/dataModel';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import { OPERATION_KIND, SCHEMA_VERSIONS } from './constants';
 import {
 	claimInstructionExecution,
@@ -535,7 +535,7 @@ async function handleExportInstruction(
 	runId: Id<'runs'>,
 	instruction: Extract<NextInstruction, { action: 'generate_export' }>
 ): Promise<NextInstruction> {
-	const { next } = await convex.mutation(api.runs.completeExport, {
+	const { next } = await convex.mutation(api.runs.index.completeExport, {
 		runId,
 		artifactVersionId: instruction.artifactVersionId,
 		format: 'pdf'
