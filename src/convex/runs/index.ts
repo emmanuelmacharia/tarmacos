@@ -511,6 +511,8 @@ export const claimInstructionExecution = mutation({
 
 			const currentInstruction = await deriveNextInstructionForRun(ctx, run);
 
+			console.log(currentInstruction);
+
 			if (currentInstruction.action === 'await_user' || currentInstruction.action === 'done') {
 				mapConvexError({
 					message: `Run ${args.runId} is not in an executable state`,
@@ -531,6 +533,8 @@ export const claimInstructionExecution = mutation({
 
 			const existingClaim = getExecutionClaim(run);
 
+			console.log(existingClaim);
+
 			if (existingClaim) {
 				mapConvexError({
 					message: `Instruction already claimed by execution ${existingClaim.executionId}`,
@@ -540,7 +544,7 @@ export const claimInstructionExecution = mutation({
 				});
 			}
 
-			await ctx.db.patch(args.runId, {
+			const payload = {
 				metadata: {
 					...getSafeMetadataObject(run.metadata),
 					execution: {
@@ -550,7 +554,11 @@ export const claimInstructionExecution = mutation({
 					}
 				},
 				updatedAt: Date.now()
-			});
+			};
+
+			await ctx.db.patch(args.runId, payload);
+
+			await ctx.db.get(args.runId);
 
 			return ok({ ok: true }, { message: 'Instruction claimed!' });
 		});
