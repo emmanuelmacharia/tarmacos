@@ -24,12 +24,12 @@ const BlockingIssueSchema = z.object({
 
 export const CritiqueAndPlanSchema = z.object({
 	candidateFitSummary: z.string().min(1).max(2000),
-	strengthsToEmphasize: z.array(z.string().min(1).max(300)).max(12),
+	strengthsToEmphasize: z.array(z.string().min(1).max(300)),
 	gapsOrRisks: z.array(BlockingIssueSchema).max(10),
-	targetKeywords: z.array(z.string().min(1).max(100)).max(30),
-	experiencePriorities: z.array(z.string().min(1).max(300)).max(12),
-	writerStrategy: z.array(z.string().min(1).max(500)).max(12),
-	factualGuardrails: z.array(z.string().min(1).max(300)).max(12),
+	targetKeywords: z.array(z.string().min(1).max(100)),
+	experiencePriorities: z.array(z.string().min(1).max(300)),
+	writerStrategy: z.array(z.string().min(1).max(500)),
+	factualGuardrails: z.array(z.string().min(1).max(300)),
 	suggestedResumeFocus: z.string().min(1).max(1000),
 	resumeAlignmentScore: z.number().min(0).max(1),
 	keywordMatchScore: z.number().min(0).max(1),
