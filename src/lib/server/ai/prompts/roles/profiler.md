@@ -43,18 +43,18 @@ Return an object matching this schema:
 
 ```ts
 export const ProfileCreationSchema = z.object({
-  profileName: z.string().min(1).max(200),
-  profileSummary: z.string().min(1).max(2000),
-  primaryFocus: z.string().min(1).max(500),
-  yearsOfExperience: z.number(),
-  seniorityLevel: z.union([
-    z.literal("intern"),
-    z.literal("junior"),
-    z.literal("mid"),
-    z.literal("senior"),
-    z.literal("lead"),
-    z.literal("manager"),
-  ]),
+	profileName: z.string().min(1).max(200),
+	profileSummary: z.string().min(1).max(2000),
+	primaryFocus: z.string().min(1).max(500),
+	yearsOfExperience: z.number(),
+	seniorityLevel: z.union([
+		z.literal('intern'),
+		z.literal('junior'),
+		z.literal('mid'),
+		z.literal('senior'),
+		z.literal('lead'),
+		z.literal('manager')
+	])
 });
 ```
 
