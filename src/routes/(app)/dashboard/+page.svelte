@@ -22,7 +22,10 @@
 		({
 			pdf: 'application/pdf',
 			doc: 'application/msword',
-			docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+			docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+			md: 'text/markdown',
+			markdown: 'text/markdown',
+			txt: 'text.plain'
 		}[file.name.split('.').pop()?.toLowerCase() ?? ''] ??
 			'');
 
@@ -38,9 +41,9 @@
 				return {
 					documentId: doc.documentId,
 					fileName: doc.file.name,
-					mimeType: doc.file.type || doc.file.name.split('.')[-1],
+					mimeType: inferMimeType(doc.file),
 					purpose: 'supporting' as const,
-					base64: await doc.file.text()
+					base64: await fileToBase64(doc.file)
 				};
 			})
 		);
