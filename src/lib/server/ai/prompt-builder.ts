@@ -231,7 +231,7 @@ export function buildProfilerTaskMesage(input: { resume: string; jobDescription:
 		`.trim()
 		),
 		section('baseline_resume', input.resume),
-		section('job_descripton', input.jobDescription)
+		section('job_description', input.jobDescription)
 	]
 		.filter(Boolean)
 		.join('\n\n');

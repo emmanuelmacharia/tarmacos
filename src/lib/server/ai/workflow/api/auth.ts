@@ -21,7 +21,11 @@ export async function requireConvexUser(event: {
 }): Promise<AuthenticatedConvexUser> {
 	const locals = event.locals as LocalsWithClerk;
 
-	const auth = await locals.auth?.();
+	if (!locals.auth) {
+		throw unauthenticated();
+	}
+
+	const auth = await locals.auth();
 
 	if (!auth.userId) {
 		throw unauthenticated();

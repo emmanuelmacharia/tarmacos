@@ -10,6 +10,22 @@
 
 	$effect(() => console.log(activeUserProfile, profileState));
 
+	const fileToBase64 = async (file: File) => {
+		const bytes = new Uint8Array(await file.arrayBuffer());
+		let binary = '';
+		for (const byte of bytes) binary += String.fromCharCode(byte);
+		return btoa(binary);
+	};
+
+	const inferMimeType = (file: File) =>
+		file.type ||
+		({
+			pdf: 'application/pdf',
+			doc: 'application/msword',
+			docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+		}[file.name.split('.').pop()?.toLowerCase() ?? ''] ??
+			'');
+
 	async function handleSubmit(data: {
 		jobDescription: string;
 		jobInstructions: string;
@@ -34,7 +50,7 @@
 			jobDescription: data.jobDescription,
 			models: {
 				reviewerModelSlug: data.models.reviewer.name ?? undefined,
-				writerModelSlug: data.models.reviewer.name ?? undefined
+				writerModelSlug: data.models.writer.name ?? undefined
 			},
 			jobInstructions: data.jobInstructions,
 			baselineCv: {

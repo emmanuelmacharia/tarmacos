@@ -34,15 +34,13 @@ export async function parseBase64Document(
 		});
 	}
 
-	const textFileExtract = extractTextFileDataWithoutEncoding(document);
+	// const textFileExtract = extractTextFileDataWithoutEncoding(document);
 
-	const extractedText =
-		textFileExtract ??
-		(await extractTextFromBytes({
-			bytes,
-			mimeType: document.mimeType,
-			fileName: document.fileName
-		}));
+	const extractedText = await extractTextFromBytes({
+		bytes,
+		mimeType: document.mimeType,
+		fileName: document.fileName
+	});
 
 	const normalizedText = normalizeExtractedText(extractedText);
 
@@ -68,13 +66,13 @@ export async function parseBase64Document(
 	};
 }
 
-function extractTextFileDataWithoutEncoding(document: Base64DocumentInput): string | null {
-	const { mimeType } = document;
-	if (mimeType === 'text/plain' || mimeType === 'text/markdown' || mimeType.includes('md')) {
-		return document.base64;
-	}
-	return null;
-}
+// function extractTextFileDataWithoutEncoding(document: Base64DocumentInput): string | null {
+// 	const { mimeType } = document;
+// 	if (mimeType === 'text/plain' || mimeType === 'text/markdown' || mimeType.includes('md')) {
+// 		return document.base64;
+// 	}
+// 	return null;
+// }
 
 function validateDocumentInput(document: Base64DocumentInput): void {
 	if (!document.fileName.trim()) {
@@ -121,6 +119,8 @@ async function extractTextFromBytes(input: {
 	switch (input.mimeType) {
 		case 'text/plain':
 		case 'text/markdown':
+		case 'text/md':
+		case 'md':
 			return new TextDecoder('utf-8').decode(input.bytes);
 
 		case 'application/pdf':

@@ -63,12 +63,11 @@ async function assertProfileExistsAndBelongsToUser(
 ) {
 	try {
 		const profile = await convex.query(api.user.profiles.fetchProfile, { profileId });
-		if (profile.ok && profile.data) {
-			return true;
+		if (!profile.ok || !profile.data) {
+			throw apiError('PROFILE_NOT_FOUND', 'Profile not found or access denied', 403);
 		}
 	} catch (error) {
 		handleErrorsFromConvexTransactions(error);
-		return false;
 	}
 }
 

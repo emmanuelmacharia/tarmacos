@@ -121,14 +121,15 @@
 	}
 
 	function submitPrompt() {
-		if (!promptText.trim() && !attachedFiles.length) return;
+		const resume = attachedFiles[0];
+		if (!promptText.trim() || !attachedFiles.length || resume.status !== 'ready') return;
 		// begin a run
 		const payload = {
 			jobDescription: promptText,
 			jobInstructions: additionalInstructions,
 			models: modelSelections,
 			resume: attachedFiles[0],
-			supportingDocuments: attachedFiles.slice(1, attachedFiles.length - 1)
+			supportingDocuments: attachedFiles.slice(1).filter((f) => f.status === 'ready')
 		};
 
 		onsubmit(payload);

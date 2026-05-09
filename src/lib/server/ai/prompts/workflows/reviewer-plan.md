@@ -74,7 +74,7 @@ const BlockingIssueSchema = z.object({
 	explanation: z.string().min(1).max(1000),
 	suggestedFix: z.string().min(1).max(1000)
 });
-p;
+
 export const CritiqueAndPlanSchema = z.object({
 	candidateFitSummary: z.string().min(1).max(2000),
 	strengthsToEmphasize: z.array(z.string().min(1).max(300)).max(12),

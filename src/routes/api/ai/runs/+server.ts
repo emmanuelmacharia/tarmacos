@@ -9,8 +9,6 @@ export const POST = withApiErrorHandling(async (event) => {
 	const apiEvent = await requireAuthedEvent(event);
 	const { convex } = apiEvent.ctx;
 
-	console.log('convex auth ====>', convex);
-
 	const rawInput = await parseStartWorkflowApiRequest(event.request);
 
 	const prepared = await prepareWorkflowStart({ convex, input: rawInput });
@@ -22,6 +20,10 @@ export const POST = withApiErrorHandling(async (event) => {
 	console.log('build workflow Args ====> ', workflowRequest);
 
 	const result = await startWorkflow(workflowRequest.convex, workflowRequest.input);
+
+	if (!result || result.runId || !result?.terminalAction) {
+		throw new Error('Workflow did not start');
+	}
 
 	return json({ runId: result?.runId, action: result?.terminalAction }, { status: 202 });
 });

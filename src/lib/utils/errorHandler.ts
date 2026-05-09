@@ -93,7 +93,7 @@ export function unauthenticated(): APIError {
 	return apiError('UNAUTHENTICATED', 'Authentication is required', 401);
 }
 
-export function forbidden(message: 'You dont have permission to access this resource') {
+export function forbidden(message = 'You dont have permission to access this resource') {
 	return apiError('FORBIDDEN', message, 403);
 }
 
