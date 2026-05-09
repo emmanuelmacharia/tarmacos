@@ -76,25 +76,33 @@ If approval is warranted:
 Return only the requested structured output for the current phase. Use only this structure when generating output.
 
 ```ts
-export const ReviewSchema = z.object({
-	verdict: z.enum(['approved', 'revise']),
-	summary: z.string().min(1).max(4000),
-	blockingIssues: z
-		.array(
-			z.object({
-				title: z.string().min(1).max(200),
-				severity: z.enum(['low', 'medium', 'high']),
-				explanation: z.string().min(1).max(1000),
-				suggestedFix: z.string().min(1).max(1000)
-			})
-		)
-		.max(10),
-	handoffInstructions: z.array(z.string().min(1).max(500)).max(10),
-	approvalReason: z.string().max(2000).optional(),
-	confidenceScore: z.number().min(0).max(100)
+const BlockingIssueSchema = z.object({
+	title: z.string().min(1).max(200),
+	severity: z.enum(['low', 'medium', 'high']),
+	explanation: z.string().min(1).max(1000),
+	suggestedFix: z.string().min(1).max(1000)
 });
 
-export type ReviewResult = z.infer<typeof ReviewSchema>;
+export const ReviewSchema = z.discriminatedUnion('verdict', [
+	z.object({
+		verdict: z.literal('approved'),
+		summary: z.string().min(1).max(4000),
+		handoffInstructions: z.array(z.string().min(1).max(500)).max(10),
+		approvalReason: z.string().min(1).max(2000),
+		resumeAlignmentScore: z.number().min(0).max(1),
+		keywordMatchScore: z.number().min(0).max(1),
+		yearsOfExperienceScore: z.number().min(0)
+	}),
+	z.object({
+		verdict: z.literal('revise'),
+		summary: z.string().min(1).max(4000),
+		blockingIssues: z.array(BlockingIssueSchema).min(1).max(10),
+		handoffInstructions: z.array(z.string().min(1).max(500)).min(1).max(10),
+		resumeAlignmentScore: z.number().min(0).max(1),
+		keywordMatchScore: z.number().min(0).max(1),
+		yearsOfExperienceScore: z.number().min(0)
+	})
+]);
 ```
 
 Do not include any text outside the required structured output.

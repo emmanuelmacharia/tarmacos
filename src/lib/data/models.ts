@@ -1,3 +1,5 @@
+import type { Id } from '../../convex/_generated/dataModel';
+
 export type Model = {
 	provider: string | null;
 	name: string | null;
@@ -82,7 +84,7 @@ export interface Props {
 	modelSelections: Record<Role, SelectedModel>;
 }
 
-export type Role = 'writer' | 'reviewer';
+export type Role = 'writer' | 'reviewer' | 'profiler';
 
 export type Level =
 	| 'intern'
@@ -95,7 +97,7 @@ export type Level =
 	| 'manager';
 
 export type Profile = {
-	_id: string;
+	_id: Id<'profiles'>;
 	userId: string;
 	name: string;
 	summary?: string;

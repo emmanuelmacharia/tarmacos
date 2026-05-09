@@ -1,6 +1,6 @@
 import type { ConvexHttpClient } from 'convex/browser';
-import { api } from '../../../../convex/_generated/api';
-import type { Id } from '../../../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import type {
 	InstructionExecutionClaim,
 	ReviewerPlanContext,
@@ -8,7 +8,7 @@ import type {
 	WriterContext
 } from './types';
 import { handleErrorsFromConvexTransactions } from '$lib/utils/errorHandler';
-import type { NextInstruction } from '../../../../convex/lib/schemaTypes';
+import type { NextInstruction } from '../../../../../convex/lib/schemaTypes';
 
 export async function getReviewerPlanContext(
 	convex: ConvexHttpClient,
@@ -20,6 +20,7 @@ export async function getReviewerPlanContext(
 			runId,
 			artifactVersionId
 		});
+		console.log(result, result.data as ReviewerPlanContext);
 		return result.data as ReviewerPlanContext;
 	} catch (error) {
 		throw handleErrorsFromConvexTransactions(error);
@@ -90,6 +91,7 @@ export async function getNextInstructionForRun(
 	convex: ConvexHttpClient,
 	runId: Id<'runs'>
 ): Promise<NextInstruction> {
+	console.log(runId);
 	try {
 		const result = await convex.query(api.runs.index.getNextInstruction, { runId });
 		return result;

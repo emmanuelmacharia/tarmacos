@@ -73,9 +73,11 @@ function section(label: string, value?: string): string {
  * To keep the handoff precise across agent turns.
  */
 function jsonSection(label: string, value: unknown): string {
-	const serialized = JSON.stringify(value, null, 2)
-		.replace(/</g, '\\u003c')
-		.replace(/>/g, '\\u003e');
+	const isString = typeof value === 'string';
+
+	const serialized = !isString
+		? JSON.stringify(value, null, 2).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')
+		: value.replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 	return [`<${label}>`, serialized, `</${label}>`].join('\n');
 }
 
@@ -141,6 +143,8 @@ export function buildReviewerPlanTaskMessage(args: BuildReviewerPlanTaskArgs): s
  * - critiquePlan remains included so the writer keeps the original strategy
  */
 export function buildWriterTaskMessage(args: BuildWriterTaskArgs): string {
+	console.log('building the writer prompt');
+	console.log(args);
 	const parts = [
 		'Produce a tailored resume draft for the target job.',
 		'Use the critique plan as your main steering artifact.',
@@ -191,6 +195,46 @@ export function buildReviewerReviewTaskMessage(args: BuildReviewerReviewTaskArgs
 		section('baseline_cv', args.baselineCv),
 		jsonSection('critique_plan_json', args.critiquePlan),
 		section('current_draft', args.currentDraft)
+	]
+		.filter(Boolean)
+		.join('\n\n');
+}
+
+/**
+ * Profiling prompt
+ *
+ */
+export function buildProfilerTaskMessage(input: {
+	resume: string;
+	jobDescription: string;
+}): string {
+	return [
+		section(
+			'task_instructions',
+			`
+		Create a job profile from the baseline resume and job description.
+
+		Return only valid JSON matching ProfileCreationSchema:
+		{
+		"profileName": string,
+		"profileSummary": string,
+		"primaryFocus": string,
+		"yearsOfExperience": number,
+		"seniorityLevel": "intern" | "junior" | "mid" | "senior" | "lead" | "manager"
+		}
+
+		Requirements:
+		- Base profileName, primaryFocus, and seniorityLevel primarily on the job description.
+		- Treat seniorityLevel as the target role level, not the candidate's current level.
+		- Use the resume as the factual source for profileSummary and yearsOfExperience.
+		- Do not invent experience, tools, credentials, employers, dates, or achievements.
+		- If the job description and resume differ, preserve the job target in profileName/seniorityLevel, but keep profileSummary factually supported by the resume.
+		- Estimate yearsOfExperience conservatively from relevant resume experience; use 0 if unclear.
+		- Do not include markdown, explanations, comments, or extra fields.
+		`.trim()
+		),
+		section('baseline_resume', input.resume),
+		section('job_description', input.jobDescription)
 	]
 		.filter(Boolean)
 		.join('\n\n');

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { error as throwError } from '@sveltejs/kit';
-import { api } from '../../../../convex/_generated/api';
-import type { Id, Doc } from '../../../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import { OPERATION_KIND, SCHEMA_VERSIONS } from './constants';
 import {
 	claimInstructionExecution,
@@ -25,16 +25,16 @@ import {
 	type NormalizationResult,
 	type NormalizedDraft
 } from './normalization';
-import { assertModelAllowedForRole } from '../models';
-import { resolveCustomProfileInstructions } from '../profile-customization';
+import { assertModelAllowedForRole } from '../../models';
+import { resolveCustomProfileInstructions } from '../../profile-customization';
 import {
 	buildReviewerPlanTaskMessage,
 	buildReviewerReviewTaskMessage,
 	buildSystemPrompt,
 	buildWriterTaskMessage,
 	sanitizeUserText
-} from '../prompt-builder';
-import { CritiqueAndPlanSchema, ReviewSchema, type WorkflowRequest } from '../schemas';
+} from '../../prompt-builder';
+import { CritiqueAndPlanSchema, ReviewSchema, type WorkflowRequest } from '../../schemas';
 import type {
 	CanonicalBaselineReview,
 	CanonicalDraft,
@@ -43,17 +43,14 @@ import type {
 } from './types';
 import { parseConvexMessage } from '$lib/utils/errorHandler';
 import type { ConvexHttpClient } from 'convex/browser';
-import type { NextInstruction } from '../../../../convex/lib/schemaTypes';
+import type { NextInstruction } from '../../../../../convex/lib/schemaTypes';
 
 export interface StartWorkflowResult {
 	runId: Id<'runs'>;
 	terminalAction: 'done' | 'await_user';
 }
 
-async function persistRun(
-	input: WorkflowRequest,
-	convex: ConvexHttpClient
-): Promise<Doc<'runs'> | null> {
+async function persistRun(input: WorkflowRequest, convex: ConvexHttpClient) {
 	const [writerProfileInstructions, reviewerProfileInstructions] = await Promise.all([
 		resolveCustomProfileInstructions(convex, {
 			role: 'writer',
@@ -147,9 +144,12 @@ async function persistRun(
 		}
 	};
 
+	payload.documents.map((doc) => console.table({ id: doc.documentId, purpose: doc.purpose }));
+
 	try {
 		const run = await convex.action(api.runs.actions.createRun, payload);
-		return run.data as Doc<'runs'>;
+		console.log('==================created run ==============\n', run);
+		return run.data;
 	} catch (error) {
 		if (error instanceof Error) {
 			const errorobj = parseConvexMessage(error.message);
@@ -175,11 +175,17 @@ export async function startWorkflow(
 		requiredStructuredOutput: true
 	});
 
-	const run: Doc<'runs'> | null = await persistRun(input, convex);
+	const run = await persistRun(input, convex);
+
+	console.log(
+		'=========================================RUN CREATED================================================'
+	);
 
 	if (run) {
 		const next = await getNextInstructionForRun(convex, run._id);
-		const { _id: runId } = run;
+		const runId = run._id;
+
+		console.log('here are the next instructions', next);
 
 		const terminalAction = await executeLoop(convex, runId, next, input.signal);
 
@@ -211,6 +217,11 @@ async function executeLoop(
 	signal?: AbortSignal
 ): Promise<'done' | 'await_user'> {
 	let instruction = initialInstruction;
+
+	console.log(
+		'==========================================INITIATING WRITER-REVIEW LOOP================================================'
+	);
+	console.log(instruction);
 
 	while (instruction.action !== 'done' && instruction.action !== 'await_user') {
 		const executionId = randomUUID();
@@ -289,8 +300,10 @@ async function handleBaselineAssessment(
 	instruction: Extract<NextInstruction, { action: 'call_reviewer' }>,
 	signal?: AbortSignal
 ): Promise<NextInstruction> {
+	console.log(
+		'==========================PHASE 1: BASELINE ASSESSMENT============================='
+	);
 	const context = await getReviewerPlanContext(convex, runId, instruction.artifactVersionId);
-
 	const system = buildSystemPrompt({
 		role: 'reviewer',
 		workflow: 'reviewerPlan'
@@ -310,13 +323,13 @@ async function handleBaselineAssessment(
 		role: 'reviewer',
 		modelSlug: context.agent.modelSlug,
 		gatewayProvider: context.agent.gatewayProvider,
-		requestParams: context.agent.defaultRequestParameters,
+		requestParams: context.agent.defaultRequestParams,
 		system,
 		basePrompt,
 		schema: CritiqueAndPlanSchema,
 		loopNumber: context.loopNumber,
 		operationKind: OPERATION_KIND.baselineReview,
-		maxRetriesPerCall: context.agent.defaultRequestParameters.responseFormat === 'json' ? 1 : 3,
+		maxRetriesPerCall: context.agent.defaultRequestParams.responseFormat === 'json' ? 1 : 3,
 		maxNormalizationRepairs: 1,
 		signal,
 		normalize: normalizeCritiquePlan,
@@ -337,7 +350,7 @@ async function handleBaselineAssessment(
 
 	const messageSummary = buildBaselineAssessmentMessage(normalized.data);
 
-	const { next } = await convex.mutation(api.runs.completeBaselineReview, {
+	const { next } = await convex.mutation(api.runs.index.completeBaselineReview, {
 		runId,
 		llmCallId: normalized.llmCallId,
 		canonical,
@@ -376,7 +389,7 @@ async function handleDraftReview(
 		role: 'reviewer',
 		modelSlug: context.agent.modelSlug,
 		gatewayProvider: context.agent.gatewayProvider,
-		requestParams: context.agent.defaultRequestParameters,
+		requestParams: context.agent.defaultRequestParams,
 		system,
 		basePrompt,
 		schema: ReviewSchema,
@@ -411,7 +424,7 @@ async function handleDraftReview(
 			? buildMaxIterationsMessage(context.currentIteration)
 			: undefined;
 
-	const { next } = await convex.mutation(api.runs.completeReview, {
+	const { next } = await convex.mutation(api.runs.index.completeReview, {
 		runId,
 		llmCallId: normalized.llmCallId,
 		canonical,
@@ -428,6 +441,9 @@ async function handleWriterInstruction(
 	instruction: Extract<NextInstruction, { action: 'call_writer' }>,
 	signal?: AbortSignal
 ): Promise<NextInstruction> {
+	console.log(
+		'===========================================PHASE 2* - WRITER DRAFT==================================================='
+	);
 	const context = await getWriterContext(convex, {
 		runId,
 		basedOnVersionId: instruction.basedOnVersionId,
@@ -436,6 +452,7 @@ async function handleWriterInstruction(
 		userMessageId: instruction.userMessageId
 	});
 
+	console.log('writer context ==========================> \n', context);
 	const workflow = context.requestKind === 'initial_draft' ? 'writerDraft' : 'writerRevise';
 
 	const system = buildSystemPrompt({
@@ -443,16 +460,20 @@ async function handleWriterInstruction(
 		workflow
 	});
 
+	console.log('writer system prompt', system);
+
 	const basePrompt = buildWriterTaskMessage({
 		jobDescription: context.jobDescription,
 		baselineCv: context.baselineCv,
 		profileInstructions: context.profileInstructions,
 		jobInstructions: context.jobInstructions,
-		critiquePlan: context.critiquePlan,
+		critiquePlan: context.baselineAssessment,
 		previousDraft: context.previousDraftMarkdown,
 		latestReview: context.latestReview,
 		latestUserFeedback: context.latestUserFeedback
 	});
+
+	console.log(basePrompt);
 
 	const normalized = await generateFreeformWithRepair({
 		convex,
@@ -461,10 +482,10 @@ async function handleWriterInstruction(
 		role: 'writer',
 		modelSlug: context.agent.modelSlug,
 		gatewayProvider: context.agent.gatewayProvider,
-		requestParams: context.agent.defaultRequestParameters,
+		requestParams: context.agent.defaultRequestParams,
 		system,
 		basePrompt,
-		loopNumber: context.loopNumber,
+		loopNumber: context.loopCount,
 		operationKind:
 			context.requestKind === 'initial_draft'
 				? OPERATION_KIND.draftGeneration
@@ -514,7 +535,7 @@ async function handleExportInstruction(
 	runId: Id<'runs'>,
 	instruction: Extract<NextInstruction, { action: 'generate_export' }>
 ): Promise<NextInstruction> {
-	const { next } = await convex.mutation(api.runs.completeExport, {
+	const { next } = await convex.mutation(api.runs.index.completeExport, {
 		runId,
 		artifactVersionId: instruction.artifactVersionId,
 		format: 'pdf'
@@ -682,9 +703,7 @@ async function generateFreeformWithRepair(args: {
 			throw new Error(normalized.error);
 		}
 
-		prompt = `${args.basePrompt}
-
-${args.repairPromptSuffix(normalized.error)}`;
+		prompt = `${args.basePrompt} \n ${args.repairPromptSuffix(normalized.error)}`;
 	}
 
 	throw new Error(lastError);

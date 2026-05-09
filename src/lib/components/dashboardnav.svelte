@@ -26,6 +26,12 @@
 
 	let defaultActiveProfile: Profile = $derived(activeProfile ? activeProfile : profiles[0]);
 
+	$effect(() => {
+		if (!activeProfile && defaultActiveProfile) {
+			activeProfile = defaultActiveProfile;
+		}
+	});
+
 	const navItems = [
 		{ label: 'Dashboard', href: '/dashboard', icon: Briefcase },
 		// { label: 'Generations', href: '/dashboard/generations', icon: FileText },

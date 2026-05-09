@@ -1,5 +1,5 @@
 import type { ConvexHttpClient } from 'convex/browser';
-import type { Id } from '../../../../convex/_generated/dataModel';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import type {
 	CompleteLLMCallParams,
 	LLMCallPhase,
@@ -10,8 +10,8 @@ import type {
 	OutputStrategy
 } from './types';
 import type z from 'zod';
-import { api } from '../../../../convex/_generated/api';
-import { getChatModel } from '../openrouter';
+import { api } from '../../../../../convex/_generated/api';
+import { getChatModel } from '../../openrouter';
 import { generateText, Output } from 'ai';
 
 export interface BaseCallArgs {
@@ -93,8 +93,18 @@ export async function callStructuredOutput<T>(
 				executor: () => executeStructuredCall(args, strategy)
 			});
 
+			console.log(
+				'==============RESPONSE FROM RUN SINGLE ATTEMPT =================== \n',
+				'------LLMCALLID------------\n',
+				llmCallId,
+				'\n ----------------- LLM CALL RESULT -----------------\n',
+				result
+			);
+
 			if (result.kind === 'success') {
 				const validated = args.schema.safeParse(result.outcome.output);
+				console.log(args.schema);
+				console.table(validated);
 				if (!validated.success) {
 					// treat as failure - record and continue the retry chain
 					/**
@@ -367,11 +377,42 @@ async function runSingleAttempt(
 	}
 }
 
+export async function profileCreationInference<T>(input: {
+	systemPrompt: string;
+	profileCreationPrompt: string;
+	strategy: OutputStrategy;
+	schema: z.ZodType<T>;
+	modelSlug: string;
+}) {
+	const result = await generateText({
+		model: getChatModel(input.modelSlug),
+		system: input.systemPrompt,
+		prompt: input.profileCreationPrompt,
+		temperature: 0.1,
+		topP: 0.4,
+		maxOutputTokens: 5000,
+		output: Output.object({
+			schema: input.schema
+		}),
+		providerOptions: {
+			openrouter: {
+				provider: {
+					require_parameters: true,
+					order: ['deepinfra/bf16']
+				}
+			}
+		}
+	});
+
+	return result.output;
+}
+
 async function executeStructuredCall<T>(
 	args: StructuredCallArgs<T>,
 	strategy: OutputStrategy
 ): Promise<AttemptOutcome> {
 	const startedAt = Date.now();
+	console.log(strategy);
 	if (strategy === 'native_structured') {
 		const result = await generateText({
 			model: getChatModel(args.modelSlug),
@@ -389,8 +430,10 @@ async function executeStructuredCall<T>(
 			providerOptions: buildProviderOptions(args.requestParams)
 		});
 
-		console.log('raw response result', result);
-
+		console.log(
+			'==========================================raw response result=====================================\n',
+			result
+		);
 		return {
 			latencyMs: Date.now() - startedAt,
 			inputTokens: result.usage?.inputTokens,
@@ -401,8 +444,8 @@ async function executeStructuredCall<T>(
 			rawText: JSON.stringify(result.output),
 			output: result.output,
 			reasoning: normalizeReasoning(result.reasoning),
-			openRouterRequestId: result.response.id,
-			routedProvider: result.providerMetadata?.provider.id?.toString(),
+			openRouterRequestId: result.response?.id,
+			routedProvider: result.providerMetadata?.provider?.id?.toString(),
 			strategyUsed: 'native_structured',
 			status: 'completed',
 			completedAt: Date.now(),
@@ -426,6 +469,11 @@ async function executeStructuredCall<T>(
 	});
 
 	const parsed = parseJSONResponse(result.text);
+
+	console.log(
+		'==========================================raw response result=====================================\n',
+		result
+	);
 
 	return {
 		latencyMs: Date.now() - startedAt,
@@ -458,6 +506,8 @@ async function executeFreeformCall(args: BaseCallArgs): Promise<AttemptOutcome> 
 		providerOptions: buildProviderOptions(args.requestParams)
 	});
 
+	console.log('======================== FREE FORM ==================================\n', result);
+
 	return {
 		latencyMs: Date.now() - startedAt,
 		inputTokens: result.usage?.inputTokens,
@@ -484,6 +534,12 @@ async function updateCallStatus(
 async function completeCall(convex: ConvexHttpClient, args: CompleteLLMCallParams): Promise<void> {
 	try {
 		const { content } = args;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const error = content.error as any;
+		let err;
+		if (error instanceof Error) {
+			err = error.toString();
+		}
 		const completeCallContent = {
 			...content,
 			structuredOutput: content.structuredOutput
@@ -496,8 +552,10 @@ async function completeCall(convex: ConvexHttpClient, args: CompleteLLMCallParam
 					? ''
 					: typeof content.rawResponse === 'string'
 						? content.rawResponse
-						: JSON.stringify(content.rawResponse)
+						: JSON.stringify(content.rawResponse),
+			error: err ?? content.error
 		};
+
 		await convex.mutation(api.ai.index.completeAiCall, { ...args, content: completeCallContent });
 	} catch (error) {
 		console.log('Error completing LLM call:', error);

@@ -311,6 +311,24 @@ export const completeBaselineReview = mutation({
 	}
 });
 
+export const completeReview = mutation({
+	args: {
+		runId: v.id('runs'),
+		llmCallId: v.id('llmCalls'),
+		canonical: v.any(),
+		messageSummary: v.string(),
+		maxIterationsMessage: v.optional(v.string())
+	},
+	handler: async (ctx, args) => {
+		console.log(ctx);
+		console.log(args);
+
+		const run = assertFound(await ctx.db.get(args.runId));
+
+		return { next: deriveNextInstructionForRun(ctx, run) };
+	}
+});
+
 export const completeDraft = mutation({
 	args: {
 		runId: v.id('runs'),
@@ -493,6 +511,8 @@ export const claimInstructionExecution = mutation({
 
 			const currentInstruction = await deriveNextInstructionForRun(ctx, run);
 
+			console.log(currentInstruction);
+
 			if (currentInstruction.action === 'await_user' || currentInstruction.action === 'done') {
 				mapConvexError({
 					message: `Run ${args.runId} is not in an executable state`,
@@ -513,6 +533,8 @@ export const claimInstructionExecution = mutation({
 
 			const existingClaim = getExecutionClaim(run);
 
+			console.log(existingClaim);
+
 			if (existingClaim) {
 				mapConvexError({
 					message: `Instruction already claimed by execution ${existingClaim.executionId}`,
@@ -522,7 +544,7 @@ export const claimInstructionExecution = mutation({
 				});
 			}
 
-			await ctx.db.patch(args.runId, {
+			const payload = {
 				metadata: {
 					...getSafeMetadataObject(run.metadata),
 					execution: {
@@ -532,7 +554,11 @@ export const claimInstructionExecution = mutation({
 					}
 				},
 				updatedAt: Date.now()
-			});
+			};
+
+			await ctx.db.patch(args.runId, payload);
+
+			await ctx.db.get(args.runId);
 
 			return ok({ ok: true }, { message: 'Instruction claimed!' });
 		});
@@ -612,6 +638,37 @@ export const getNextInstruction = query({
 			forbiddenCheck(() => run.userId === user._id);
 
 			return deriveNextInstructionForRun(ctx, run);
+		});
+	}
+});
+
+export const completeExport = mutation({
+	args: {
+		runId: v.id('runs'),
+		artifactVersionId: v.id('artifactVersions'),
+		format: v.literal('pdf')
+	},
+	handler: async (ctx, args) => {
+		// TODO: to be implemented in templates
+		return withAppErrors(async () => {
+			const identity = assertFound(
+				await ctx.auth.getUserIdentity(),
+				'Please log in or sign up to continue',
+				true
+			);
+			const clerkId = identity.subject;
+			const user = assertFound(
+				await ctx.db
+					.query('users')
+					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
+					.unique(),
+				'User not found',
+				true
+			);
+			const run = assertFound(await ctx.db.get(args.runId), 'Run not found');
+			forbiddenCheck(() => run.userId === user._id);
+
+			return { next: deriveNextInstructionForRun(ctx, run) };
 		});
 	}
 });

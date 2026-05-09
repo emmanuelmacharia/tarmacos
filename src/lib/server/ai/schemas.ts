@@ -1,5 +1,20 @@
 import { z } from 'zod';
 
+export const ProfileCreationSchema = z.object({
+	profileName: z.string().min(1).max(200),
+	profileSummary: z.string().min(1).max(2000),
+	primaryFocus: z.string().min(1).max(500),
+	yearsOfExperience: z.number().min(0),
+	seniorityLevel: z.union([
+		z.literal('intern'),
+		z.literal('junior'),
+		z.literal('mid'),
+		z.literal('senior'),
+		z.literal('lead'),
+		z.literal('manager')
+	])
+});
+
 const BlockingIssueSchema = z.object({
 	title: z.string().min(1).max(200),
 	severity: z.enum(['low', 'medium', 'high']),
@@ -9,16 +24,16 @@ const BlockingIssueSchema = z.object({
 
 export const CritiqueAndPlanSchema = z.object({
 	candidateFitSummary: z.string().min(1).max(2000),
-	strengthsToEmphasize: z.array(z.string().min(1).max(300)).max(12),
+	strengthsToEmphasize: z.array(z.string().min(1).max(300)),
 	gapsOrRisks: z.array(BlockingIssueSchema).max(10),
-	targetKeywords: z.array(z.string().min(1).max(100)).max(30),
-	experiencePriorities: z.array(z.string().min(1).max(300)).max(12),
-	writerStrategy: z.array(z.string().min(1).max(500)).max(12),
-	factualGuardrails: z.array(z.string().min(1).max(300)).max(12),
+	targetKeywords: z.array(z.string().min(1).max(100)),
+	experiencePriorities: z.array(z.string().min(1).max(300)),
+	writerStrategy: z.array(z.string().min(1).max(500)),
+	factualGuardrails: z.array(z.string().min(1).max(300)),
 	suggestedResumeFocus: z.string().min(1).max(1000),
 	resumeAlignmentScore: z.number().min(0).max(1),
 	keywordMatchScore: z.number().min(0).max(1),
-	yearsOfExperienceScore: z.number().min(0).max(1)
+	yearsOfExperienceScore: z.number().min(0)
 	// confidence score is an aggregate of all the scores in the resume - it's a ui only thing
 });
 
@@ -28,22 +43,20 @@ export const ReviewSchema = z.discriminatedUnion('verdict', [
 	z.object({
 		verdict: z.literal('approved'),
 		summary: z.string().min(1).max(4000),
-		blockingIssues: z.array(BlockingIssueSchema).max(10),
 		handoffInstructions: z.array(z.string().min(1).max(500)).max(10),
 		approvalReason: z.string().min(1).max(2000),
 		resumeAlignmentScore: z.number().min(0).max(1),
 		keywordMatchScore: z.number().min(0).max(1),
-		yearsOfExperienceScore: z.number().min(0).max(1)
+		yearsOfExperienceScore: z.number().min(0)
 	}),
 	z.object({
 		verdict: z.literal('revise'),
 		summary: z.string().min(1).max(4000),
 		blockingIssues: z.array(BlockingIssueSchema).min(1).max(10),
 		handoffInstructions: z.array(z.string().min(1).max(500)).min(1).max(10),
-		approvalReason: z.string().max(2000).optional(),
 		resumeAlignmentScore: z.number().min(0).max(1),
 		keywordMatchScore: z.number().min(0).max(1),
-		yearsOfExperienceScore: z.number().min(0).max(1)
+		yearsOfExperienceScore: z.number().min(0)
 	})
 ]);
 
@@ -52,10 +65,16 @@ export type ReviewResult = z.infer<typeof ReviewSchema>;
 export const WriterDraftSchema = z.object({}); // I'm thinking of creating an output schema for the writer as well
 
 export const WorkflowRequestSchema = z.object({
+	// <- request you send to the orchestration layer
 	profileId: z.string(), // not optional anymore
 	// projectId: z.string().optional(), // what was this one for?
 
 	// TODO: we need to check into this one again
+	/**
+	 * We could use the JD as a simple string - use it that way = the problem is where it would live
+	 * Run documents need to be maintained in storage
+	 * Unless we create a file from the pasted text JD - we'll need to rethink this one
+	 */
 	jobDescription: z.object({
 		extractedText: z.string().min(1).max(20_000),
 		extractedTextSource: z.optional(z.string()),
@@ -86,7 +105,12 @@ export const WorkflowRequestSchema = z.object({
 
 export type WorkflowRequest = z.infer<typeof WorkflowRequestSchema>;
 
-export type WorkflowPhase = 'reviewerPlan' | 'writerDraft' | 'writerRevise' | 'reviewerReview';
+export type WorkflowPhase =
+	| 'reviewerPlan'
+	| 'writerDraft'
+	| 'writerRevise'
+	| 'reviewerReview'
+	| 'preflight'; // preflight for profile creeation or other llm calls that dont work within a phase
 
 export type WorkflowEvent =
 	| {

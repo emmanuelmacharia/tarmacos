@@ -24,7 +24,9 @@ export const documentType = v.union(
 	v.literal('uploaded_resume'),
 	v.literal('promoted_generated_resume'),
 	v.literal('uploaded_coverletter'),
-	v.literal('promoted_generated_coverletter')
+	v.literal('promoted_generated_coverletter'),
+	v.literal('job_description'),
+	v.literal('supporting_documents')
 );
 
 export const documentFormat = v.union(
@@ -32,7 +34,8 @@ export const documentFormat = v.union(
 	v.literal('docx'),
 	v.literal('markdown'),
 	v.literal('txt'),
-	v.literal('json')
+	v.literal('json'),
+	v.literal('md')
 );
 
 export const runStatus = v.union(
@@ -193,7 +196,8 @@ export const llmContentKind = v.union(
 	v.literal('response'),
 	v.literal('raw_response'),
 	v.literal('reasoning'),
-	v.literal('structured_output')
+	v.literal('structured_output'),
+	v.literal('error')
 );
 
 export const llmContentFormat = v.union(v.literal('json'), v.literal('text'));

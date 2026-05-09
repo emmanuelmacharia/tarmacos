@@ -1,5 +1,5 @@
-import type { Id } from '../../../../convex/_generated/dataModel';
-import type { NextInstruction } from '../../../../convex/lib/schemaTypes';
+import type { Id } from '../../../../../convex/_generated/dataModel';
+import type { NextInstruction } from '../../../../../convex/lib/schemaTypes';
 import type {
 	NormalizedCritiquePlan,
 	NormalizedDraft,
@@ -45,7 +45,7 @@ export interface AgentRoleConfig {
 		revision?: string;
 		rolePromptVersion?: string;
 	};
-	defaultRequestParameters: ModelRequestParameters;
+	defaultRequestParams: ModelRequestParameters;
 }
 
 export interface AgentConfig {
@@ -201,11 +201,11 @@ export interface WriterContext {
 	baselineCv: string;
 	jobInstructions: string;
 	profileInstructions: string;
-	critiquePlan: NormalizedCritiquePlan;
+	baselineAssessment: NormalizedCritiquePlan;
 	requestKind: 'initial_draft' | 'review_revision' | 'user_feedback_revision';
 	previousDraftMarkdown?: string;
 	latestReview?: NormalizedReviewResult;
 	latestUserFeedback?: string;
 	currentIteration: number;
-	loopNumber: number;
+	loopCount: number;
 }

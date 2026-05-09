@@ -11,17 +11,20 @@ import writerDraftWorkflow from './prompts/workflows/writer-drafts.md?raw';
 import writerReviseWorkflow from './prompts/workflows/writer-revise.md?raw';
 import reviewerWorkflow from './prompts/workflows/reviewer.md?raw';
 import planWorkflow from './prompts/workflows/reviewer-plan.md?raw';
+import profilerRolePrompt from './prompts/roles/profiler.md?raw';
 
 export const PROMPTS = {
 	baseSystemPrompt: systemPrompt.trim(),
 	roles: {
 		writer: writerRolePrompt.trim(),
-		reviewer: reviewerRolePrompt.trim()
+		reviewer: reviewerRolePrompt.trim(),
+		profiler: profilerRolePrompt.trim()
 	},
 	workflows: {
 		reviewerPlan: planWorkflow.trim(),
 		writerDraft: writerDraftWorkflow.trim(),
 		writerRevise: writerReviseWorkflow.trim(),
-		reviewerReview: reviewerWorkflow.trim()
+		reviewerReview: reviewerWorkflow.trim(),
+		preflight: ''
 	}
 } as const;

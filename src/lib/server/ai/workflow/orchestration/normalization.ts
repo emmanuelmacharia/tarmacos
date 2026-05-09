@@ -6,7 +6,7 @@ import {
 	ReviewSchema,
 	type CritiquePlan,
 	type ReviewResult
-} from '../schemas';
+} from '../../schemas';
 
 export type NormalizedCritiquePlan = CritiquePlan;
 export type NormalizedReviewResult = ReviewResult;
@@ -120,22 +120,21 @@ export function normalizeReviewResult(
 	}
 
 	if (data.verdict === 'approved') {
-		const hasHighSeverityIssues = data.blockingIssues.some((issue) => issue.severity === 'high');
-
-		if (hasHighSeverityIssues) {
-			return {
-				ok: true,
-				data: {
-					...data,
-					verdict: 'revise',
-					handoffInstructions:
-						data.handoffInstructions.length > 0
-							? data.handoffInstructions
-							: data.blockingIssues.map((issue) => issue.suggestedFix)
-				},
-				strategy
-			};
-		}
+		// const hasHighSeverityIssues = data.blockingIssues.some((issue) => issue.severity === 'high');
+		// if (hasHighSeverityIssues) {
+		// 	return {
+		// 		ok: true,
+		// 		data: {
+		// 			...data,
+		// 			verdict: 'revise',
+		// 			handoffInstructions:
+		// 				data.handoffInstructions.length > 0
+		// 					? data.handoffInstructions
+		// 					: data.blockingIssues.map((issue) => issue.suggestedFix)
+		// 		},
+		// 		strategy
+		// 	};
+		// }
 	}
 
 	return { ok: true, data, strategy };

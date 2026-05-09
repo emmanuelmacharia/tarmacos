@@ -76,6 +76,7 @@ export const createRunWithDocumentsAndArtifact = internalMutation({
 		};
 
 		const runid = await ctx.db.insert('runs', payload);
+
 		const run = assertFound(await ctx.db.get(runid));
 
 		await ctx.runMutation(internal.runs.runDocuments.persistRunDocument, {
@@ -90,14 +91,25 @@ export const createRunWithDocumentsAndArtifact = internalMutation({
 			versionData: { ...args.artifact.data }
 		});
 
+		return run;
+	}
+});
+
+export const getUser = internalQuery({
+	args: {
+		clerkId: v.string()
+	},
+	handler: async (ctx, args) => {
+		const user = assertFound(
+			await ctx.db
+				.query('users')
+				.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkId))
+				.unique(),
+			'User not found',
+			true
+		);
 		return {
-			id: run._id,
-			title: run.title,
-			status: run.status,
-			phase: run.phase,
-			loopCount: run.loopCount,
-			agentConfig: run.agentConfig,
-			nextMessageSequenceNumber: run.nextMessageSequenceNumber
+			user
 		};
 	}
 });
