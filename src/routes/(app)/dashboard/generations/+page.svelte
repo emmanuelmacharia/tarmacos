@@ -202,7 +202,7 @@
 					{typeof event.review === 'string' ? event.review : event.review.summary}
 				</p>
 
-				{#if typeof event.review !== 'string' && event.review.blockingIssues.length}
+				{#if typeof event.review !== 'string' && event.review.verdict === 'revise' && event.review.blockingIssues.length}
 					<h4>Blocking issues</h4>
 					<ul>
 						{#each event.review.blockingIssues as issue (issue.title)}
