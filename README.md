@@ -59,8 +59,16 @@ You can preview the production build with `npm run preview`.
 - [x] Integrate AI SDK & openrouter
 - [x] Convex add mutation for create profile
 - [x] Wire up frontend to display created profiles and manually create profile
-- [ ] Auto generate profile by AI if none is created. Use inference into JD to give the profile its params
+- [x] Auto generate profile by AI if none is created. Use inference into JD to give the profile its params
 - [x] Convex add document upload and fetch url
 - [x] Convex add document db schema and add mutations
-- [ ] Convex add run schema and add mutations
+- [x] Convex add run schema and add mutations
 - [ ] **Build the generations experience out**
+  - [x] Data layer
+  - [x] Orchestration layer
+  - [ ] API layer
+  - [ ] UI
+- [ ] Make it work serverless ( vercel workflows )
+- [ ] Add Posthog
+- [ ] Add export functionality
+- [ ] Billing
