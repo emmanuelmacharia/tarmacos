@@ -103,7 +103,6 @@ export const ReviewSchema = z.discriminatedUnion('verdict', [
 		yearsOfExperienceScore: z.number().min(0)
 	})
 ]);
-
 ```
 
 Do not include any text outside the required structured output.
