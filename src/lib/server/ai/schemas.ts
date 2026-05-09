@@ -43,7 +43,6 @@ export const ReviewSchema = z.discriminatedUnion('verdict', [
 	z.object({
 		verdict: z.literal('approved'),
 		summary: z.string().min(1).max(4000),
-		blockingIssues: z.array(BlockingIssueSchema).max(10),
 		handoffInstructions: z.array(z.string().min(1).max(500)).max(10),
 		approvalReason: z.string().min(1).max(2000),
 		resumeAlignmentScore: z.number().min(0).max(1),
@@ -55,7 +54,6 @@ export const ReviewSchema = z.discriminatedUnion('verdict', [
 		summary: z.string().min(1).max(4000),
 		blockingIssues: z.array(BlockingIssueSchema).min(1).max(10),
 		handoffInstructions: z.array(z.string().min(1).max(500)).min(1).max(10),
-		approvalReason: z.string().max(2000).optional(),
 		resumeAlignmentScore: z.number().min(0).max(1),
 		keywordMatchScore: z.number().min(0).max(1),
 		yearsOfExperienceScore: z.number().min(0)

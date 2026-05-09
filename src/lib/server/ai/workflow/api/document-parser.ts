@@ -25,6 +25,8 @@ export async function parseBase64Document(
 	document: Base64DocumentInput
 ): Promise<ParsedDocumentContent> {
 	validateDocumentInput(document);
+	const base64 = stripDataUrlPrefix(document.base64);
+	enforceDecodedSizeLimit(base64, MAX_FILE_SIZE_BYTES, document.fileName);
 	const bytes = decodeBase64Document(document.base64);
 	if (bytes.byteLength > MAX_FILE_SIZE_BYTES) {
 		throw validationError('File is too large', {
@@ -74,6 +76,18 @@ export async function parseBase64Document(
 // 	return null;
 // }
 
+function enforceDecodedSizeLimit(base64: string, maxBytes: number, fileName: string): void {
+	const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+	const estimatedDecodedBytes = Math.floor((base64.length * 3) / 4) - padding;
+	if (estimatedDecodedBytes > maxBytes) {
+		throw validationError('File is too large', {
+			fileName,
+			maxBytes,
+			actualBytes: estimatedDecodedBytes
+		});
+	}
+}
+
 function validateDocumentInput(document: Base64DocumentInput): void {
 	if (!document.fileName.trim()) {
 		throw validationError('Document fileName is required.');
@@ -95,8 +109,12 @@ function validateDocumentInput(document: Base64DocumentInput): void {
 
 function decodeBase64Document(base64OrDataUrl: string): Uint8Array {
 	const base64 = stripDataUrlPrefix(base64OrDataUrl);
+	const normalized = base64.replace(/\s+/g, '');
+	if (!/^[A-Za-z0-9+/]*={0,2}$/.test(normalized) || normalized.length % 4 !== 0) {
+		throw validationError('Invalid base64 document content');
+	}
 	try {
-		return Uint8Array.from(Buffer.from(base64, 'base64'));
+		return Uint8Array.from(Buffer.from(normalized, 'base64'));
 	} catch {
 		throw validationError('Invalid base64 document content');
 	}
@@ -141,9 +159,12 @@ async function extractPdfText(bytes: Uint8Array): Promise<string> {
 	const parser = new PDFParse({
 		data: Buffer.from(bytes)
 	});
-	const result = await parser.getText();
-	await parser.destroy();
-	return result.text;
+	try {
+		const result = await parser.getText();
+		return result.text;
+	} finally {
+		await parser.destroy();
+	}
 }
 
 async function extractDocxText(bytes: Uint8Array): Promise<string> {
