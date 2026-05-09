@@ -21,7 +21,7 @@ export const POST = withApiErrorHandling(async (event) => {
 
 	const result = await startWorkflow(workflowRequest.convex, workflowRequest.input);
 
-	if (!result || result.runId || !result?.terminalAction) {
+	if (!result?.runId || !result?.terminalAction) {
 		throw new Error('Workflow did not start');
 	}
 
