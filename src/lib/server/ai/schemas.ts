@@ -4,7 +4,7 @@ export const ProfileCreationSchema = z.object({
 	profileName: z.string().min(1).max(200),
 	profileSummary: z.string().min(1).max(2000),
 	primaryFocus: z.string().min(1).max(500),
-	yearsOfExperience: z.number(),
+	yearsOfExperience: z.number().min(0),
 	seniorityLevel: z.union([
 		z.literal('intern'),
 		z.literal('junior'),
@@ -33,7 +33,7 @@ export const CritiqueAndPlanSchema = z.object({
 	suggestedResumeFocus: z.string().min(1).max(1000),
 	resumeAlignmentScore: z.number().min(0).max(1),
 	keywordMatchScore: z.number().min(0).max(1),
-	yearsOfExperienceScore: z.number().min(0).max(1)
+	yearsOfExperienceScore: z.number().min(0)
 	// confidence score is an aggregate of all the scores in the resume - it's a ui only thing
 });
 
@@ -48,7 +48,7 @@ export const ReviewSchema = z.discriminatedUnion('verdict', [
 		approvalReason: z.string().min(1).max(2000),
 		resumeAlignmentScore: z.number().min(0).max(1),
 		keywordMatchScore: z.number().min(0).max(1),
-		yearsOfExperienceScore: z.number().min(0).max(1)
+		yearsOfExperienceScore: z.number().min(0)
 	}),
 	z.object({
 		verdict: z.literal('revise'),
@@ -58,7 +58,7 @@ export const ReviewSchema = z.discriminatedUnion('verdict', [
 		approvalReason: z.string().max(2000).optional(),
 		resumeAlignmentScore: z.number().min(0).max(1),
 		keywordMatchScore: z.number().min(0).max(1),
-		yearsOfExperienceScore: z.number().min(0).max(1)
+		yearsOfExperienceScore: z.number().min(0)
 	})
 ]);
 

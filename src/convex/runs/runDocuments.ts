@@ -74,11 +74,8 @@ export const saveTextFile = action({
 				true
 			);
 			const clerkId = identity.subject;
-			assertFound(
-				await ctx.runQuery(internal.runs.internals.getUser, { clerkId }),
-				'User not found',
-				true
-			);
+
+			await ctx.runQuery(internal.runs.internals.getUser, { clerkId });
 
 			const blob = new Blob([args.text], {
 				type: 'text/plain;charset=utf-8'

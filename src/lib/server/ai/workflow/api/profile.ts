@@ -2,7 +2,7 @@ import type { ConvexHttpClient } from 'convex/browser';
 import type { Id } from '../../../../../convex/_generated/dataModel';
 import { api } from '../../../../../convex/_generated/api';
 import { apiError, handleErrorsFromConvexTransactions } from '$lib/utils/errorHandler';
-import { buildProfilerTaskMesage, buildSystemPrompt } from '../../prompt-builder';
+import { buildProfilerTaskMessage, buildSystemPrompt } from '../../prompt-builder';
 import { PROFILE_INFERENCE_MODEL } from '../../models';
 import { ProfileCreationSchema } from '../../schemas';
 import { profileCreationInference } from '../orchestration/llm';
@@ -77,7 +77,7 @@ async function generateProfileCreationPayload(input: {
 }) {
 	// build system and creation prompt
 	const systemPrompt = buildSystemPrompt({ role: 'profiler', workflow: 'preflight' });
-	const prompt = buildProfilerTaskMesage({
+	const prompt = buildProfilerTaskMessage({
 		resume: input.resumeText,
 		jobDescription: input.jobDescription
 	});

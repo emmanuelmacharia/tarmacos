@@ -204,7 +204,10 @@ export function buildReviewerReviewTaskMessage(args: BuildReviewerReviewTaskArgs
  * Profiling prompt
  *
  */
-export function buildProfilerTaskMesage(input: { resume: string; jobDescription: string }): string {
+export function buildProfilerTaskMessage(input: {
+	resume: string;
+	jobDescription: string;
+}): string {
 	return [
 		section(
 			'task_instructions',
