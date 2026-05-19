@@ -1,7 +1,7 @@
 import { parseStartWorkflowApiRequest } from '$lib/server/ai/workflow/api/parse';
 import { buildWorkflowArgs, prepareWorkflowStart } from '$lib/server/ai/workflow/api/prepare';
 import { requireAuthedEvent } from '$lib/server/ai/workflow/api/route';
-import { startWorkflow } from '$lib/server/ai/workflow/orchestration/orchestrator';
+import { createRun } from '$lib/server/ai/workflow/orchestration/orchestrator';
 import { withApiErrorHandling } from '$lib/utils/errorHandler';
 import { json } from '@sveltejs/kit';
 
@@ -19,11 +19,13 @@ export const POST = withApiErrorHandling(async (event) => {
 
 	console.log('build workflow Args ====> ', workflowRequest);
 
-	const result = await startWorkflow(workflowRequest.convex, workflowRequest.input);
+	const result = await createRun(workflowRequest.convex, workflowRequest.input);
 
-	if (!result?.runId || !result?.terminalAction) {
-		throw new Error('Workflow did not start');
+	if (result?._id) {
+		// success
+		return json({ id: result._id, title: result.title }, { status: 201 });
 	}
 
-	return json({ runId: result?.runId, action: result?.terminalAction }, { status: 202 });
+	// failure
+	return json({ result }, { status: 400 });
 });
