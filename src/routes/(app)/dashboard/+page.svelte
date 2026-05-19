@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import MainPrompt, { type AttachedFile } from '$lib/components/main-prompt.svelte';
 	import { getProfileState } from '$lib/context/profile-state';
 	import type { Role, SelectedModel } from '$lib/data/models';
 	import type { StartWorkflowApiRequest } from '$lib/server/ai/workflow/api/types';
+	import { resolve } from '$app/paths';
 
 	const profileState = getProfileState();
 
@@ -63,7 +65,7 @@
 					data.resume.file.type ||
 					data.resume.file.name.split('.')[data.resume.file.name.split('.').length - 1],
 				purpose: 'resume' as const,
-				base64: await data.resume.file.text()
+				base64: await fileToBase64(data.resume.file)
 			},
 			supportingDocuments: supportingDocumentsData
 		};
@@ -72,6 +74,10 @@
 			'weve got the payload right here ----> are we setting the file type correctly?',
 			payload
 		);
+
+		// const route = resolve('/(app)/runs');
+
+		// goto(route);
 		startWorkflow(payload);
 	}
 
@@ -88,6 +94,19 @@
 		if (!response.ok || !response.body) {
 			console.log(response);
 		}
+
+		console.log(response, '\n', response.json);
+
+		const data = await response.json();
+
+		const { id } = data;
+
+		if (!id) {
+			console.log(data);
+		}
+		const route = resolve(`/runs/${id}`);
+
+		goto(route);
 	}
 </script>
 
