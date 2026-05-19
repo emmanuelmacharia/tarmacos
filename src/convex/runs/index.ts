@@ -7,7 +7,8 @@ import {
 	documentPurpose,
 	nextInstructions,
 	runPhase,
-	runStatus
+	runStatus,
+	type NextInstruction
 } from '../lib/schemaTypes';
 import { ok } from '../lib/responseMapper';
 import { internal } from '../_generated/api';
@@ -17,6 +18,7 @@ import {
 	getSafeMetadataObject,
 	sameInstruction
 } from '../lib/run/utils';
+import type { Doc } from '../_generated/dataModel';
 
 const CanonicalResumeSectionValidator = v.object({
 	kind: v.union(
@@ -43,6 +45,41 @@ const CompleteDraftCanonicalValidator = v.object({
 	markdown: v.string(),
 	plainText: v.string(),
 	previewText: v.string()
+});
+
+export const getRun = query({
+	args: {
+		runId: v.id('runs'),
+		getInstructions: v.optional(v.boolean())
+	},
+	handler: async (ctx, args) => {
+		return withAppErrors(async () => {
+			const identity = assertFound(await ctx.auth.getUserIdentity());
+			const clerkId = identity.subject;
+			const user = assertFound(
+				await ctx.db
+					.query('users')
+					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
+					.unique(),
+				'User not found',
+				true
+			);
+
+			const { runId } = args;
+			const run = assertFound(await ctx.db.get(runId), 'Run not found');
+
+			forbiddenCheck(() => run.userId === user._id);
+
+			const nextInstructions = await deriveNextInstructionForRun(ctx, run);
+			return ok<{ run: Doc<'runs'>; next: NextInstruction }, { message: string; status: number }>(
+				{ run, next: nextInstructions },
+				{
+					message: 'Run found',
+					status: 200
+				}
+			);
+		});
+	}
 });
 
 export const updateRun = mutation({
@@ -325,7 +362,7 @@ export const completeReview = mutation({
 
 		const run = assertFound(await ctx.db.get(args.runId));
 
-		return { next: deriveNextInstructionForRun(ctx, run) };
+		return { next: await deriveNextInstructionForRun(ctx, run) };
 	}
 });
 
