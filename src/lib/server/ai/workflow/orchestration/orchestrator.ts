@@ -197,6 +197,20 @@ export async function startWorkflow(
 	return;
 }
 
+export async function createRun(convex: ConvexHttpClient, input: WorkflowRequest) {
+	assertModelAllowedForRole(input.writer.modelId, 'writer');
+	assertModelAllowedForRole(input.reviewer.modelId, 'reviewer', {
+		requiredStructuredOutput: true
+	});
+
+	const run = await persistRun(input, convex).catch((error) => {
+		console.log(error);
+		console.log(error instanceof Error);
+	});
+
+	return run;
+}
+
 export async function resumeWorkflow(
 	convex: ConvexHttpClient,
 	args: {
