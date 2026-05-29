@@ -1,8 +1,9 @@
 import { v } from 'convex/values';
-import { mutation, query } from '../_generated/server';
+import { internalMutation, mutation, query } from '../_generated/server';
 import { assertFound, forbiddenCheck, mapConvexError, withAppErrors } from '../lib/errorMapper';
 import {
 	agentConfig,
+	CanonicalReviewResult,
 	CritiquePlan,
 	documentPurpose,
 	nextInstructions,
@@ -149,7 +150,6 @@ export const updateRun = mutation({
 				)
 			};
 
-			console.log(payload);
 			await ctx.db.patch(run._id, payload);
 
 			const updatedRun = await ctx.db.get(run._id);
@@ -352,17 +352,115 @@ export const completeReview = mutation({
 	args: {
 		runId: v.id('runs'),
 		llmCallId: v.id('llmCalls'),
-		canonical: v.any(),
+		canonical: CanonicalReviewResult,
 		messageSummary: v.string(),
 		maxIterationsMessage: v.optional(v.string())
 	},
 	handler: async (ctx, args) => {
-		console.log(ctx);
-		console.log(args);
+		/**
+		 * TODO:
+		 * 1. persist the review in the reviews table
+		 * 2. Update the run phase and status as appropriate
+		 * 3. Derive the next instruction and return it to the caller
+		 */
+		return withAppErrors(async () => {
+			const identity = assertFound(
+				await ctx.auth.getUserIdentity(),
+				'Please log in or sign up to continue',
+				true
+			);
 
-		const run = assertFound(await ctx.db.get(args.runId));
+			const clerkId = identity.subject;
+			const user = assertFound(
+				await ctx.db
+					.query('users')
+					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
+					.unique(),
+				'User not found',
+				true
+			);
+			const run = assertFound(await ctx.db.get(args.runId), 'Run not found');
+			forbiddenCheck(() => run.userId === user._id);
 
-		return { next: await deriveNextInstructionForRun(ctx, run) };
+			const now = Date.now();
+
+			if (run.status === 'completed' || run.status === 'failed' || run.status === 'cancelled') {
+				mapConvexError({
+					status: 400,
+					message: `Run is terminal: ${run.status}`,
+					code: 'BAD_REQUEST',
+					details: ''
+				});
+			}
+
+			if (run.phase !== 'reviewing') {
+				mapConvexError({
+					status: 400,
+					message: `Invalid phase for completeBaselineReview: ${run.phase}`,
+					code: 'BAD_REQUEST',
+					details: ''
+				});
+			}
+
+			if (!run.currentArtifactVersionId) {
+				mapConvexError({
+					status: 400,
+					message: 'Run is missing currentArtifactVersionId during baseline review',
+					code: 'BAD_REQUEST',
+					details: ''
+				});
+			}
+
+			const llmCall = assertFound(await ctx.db.get(args.llmCallId));
+
+			forbiddenCheck(() => llmCall.runId === run._id);
+
+			const reviewPayload = {
+				runId: run._id,
+				artifactVersionId: run.currentArtifactVersionId,
+				reviewKind: 'draft_review' as const,
+				decision: args.canonical.decision,
+				summary: args.canonical.summary,
+				content: JSON.stringify(args.canonical),
+				schemaVersion: args.canonical.schemaVersion,
+				sourceLlmCallId: args.llmCallId,
+				createdAt: now
+			};
+
+			const reviewId = await ctx.db.insert('reviews', reviewPayload);
+
+			const sequenceNumber = run.nextMessageSequenceNumber;
+
+			const messagePayload = {
+				runId: run._id,
+				sequenceNumber,
+				authorType: 'agent' as const,
+				authorRole: 'reviewer' as const,
+				messageType: 'reviewer_summary' as const,
+				visibility: 'user_visible' as const,
+				bodyFormat: 'markdown' as const,
+				body: args.messageSummary,
+				relatedArtifactVersionId: run.currentArtifactVersionId,
+				relatedReviewId: reviewId,
+				createdAt: now
+			};
+
+			await ctx.db.insert('messages', messagePayload);
+
+			await ctx.db.patch(run._id, {
+				status: args.canonical.decision === 'approve' ? 'awaiting_user' : ('running' as const),
+				phase: args.canonical.decision === 'approve' ? 'user_review' : ('revision' as const),
+				nextMessageSequenceNumber: sequenceNumber + 1,
+				loopCount: run.loopCount + 1,
+				updatedAt: now
+			});
+
+			const updatedRun = await ctx.db.get(run._id);
+
+			return {
+				next: await deriveNextInstructionForRun(ctx, updatedRun!)
+			};
+		});
 	}
 });
 
@@ -548,8 +646,6 @@ export const claimInstructionExecution = mutation({
 
 			const currentInstruction = await deriveNextInstructionForRun(ctx, run);
 
-			console.log(currentInstruction);
-
 			if (currentInstruction.action === 'await_user' || currentInstruction.action === 'done') {
 				mapConvexError({
 					message: `Run ${args.runId} is not in an executable state`,
@@ -569,8 +665,6 @@ export const claimInstructionExecution = mutation({
 			}
 
 			const existingClaim = getExecutionClaim(run);
-
-			console.log(existingClaim);
 
 			if (existingClaim) {
 				mapConvexError({
@@ -634,11 +728,35 @@ export const releaseInstructionExecution = mutation({
 
 			if (existingClaim.executionId !== args.executionId) {
 				mapConvexError({
-					message: `Mismatch in execution id`,
+					message: `Mismatch in execution id ${existingClaim.executionId} doesnt match payload execution id ${args.executionId}. Refused to release claim`,
 					status: 400,
 					code: 'BAD_REQUEST',
 					details: { executionId: existingClaim.executionId }
 				});
+			}
+
+			const metadata = getSafeMetadataObject(run.metadata);
+			const nextMetadata = { ...metadata };
+
+			delete nextMetadata.execution;
+
+			await ctx.db.patch(run._id, { metadata: nextMetadata, updatedAt: Date.now() });
+
+			return ok({ ok: true }, {});
+		});
+	}
+});
+
+export const killExecution = internalMutation({
+	args: {
+		runId: v.id('runs')
+	},
+	handler: async (ctx, args) => {
+		return withAppErrors(async () => {
+			const run = assertFound(await ctx.db.get(args.runId), 'Run not found');
+			const existingClaim = getExecutionClaim(run);
+			if (!existingClaim) {
+				return ok({ ok: true }, {});
 			}
 
 			const metadata = getSafeMetadataObject(run.metadata);
