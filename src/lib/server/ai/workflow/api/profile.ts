@@ -4,7 +4,7 @@ import { api } from '../../../../../convex/_generated/api';
 import { apiError, handleErrorsFromConvexTransactions } from '$lib/utils/errorHandler';
 import { buildProfilerTaskMessage, buildSystemPrompt } from '../../prompt-builder';
 import { PROFILE_INFERENCE_MODEL } from '../../models';
-import { ProfileCreationSchema } from '../../schemas';
+import { LLMProfileCreationSchema } from '../../schemas';
 import { profileCreationInference } from '../orchestration/llm';
 
 // creates profile if none is provided
@@ -87,12 +87,11 @@ async function generateProfileCreationPayload(input: {
 		systemPrompt,
 		profileCreationPrompt: prompt,
 		modelSlug: PROFILE_INFERENCE_MODEL.slug,
-		schema: ProfileCreationSchema
+		schema: LLMProfileCreationSchema
 	};
 
 	// call the model
 	const result = await profileCreationInference(payload);
-	console.log(result);
 
 	return result;
 }
