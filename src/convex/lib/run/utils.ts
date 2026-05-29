@@ -73,6 +73,7 @@ export async function deriveNextInstructionForRun(
 		return { action: 'await_user' };
 	}
 
+	console.log(`Deriving next instruction for run ${run._id} in phase ${run.phase}`);
 	switch (run.phase) {
 		case 'baseline_review': {
 			if (!run.currentArtifactVersionId) {
@@ -106,7 +107,11 @@ export async function deriveNextInstructionForRun(
 			const isInitialDraft =
 				basedOnVersion.versionNumber === 1 && basedOnVersion.origin === 'imported_source';
 
+			console.log(basedOnVersion.versionNumber, basedOnVersion.origin);
 			if (isInitialDraft) {
+				console.log(
+					`Run ${run._id} is in drafting phase and has an imported source artifact version, treating as initial draft request`
+				);
 				return {
 					action: 'call_writer',
 					requestKind: 'initial_draft',
