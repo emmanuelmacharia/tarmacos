@@ -17,6 +17,8 @@ export const DEFAULT_MODELS = {
 	reviewer: 'openai/gpt-oss-120b'
 };
 
+export const DEFAULT_MAX_RETRIES = 1;
+
 export const MODEL_POLICY: Record<string, ModelPolicy> = {
 	'minimax/minimax-m2.5:free': {
 		enabled: true,
