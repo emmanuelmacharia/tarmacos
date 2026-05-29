@@ -318,3 +318,37 @@ export const ReviewValidator = v.union(
 		yearsOfExperienceScore: v.number()
 	})
 );
+
+export const NormalizedReviewResultApproved = v.object({
+	verdict: v.literal('approved'),
+	summary: v.string(),
+	handoffInstructions: v.array(v.string()),
+	approvalReason: v.optional(v.string()),
+	resumeAlignmentScore: v.number(),
+	keywordMatchScore: v.number(),
+	yearsOfExperienceScore: v.number()
+});
+
+export const NormalizedReviewResultRevise = v.object({
+	verdict: v.literal('revise'),
+	summary: v.string(),
+	blockingIssues: v.array(
+		v.object({
+			title: v.string(),
+			explanation: v.string(),
+			suggestedFix: v.string(),
+			severity: v.union(v.literal('low'), v.literal('medium'), v.literal('high'))
+		})
+	),
+	handoffInstructions: v.array(v.string()),
+	resumeAlignmentScore: v.number(),
+	keywordMatchScore: v.number(),
+	yearsOfExperienceScore: v.number()
+});
+
+export const CanonicalReviewResult = v.object({
+	decision: v.union(v.literal('approve'), v.literal('revise')),
+	summary: v.string(),
+	content: v.union(NormalizedReviewResultApproved, NormalizedReviewResultRevise),
+	schemaVersion: v.string()
+});
