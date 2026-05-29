@@ -13,6 +13,9 @@ import type z from 'zod';
 import { api } from '../../../../../convex/_generated/api';
 import { getChatModel } from '../../openrouter';
 import { generateText, Output } from 'ai';
+import type { NormalizationResult } from './normalization';
+import { buildFreeformRepairPrompt, buildStructuredRepairPrompt } from '../../prompt-builder';
+import { DEFAULT_MAX_RETRIES } from '../../models';
 
 export interface BaseCallArgs {
 	convex: ConvexHttpClient;
@@ -34,6 +37,17 @@ export interface BaseCallArgs {
 
 export interface StructuredCallArgs<T> extends BaseCallArgs {
 	schema: z.ZodType<T>;
+	normalize?: (
+		raw: unknown,
+		strategy: 'native_structured' | 'prompted_json' | 'freeform_text'
+	) => NormalizationResult<T>;
+	repairPromptSuffix?: (validationErrorMessage: string) => string;
+	maxRepairAttempts?: number;
+}
+
+export interface FreeFormCallArgs<T> extends BaseCallArgs {
+	normalize: (raw: string) => NormalizationResult<T>;
+	repairPromptSuffix?: (errorMessage: string) => string;
 }
 
 export interface LLMCallResult<T> {
@@ -75,6 +89,38 @@ interface RunSingleAttemptArgs extends BaseCallArgs {
 	executor: () => Promise<AttemptOutcome>;
 }
 
+type StructuredValidationResult<T> =
+	| {
+			success: true;
+			data: T;
+			wasNormalized: boolean;
+			normalizationError?: undefined;
+			normalizationStatus?: 'succeeded';
+	  }
+	| {
+			success: false;
+			error: Error;
+			normalizedOutput?: unknown;
+			normalizationError?: string;
+			normalizationStatus?: 'failed';
+	  };
+
+type UnstructuredValidationResult<T> =
+	| {
+			success: true;
+			data: T;
+			wasNormalized: boolean;
+			normalizationError?: undefined;
+			normalizationStatus?: 'succeeded';
+	  }
+	| {
+			success: false;
+			error: Error;
+			normalizedOutput?: unknown;
+			normalizationError?: string;
+			normalizationStatus?: 'failed';
+	  };
+
 export async function callStructuredOutput<T>(
 	args: StructuredCallArgs<T>
 ): Promise<LLMCallResult<T>> {
@@ -94,29 +140,33 @@ export async function callStructuredOutput<T>(
 			});
 
 			console.log(
-				'==============RESPONSE FROM RUN SINGLE ATTEMPT =================== \n',
-				'------LLMCALLID------------\n',
-				llmCallId,
-				'\n ----------------- LLM CALL RESULT -----------------\n',
-				result
+				`Attempt ${attemptNumber} for structured call completed with status: ${result.kind}`
 			);
+			console.log(
+				'-------------------------------------------------------------------------------'
+			);
+			console.log('Structured call attempt result: ', JSON.parse(JSON.stringify(result)));
 
 			if (result.kind === 'success') {
-				const validated = args.schema.safeParse(result.outcome.output);
-				console.log(args.schema);
-				console.table(validated);
-				if (!validated.success) {
-					// treat as failure - record and continue the retry chain
-					/**
-					 * This is a validation failure; meaning we have the tokens already -
-					 * 	Can't we use normalization to try and get the malformed response into the valid schema?
-					 * 	e.g one of the errors we saw, was that the count of block reasons was higher than what was in the zod schema. I don't think that should cause another retry
-					 */
+				/**
+				 * we validate and normalize the output here
+				 * this allows us to inspect the output - ensure that normalization can happen instead of another loop being retried
+				 * */
+
+				// we try to normalize
+				const validated = await validateOrNormalizeStructuredOutput(
+					args,
+					result.outcome.output,
+					strategy
+				);
+				console.log(validated);
+				if (validated.success) {
+					console.log('Structured call successful, marking call as completed.');
 					await completeCall(args.convex, {
 						llmCallId,
 						openRouterRequestId: result.outcome.openRouterRequestId ?? '',
 						routedProvider: result.outcome.routedProvider,
-						status: 'failed',
+						status: 'completed',
 						completedAt: result.outcome.completedAt,
 						costUsd: result.outcome.costUsd ?? 0,
 						latencyMs: result.outcome.latencyMs,
@@ -125,8 +175,8 @@ export async function callStructuredOutput<T>(
 						reasoningTokens: result.outcome.reasoningTokens ?? 0,
 						cachedTokens: result.outcome.cachedTokens ?? 0,
 						finishReason: result.outcome.finishReason ?? '',
-						normalizationStatus: 'failed',
-						normalizationError: 'Output did not match schema',
+						normalizationStatus: 'succeeded',
+						normalizationError: validated.success ? undefined : 'Output did not match schema',
 						gatewayProvider: args.gatewayProvider ?? 'openrouter',
 						strategyUsed: strategy,
 						loopNumber: args.loopNumber,
@@ -136,22 +186,36 @@ export async function callStructuredOutput<T>(
 							systemPrompt: args.system,
 							userPrompt: args.prompt,
 							rawResponse: result.outcome.output,
-							error: validated.error
+							structuredOutput: validated.data
 						}
 					});
 
-					lastError = new Error(validated.error.message);
-					previousCallId = llmCallId;
-					attemptNumber++;
-					if (retry < args.maxRetries - 1) await sleep(backOffMs(retry));
-					continue;
-				}
+					await finalizeNormalization(args.convex, {
+						llmCallId,
+						normalizationStatus: validated.wasNormalized
+							? (validated.normalizationStatus ?? 'succeeded')
+							: 'succeeded',
+						normalizationError: validated.wasNormalized ? validated.normalizationError : undefined
+					});
 
+					return {
+						llmCallId,
+						output: validated.data!,
+						strategy,
+						rawText: result.outcome.rawText,
+						nextAttemptNumber: attemptNumber + 1
+					};
+				}
+				console.log(
+					'Validation or normalization failed for structured output, marking call as failed and retrying if possible. Error: ',
+					validated.error
+				);
+				// normalization has failed - we'll attempt a small repair
 				await completeCall(args.convex, {
 					llmCallId,
 					openRouterRequestId: result.outcome.openRouterRequestId ?? '',
 					routedProvider: result.outcome.routedProvider,
-					status: 'completed',
+					status: 'failed',
 					completedAt: result.outcome.completedAt,
 					costUsd: result.outcome.costUsd ?? 0,
 					latencyMs: result.outcome.latencyMs,
@@ -160,8 +224,8 @@ export async function callStructuredOutput<T>(
 					reasoningTokens: result.outcome.reasoningTokens ?? 0,
 					cachedTokens: result.outcome.cachedTokens ?? 0,
 					finishReason: result.outcome.finishReason ?? '',
-					normalizationStatus: 'succeeded',
-					normalizationError: validated.success ? undefined : 'Output did not match schema',
+					normalizationStatus: 'failed',
+					normalizationError: 'Output did not match schema',
 					gatewayProvider: args.gatewayProvider ?? 'openrouter',
 					strategyUsed: strategy,
 					loopNumber: args.loopNumber,
@@ -171,17 +235,56 @@ export async function callStructuredOutput<T>(
 						systemPrompt: args.system,
 						userPrompt: args.prompt,
 						rawResponse: result.outcome.output,
-						structuredOutput: validated.data
+						error: validated.error,
+						normalizedOutput: validated.normalizedOutput
 					}
 				});
 
-				return {
+				lastError = new Error(validated.error.message);
+				previousCallId = llmCallId;
+				attemptNumber++;
+
+				await finalizeNormalization(args.convex, {
 					llmCallId,
-					output: validated.data!,
-					strategy,
-					rawText: result.outcome.rawText,
-					nextAttemptNumber: attemptNumber + 1
-				};
+					normalizationStatus: validated.normalizationStatus ?? 'failed',
+					normalizationError: validated.normalizationError ?? 'Output did not match schema'
+				});
+
+				const maxLlmRepairAttempts = DEFAULT_MAX_RETRIES ?? 1;
+
+				if (maxLlmRepairAttempts > 0) {
+					// repairing the output with a small focused prompt that includes the validation error - this is more cost effective than retrying the entire call, and can often fix simple issues like formatting problems
+					const repairResult = await attemptSmallStructuredRepair({
+						callArgs: args,
+						rawOutput: result.outcome.output,
+						validationError: validated.error,
+						previousCallId,
+						attemptNumber,
+						strategy
+					});
+
+					attemptNumber = repairResult.nextAttemptNumber;
+					previousCallId = repairResult.llmCallId;
+
+					if (repairResult.success) {
+						return {
+							llmCallId: repairResult.llmCallId,
+							output: repairResult.output,
+							strategy,
+							rawText: repairResult.rawText,
+							nextAttemptNumber: repairResult.nextAttemptNumber
+						};
+					}
+					lastError = repairResult.error;
+				} else {
+					lastError = validated.error;
+				}
+
+				if (retry < args.maxRetries - 1) {
+					await sleep(backOffMs(retry));
+				}
+
+				continue;
 			}
 			if (result.kind === 'cancelled') {
 				// if cancelled, end the chain immediately - we don't want to keep retrying if the user has cancelled
@@ -224,7 +327,7 @@ export async function callStructuredOutput<T>(
 	);
 }
 
-export async function callFreeform(args: BaseCallArgs): Promise<LLMCallResult<string>> {
+export async function callFreeform<T>(args: FreeFormCallArgs<T>): Promise<LLMCallResult<T>> {
 	let attemptNumber = args.startingAttemptNumber ?? 1;
 	let previousCallId = args.initialRetryOfCallId;
 	let lastError: Error | null = null;
@@ -238,41 +341,121 @@ export async function callFreeform(args: BaseCallArgs): Promise<LLMCallResult<st
 			executor: () => executeFreeformCall(args)
 		});
 
+		console.log(`Attempt ${attemptNumber} for freeform call completed with status: ${result.kind}`);
+		console.log('-------------------------------------------------------------------------------');
+		console.log('Freeform call attempt result: ', result);
+
 		if (result.kind === 'success') {
 			const rawText = result.outcome.rawText.trim();
+			const validatedOutput = await validateOrNormalizeFreeformOutput(args, rawText);
+			console.log('Freeform call successful');
+			if (validatedOutput.success) {
+				// everything okay
+				await completeCall(args.convex, {
+					llmCallId,
+					status: 'completed',
+					openRouterRequestId: result.outcome.openRouterRequestId ?? '',
+					routedProvider: result.outcome.routedProvider,
+					strategyUsed: 'freeform_text',
+					latencyMs: result.outcome.latencyMs,
+					inputTokens: result.outcome.inputTokens,
+					outputTokens: result.outcome.outputTokens,
+					reasoningTokens: result.outcome.reasoningTokens,
+					cachedTokens: result.outcome.cachedTokens,
+					finishReason: result.outcome.finishReason,
+					normalizationStatus: 'pending',
+					gatewayProvider: args.gatewayProvider ?? 'openrouter',
+					completedAt: result.outcome.completedAt,
+					costUsd: result.outcome.costUsd ?? 0,
+					loopNumber: args.loopNumber,
+					retryOfCallId: previousCallId,
+					attemptNumber,
+					content: {
+						systemPrompt: args.system,
+						userPrompt: args.prompt,
+						rawResponse: result.outcome.rawText
+					}
+				});
+
+				await finalizeNormalization(args.convex, {
+					llmCallId,
+					normalizationStatus: validatedOutput.wasNormalized ? 'succeeded' : 'succeeded'
+				});
+
+				return {
+					llmCallId,
+					output: validatedOutput.data,
+					strategy: 'freeform_text',
+					rawText,
+					nextAttemptNumber: attemptNumber + 1
+				};
+			}
+			// if normalization fails, we consider the attempt a failure and try a repair
 			await completeCall(args.convex, {
 				llmCallId,
-				status: 'completed',
 				openRouterRequestId: result.outcome.openRouterRequestId ?? '',
 				routedProvider: result.outcome.routedProvider,
-				strategyUsed: 'freeform_text',
-				latencyMs: result.outcome.latencyMs,
-				inputTokens: result.outcome.inputTokens,
-				outputTokens: result.outcome.outputTokens,
-				reasoningTokens: result.outcome.reasoningTokens,
-				cachedTokens: result.outcome.cachedTokens,
-				finishReason: result.outcome.finishReason,
-				normalizationStatus: 'pending',
-				gatewayProvider: args.gatewayProvider ?? 'openrouter',
+				status: 'failed',
 				completedAt: result.outcome.completedAt,
 				costUsd: result.outcome.costUsd ?? 0,
+				latencyMs: result.outcome.latencyMs,
+				inputTokens: result.outcome.inputTokens ?? 0,
+				outputTokens: result.outcome.outputTokens ?? 0,
+				reasoningTokens: result.outcome.reasoningTokens ?? 0,
+				cachedTokens: result.outcome.cachedTokens ?? 0,
+				finishReason: result.outcome.finishReason ?? '',
+				normalizationStatus: 'failed',
+				normalizationError: 'Output did not match schema',
+				gatewayProvider: args.gatewayProvider ?? 'openrouter',
 				loopNumber: args.loopNumber,
 				retryOfCallId: previousCallId,
 				attemptNumber,
 				content: {
 					systemPrompt: args.system,
 					userPrompt: args.prompt,
-					rawResponse: result.outcome.rawText
+					rawResponse: result.outcome.output,
+					error: validatedOutput.error,
+					normalizedOutput: validatedOutput.normalizedOutput
 				}
 			});
 
-			return {
+			await finalizeNormalization(args.convex, {
 				llmCallId,
-				output: rawText,
-				strategy: 'freeform_text',
-				rawText,
-				nextAttemptNumber: attemptNumber + 1
-			};
+				normalizationStatus: validatedOutput.normalizationStatus ?? 'failed',
+				normalizationError:
+					validatedOutput.normalizationError ?? 'Output did not match resume format'
+			});
+
+			// we need to attempt to repair the resume
+
+			const maxRepairRetries = DEFAULT_MAX_RETRIES ?? 1;
+
+			if (maxRepairRetries > 0) {
+				const repairResult = await attemptSmallFreeformRepair({
+					callArgs: args,
+					rawOutput: result.outcome.output,
+					validationError: validatedOutput.error,
+					previousCallId: llmCallId,
+					attemptNumber
+				});
+
+				attemptNumber = repairResult.nextAttemptNumber;
+				previousCallId = repairResult.llmCallId;
+
+				if (repairResult.success) {
+					return {
+						llmCallId: repairResult.llmCallId,
+						output: repairResult.output,
+						strategy: 'freeform_text',
+						rawText: repairResult.rawText,
+						nextAttemptNumber: repairResult.nextAttemptNumber
+					};
+				}
+				lastError = repairResult.error;
+			} else {
+				lastError = validatedOutput.error;
+			}
+			throw lastError;
 		}
 
 		if (result.kind === 'cancelled') {
@@ -292,6 +475,8 @@ export async function callFreeform(args: BaseCallArgs): Promise<LLMCallResult<st
 			throw result.error;
 		}
 
+		console.log('Are we falling through to this failure block? and therefore retrying?');
+
 		await completeCall(args.convex, {
 			llmCallId,
 			status: 'failed',
@@ -307,6 +492,7 @@ export async function callFreeform(args: BaseCallArgs): Promise<LLMCallResult<st
 			}
 		});
 
+		console.log(`Attempt ${attemptNumber} for freeform call failed.`);
 		lastError = result.error;
 		previousCallId = llmCallId;
 		attemptNumber += 1;
@@ -317,6 +503,36 @@ export async function callFreeform(args: BaseCallArgs): Promise<LLMCallResult<st
 	throw new Error(
 		`Writer call failed after ${args.maxRetries} attempts. Last error: ${lastError?.message}`
 	);
+}
+
+export async function profileCreationInference<T>(input: {
+	systemPrompt: string;
+	profileCreationPrompt: string;
+	strategy: OutputStrategy;
+	schema: z.ZodType<T>;
+	modelSlug: string;
+}) {
+	const result = await generateText({
+		model: getChatModel(input.modelSlug),
+		system: input.systemPrompt,
+		prompt: input.profileCreationPrompt,
+		temperature: 0.1,
+		topP: 0.4,
+		maxOutputTokens: 5000,
+		output: Output.object({
+			schema: input.schema
+		}),
+		providerOptions: {
+			openrouter: {
+				provider: {
+					require_parameters: true,
+					order: ['deepinfra/bf16']
+				}
+			}
+		}
+	});
+
+	return result.output;
 }
 
 async function runSingleAttempt(
@@ -360,6 +576,15 @@ async function runSingleAttempt(
 
 	try {
 		await updateCallStatus(args.convex, 'running', callId);
+		console.log(
+			'Attempt',
+			args.attemptNumber,
+			'for call',
+			callId,
+			'is starting execution.',
+			'Strategy: ',
+			args.strategy
+		);
 		const outcome = await args.executor();
 		return { llmCallId: callId, result: { kind: 'success', outcome } };
 	} catch (error) {
@@ -377,42 +602,11 @@ async function runSingleAttempt(
 	}
 }
 
-export async function profileCreationInference<T>(input: {
-	systemPrompt: string;
-	profileCreationPrompt: string;
-	strategy: OutputStrategy;
-	schema: z.ZodType<T>;
-	modelSlug: string;
-}) {
-	const result = await generateText({
-		model: getChatModel(input.modelSlug),
-		system: input.systemPrompt,
-		prompt: input.profileCreationPrompt,
-		temperature: 0.1,
-		topP: 0.4,
-		maxOutputTokens: 5000,
-		output: Output.object({
-			schema: input.schema
-		}),
-		providerOptions: {
-			openrouter: {
-				provider: {
-					require_parameters: true,
-					order: ['deepinfra/bf16']
-				}
-			}
-		}
-	});
-
-	return result.output;
-}
-
 async function executeStructuredCall<T>(
 	args: StructuredCallArgs<T>,
 	strategy: OutputStrategy
 ): Promise<AttemptOutcome> {
 	const startedAt = Date.now();
-	console.log(strategy);
 	if (strategy === 'native_structured') {
 		const result = await generateText({
 			model: getChatModel(args.modelSlug),
@@ -429,11 +623,6 @@ async function executeStructuredCall<T>(
 			}),
 			providerOptions: buildProviderOptions(args.requestParams)
 		});
-
-		console.log(
-			'==========================================raw response result=====================================\n',
-			result
-		);
 		return {
 			latencyMs: Date.now() - startedAt,
 			inputTokens: result.usage?.inputTokens,
@@ -469,12 +658,6 @@ async function executeStructuredCall<T>(
 	});
 
 	const parsed = parseJSONResponse(result.text);
-
-	console.log(
-		'==========================================raw response result=====================================\n',
-		result
-	);
-
 	return {
 		latencyMs: Date.now() - startedAt,
 		inputTokens: result.usage?.inputTokens,
@@ -490,7 +673,7 @@ async function executeStructuredCall<T>(
 	};
 }
 
-async function executeFreeformCall(args: BaseCallArgs): Promise<AttemptOutcome> {
+async function executeFreeformCall<T>(args: FreeFormCallArgs<T>): Promise<AttemptOutcome> {
 	const startedAt = Date.now();
 
 	const result = await generateText({
@@ -520,6 +703,494 @@ async function executeFreeformCall(args: BaseCallArgs): Promise<AttemptOutcome> 
 		reasoning: normalizeReasoning(result.reasoning),
 		status: 'completed',
 		completedAt: Date.now()
+	};
+}
+
+async function executeStructuredRepairCall<T>(
+	args: StructuredCallArgs<T>,
+	repairPrompt: string
+): Promise<AttemptOutcome> {
+	const startedAt = Date.now();
+	const result = await generateText({
+		model: getChatModel(args.modelSlug),
+		system: 'You repair malformed structured JSON. You do not perform the original task again.',
+		prompt: repairPrompt,
+		temperature: 0,
+		topP: 1,
+		maxOutputTokens: Math.min(args.requestParams.maxOutputTokens ?? 1000, 1000),
+		abortSignal: args.signal,
+		output: Output.object({
+			schema: args.schema
+		}),
+		providerOptions: buildProviderOptions(args.requestParams)
+	});
+
+	return {
+		latencyMs: Date.now() - startedAt,
+		inputTokens: result.usage?.inputTokens,
+		outputTokens: result.usage?.outputTokens,
+		reasoningTokens: result.usage?.reasoningTokens,
+		cachedTokens: result.usage?.cachedInputTokens,
+		finishReason: result.finishReason,
+		rawText: JSON.stringify(result.output),
+		output: result.output,
+		reasoning: normalizeReasoning(result.reasoning),
+		openRouterRequestId: result.response?.id,
+		routedProvider: result.providerMetadata?.provider?.id?.toString(),
+		strategyUsed: 'native_structured',
+		status: 'completed',
+		completedAt: Date.now(),
+		costUsd: result.usage.totalTokens // calculate cost from result response - I think it's there
+	};
+}
+
+async function executeFreeformRepairCall<T>(
+	args: FreeFormCallArgs<T>,
+	repairPrompt: string
+): Promise<AttemptOutcome> {
+	const startedAt = Date.now();
+	const result = await generateText({
+		model: getChatModel(args.modelSlug),
+		system: 'You repair malformed text. You do not perform the original task again.',
+		prompt: repairPrompt,
+		temperature: 0,
+		topP: 1,
+		maxOutputTokens: Math.min(args.requestParams.maxOutputTokens ?? 1000, 1000),
+		abortSignal: args.signal,
+		providerOptions: buildProviderOptions(args.requestParams)
+	});
+
+	return {
+		latencyMs: Date.now() - startedAt,
+		inputTokens: result.usage?.inputTokens,
+		outputTokens: result.usage?.outputTokens,
+		reasoningTokens: result.usage?.reasoningTokens,
+		cachedTokens: result.usage?.cachedInputTokens,
+		finishReason: result.finishReason,
+		rawText: result.text,
+		output: result.text,
+		reasoning: normalizeReasoning(result.reasoning),
+		openRouterRequestId: result.response?.id,
+		routedProvider: result.providerMetadata?.provider?.id?.toString(),
+		strategyUsed: 'freeform_text',
+		status: 'completed',
+		completedAt: Date.now(),
+		costUsd: result.usage.totalTokens // calculate cost from result response - I think it's there
+	};
+}
+
+async function validateOrNormalizeStructuredOutput<T>(
+	args: StructuredCallArgs<T>,
+	rawOutput: unknown,
+	strategy: OutputStrategy = 'native_structured'
+): Promise<StructuredValidationResult<T>> {
+	const direct = args.schema.safeParse(rawOutput);
+
+	if (direct.success) {
+		return {
+			success: true,
+			data: direct.data,
+			wasNormalized: false
+		};
+	}
+
+	if (!args.normalize) {
+		return {
+			success: false,
+			error: direct.error
+		};
+	}
+
+	let normalizedOutput: NormalizationResult<T>;
+
+	try {
+		normalizedOutput = await args.normalize(rawOutput, strategy);
+	} catch (error) {
+		return {
+			success: false,
+			error: direct.error,
+			normalizationError: toError(error).message
+		};
+	}
+
+	if (normalizedOutput.ok) {
+		const normalized = args.schema.safeParse(normalizedOutput.data);
+
+		if (normalized.success) {
+			return {
+				success: true,
+				data: normalized.data,
+				wasNormalized: true,
+				normalizationStatus: 'succeeded'
+			};
+		}
+		return {
+			success: false,
+			error: new Error('Normalized output did not match schema'),
+			normalizedOutput: normalizedOutput.data,
+			normalizationError: 'Normalized output did not match schema'
+		};
+	}
+	// get all errors from zod and include them in the error message
+	const errors = 'Zod validation errors: ' + JSON.stringify(normalizedOutput.zodErrors, null, 2);
+
+	return {
+		success: false,
+		error: new Error(`${normalizedOutput.error}\n${errors}`),
+		normalizedOutput,
+		normalizationError: normalizedOutput.error,
+		normalizationStatus: 'failed'
+	};
+}
+
+async function validateOrNormalizeFreeformOutput<T>(
+	args: FreeFormCallArgs<T>,
+	rawText: string
+): Promise<UnstructuredValidationResult<T>> {
+	const normalizedOutput = args.normalize(rawText);
+	if (normalizedOutput.ok) {
+		return {
+			success: true,
+			data: normalizedOutput.data,
+			wasNormalized: true
+		};
+	}
+
+	return {
+		success: false,
+		error: new Error(normalizedOutput.error),
+		normalizationError: normalizedOutput.error
+	};
+}
+
+async function attemptSmallStructuredRepair<T>(args: {
+	callArgs: StructuredCallArgs<T>;
+	rawOutput: unknown;
+	validationError: Error;
+	previousCallId: Id<'llmCalls'>;
+	attemptNumber: number;
+	strategy: OutputStrategy;
+}): Promise<
+	| {
+			success: true;
+			llmCallId: Id<'llmCalls'>;
+			output: T;
+			rawText: string;
+			nextAttemptNumber: number;
+	  }
+	| { success: false; llmCallId: Id<'llmCalls'>; error: Error; nextAttemptNumber: number }
+> {
+	const repairPrompt = buildStructuredRepairPrompt({
+		rawOutput: args.rawOutput,
+		validationError: args.validationError,
+		repairPromptSuffix: args.callArgs.repairPromptSuffix?.(args.validationError.message)
+	});
+	const { llmCallId, result } = await runSingleAttempt({
+		...args.callArgs,
+		prompt: repairPrompt,
+		system: 'You repair malformed JSON. You do not perform the original task again.',
+		strategy: 'native_structured',
+		attemptNumber: args.attemptNumber,
+		retryOfCallId: args.previousCallId,
+		executor: () => executeStructuredRepairCall(args.callArgs, 'native_structured')
+	});
+
+	if (result.kind === 'cancelled') {
+		await completeCall(args.callArgs.convex, {
+			llmCallId,
+			status: 'cancelled',
+			loopNumber: args.callArgs.loopNumber,
+			retryOfCallId: args.previousCallId,
+			attemptNumber: args.attemptNumber,
+			content: {
+				systemPrompt:
+					'You repair malformed structured JSON. You do not perform the original task again.',
+				userPrompt: repairPrompt,
+				error: result.error
+			}
+		});
+
+		throw result.error;
+	}
+
+	if (result.kind === 'failure') {
+		await completeCall(args.callArgs.convex, {
+			llmCallId,
+			status: 'failed',
+			strategyUsed: 'native_structured',
+			loopNumber: args.callArgs.loopNumber,
+			retryOfCallId: args.previousCallId,
+			latencyMs: result.latencyMs,
+			attemptNumber: args.attemptNumber,
+			content: {
+				systemPrompt:
+					'You repair malformed structured JSON. You do not perform the original task again.',
+				userPrompt: repairPrompt,
+				error: result.error
+			}
+		});
+
+		return {
+			success: false,
+			llmCallId,
+			error: result.error,
+			nextAttemptNumber: args.attemptNumber + 1
+		};
+	}
+
+	const repaired = await validateOrNormalizeStructuredOutput(
+		args.callArgs,
+		result.outcome.output,
+		args.strategy
+	);
+
+	if (!repaired.success) {
+		await completeCall(args.callArgs.convex, {
+			llmCallId,
+			openRouterRequestId: result.outcome.openRouterRequestId ?? '',
+			routedProvider: result.outcome.routedProvider,
+			status: 'failed',
+			completedAt: result.outcome.completedAt,
+			costUsd: result.outcome.costUsd ?? 0,
+			latencyMs: result.outcome.latencyMs,
+			inputTokens: result.outcome.inputTokens ?? 0,
+			outputTokens: result.outcome.outputTokens ?? 0,
+			reasoningTokens: result.outcome.reasoningTokens ?? 0,
+			cachedTokens: result.outcome.cachedTokens ?? 0,
+			finishReason: result.outcome.finishReason ?? '',
+			normalizationStatus: 'failed',
+			normalizationError: repaired.normalizationError ?? 'AI repair did not match schema',
+			gatewayProvider: args.callArgs.gatewayProvider ?? 'openrouter',
+			strategyUsed: 'native_structured',
+			loopNumber: args.callArgs.loopNumber,
+			retryOfCallId: args.previousCallId,
+			attemptNumber: args.attemptNumber,
+			content: {
+				systemPrompt:
+					'You repair malformed structured JSON. You do not perform the original task again.',
+				userPrompt: repairPrompt,
+				rawResponse: result.outcome.output,
+				normalizedOutput: repaired.normalizedOutput,
+				error: repaired.error
+			}
+		});
+
+		await finalizeNormalization(args.callArgs.convex, {
+			llmCallId,
+			normalizationStatus: 'failed' as const,
+			normalizationError: repaired.normalizationError ?? 'Output did not match schema'
+		});
+
+		return {
+			success: false,
+			llmCallId,
+			error: repaired.error,
+			nextAttemptNumber: args.attemptNumber + 1
+		};
+	}
+
+	await completeCall(args.callArgs.convex, {
+		llmCallId,
+		openRouterRequestId: result.outcome.openRouterRequestId ?? '',
+		routedProvider: result.outcome.routedProvider,
+		status: 'completed',
+		completedAt: result.outcome.completedAt,
+		costUsd: result.outcome.costUsd ?? 0,
+		latencyMs: result.outcome.latencyMs,
+		inputTokens: result.outcome.inputTokens ?? 0,
+		outputTokens: result.outcome.outputTokens ?? 0,
+		reasoningTokens: result.outcome.reasoningTokens ?? 0,
+		cachedTokens: result.outcome.cachedTokens ?? 0,
+		finishReason: result.outcome.finishReason ?? '',
+		normalizationStatus: 'succeeded',
+		gatewayProvider: args.callArgs.gatewayProvider ?? 'openrouter',
+		strategyUsed: 'native_structured',
+		loopNumber: args.callArgs.loopNumber,
+		retryOfCallId: args.previousCallId,
+		attemptNumber: args.attemptNumber,
+		content: {
+			systemPrompt:
+				'You repair malformed structured JSON. You do not perform the original task again.',
+			userPrompt: repairPrompt,
+			rawResponse: result.outcome.output,
+			structuredOutput: repaired.data
+			// wasAIRepaired: true
+			// wasLocallyNormalizedAfterRepair: repaired.wasNormalized
+		}
+	});
+
+	await finalizeNormalization(args.callArgs.convex, {
+		llmCallId,
+		normalizationStatus: 'succeeded' as const
+	});
+
+	return {
+		success: true,
+		llmCallId,
+		output: repaired.data,
+		rawText: result.outcome.rawText,
+		nextAttemptNumber: args.attemptNumber + 1
+	};
+}
+
+async function attemptSmallFreeformRepair<T>(args: {
+	callArgs: FreeFormCallArgs<T>;
+	rawOutput: unknown;
+	validationError: Error;
+	previousCallId: Id<'llmCalls'>;
+	attemptNumber: number;
+}): Promise<
+	| {
+			success: true;
+			llmCallId: Id<'llmCalls'>;
+			output: T;
+			rawText: string;
+			nextAttemptNumber: number;
+	  }
+	| { success: false; llmCallId: Id<'llmCalls'>; error: Error; nextAttemptNumber: number }
+> {
+	const repairPrompt = buildFreeformRepairPrompt({
+		rawOutput: typeof args.rawOutput === 'string' ? args.rawOutput : String(args.rawOutput),
+		validationError: args.validationError,
+		repairPromptSuffix: args.callArgs.repairPromptSuffix?.(args.validationError.message)
+	});
+
+	const { llmCallId, result } = await runSingleAttempt({
+		...args.callArgs,
+		prompt: repairPrompt,
+		system: 'You repair malformed freeform text. You do not perform the original task again.',
+		strategy: 'freeform_text',
+		attemptNumber: args.attemptNumber,
+		retryOfCallId: args.previousCallId,
+		executor: () => executeFreeformRepairCall(args.callArgs, repairPrompt)
+	});
+
+	if (result.kind === 'cancelled') {
+		await completeCall(args.callArgs.convex, {
+			llmCallId,
+			status: 'failed',
+			retryOfCallId: args.previousCallId,
+			attemptNumber: args.attemptNumber,
+			content: {
+				systemPrompt:
+					'You repair malformed freeform text. You do not perform the original task again.',
+				userPrompt: repairPrompt,
+				error: result.error
+			}
+		});
+
+		throw result.error;
+	}
+
+	if (result.kind === 'failure') {
+		await completeCall(args.callArgs.convex, {
+			llmCallId,
+			status: 'failed',
+			retryOfCallId: args.previousCallId,
+			attemptNumber: args.attemptNumber,
+			content: {
+				systemPrompt:
+					'You repair malformed freeform text. You do not perform the original task again.',
+				userPrompt: repairPrompt,
+				error: result.error
+			}
+		});
+
+		return {
+			success: false,
+			llmCallId,
+			error: result.error,
+			nextAttemptNumber: args.attemptNumber + 1
+		};
+	}
+
+	const repaired = await validateOrNormalizeFreeformOutput(args.callArgs, result.outcome.rawText);
+
+	if (!repaired.success) {
+		await completeCall(args.callArgs.convex, {
+			llmCallId,
+			openRouterRequestId: result.outcome.openRouterRequestId ?? '',
+			routedProvider: result.outcome.routedProvider,
+			status: 'failed',
+			completedAt: result.outcome.completedAt,
+			costUsd: result.outcome.costUsd ?? 0,
+			latencyMs: result.outcome.latencyMs,
+			inputTokens: result.outcome.inputTokens ?? 0,
+			outputTokens: result.outcome.outputTokens ?? 0,
+			reasoningTokens: result.outcome.reasoningTokens ?? 0,
+			cachedTokens: result.outcome.cachedTokens ?? 0,
+			finishReason: result.outcome.finishReason ?? '',
+			normalizationStatus: 'failed',
+			normalizationError: repaired.normalizationError ?? 'AI repair did not match format',
+			gatewayProvider: args.callArgs.gatewayProvider ?? 'openrouter',
+			strategyUsed: 'native_structured',
+			loopNumber: args.callArgs.loopNumber,
+			retryOfCallId: args.previousCallId,
+			attemptNumber: args.attemptNumber,
+			content: {
+				systemPrompt:
+					'You repair malformed freeform text. You do not perform the original task again.',
+				userPrompt: repairPrompt,
+				rawResponse: result.outcome.output,
+				normalizedOutput: repaired.normalizedOutput,
+				error: repaired.error
+			}
+		});
+
+		await finalizeNormalization(args.callArgs.convex, {
+			llmCallId,
+			normalizationStatus: 'failed' as const,
+			normalizationError: repaired.normalizationError ?? 'Output did not match resume format'
+		});
+
+		return {
+			success: false,
+			llmCallId,
+			error: repaired.error,
+			nextAttemptNumber: args.attemptNumber + 1
+		};
+	}
+
+	await completeCall(args.callArgs.convex, {
+		llmCallId,
+		openRouterRequestId: result.outcome.openRouterRequestId ?? '',
+		routedProvider: result.outcome.routedProvider,
+		status: 'completed',
+		completedAt: result.outcome.completedAt,
+		costUsd: result.outcome.costUsd ?? 0,
+		latencyMs: result.outcome.latencyMs,
+		inputTokens: result.outcome.inputTokens ?? 0,
+		outputTokens: result.outcome.outputTokens ?? 0,
+		reasoningTokens: result.outcome.reasoningTokens ?? 0,
+		cachedTokens: result.outcome.cachedTokens ?? 0,
+		finishReason: result.outcome.finishReason ?? '',
+		normalizationStatus: 'succeeded',
+		gatewayProvider: args.callArgs.gatewayProvider ?? 'openrouter',
+		strategyUsed: 'native_structured',
+		loopNumber: args.callArgs.loopNumber,
+		retryOfCallId: args.previousCallId,
+		attemptNumber: args.attemptNumber,
+		content: {
+			systemPrompt:
+				'You repair malformed freeform text. You do not perform the original task again.',
+			userPrompt: repairPrompt,
+			rawResponse: result.outcome.rawText
+			// wasAIRepaired: true,
+			// wasLocallyNormalizedAfterRepair: repaired.wasNormalized
+		}
+	});
+
+	await finalizeNormalization(args.callArgs.convex, {
+		llmCallId,
+		normalizationStatus: 'succeeded' as const
+	});
+
+	return {
+		success: true,
+		llmCallId,
+		rawText: result.outcome.rawText,
+		nextAttemptNumber: args.attemptNumber + 1,
+		output: repaired.data
 	};
 }
 
@@ -561,6 +1232,17 @@ async function completeCall(convex: ConvexHttpClient, args: CompleteLLMCallParam
 		console.log('Error completing LLM call:', error);
 		throw error;
 	}
+}
+
+async function finalizeNormalization(
+	convex: ConvexHttpClient,
+	args: {
+		llmCallId: Id<'llmCalls'>;
+		normalizationStatus: 'succeeded' | 'failed';
+		normalizationError?: string;
+	}
+): Promise<void> {
+	await convex.mutation(api.ai.index.updateNormalization, args);
 }
 
 function buildProviderOptions(requestParams: ModelRequestParameters) {
