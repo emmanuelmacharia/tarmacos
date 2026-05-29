@@ -202,8 +202,6 @@ export const getReviewerPlanContext = action({
 				supportingDocuments: supportingDocuments,
 				artifactVersionId: artifactVersion._id
 			};
-
-			console.log('Get reviewer plan context =================>', result);
 			return ok(result, { message: 'Initial review context retrieved', statusCode: 200 });
 		});
 	}
@@ -353,13 +351,11 @@ export const getWriterContext = action({
 			let latestAssessment = null;
 			let currentPassedReview = null;
 
-			if (args.requestKind && args.requestKind === 'initial_draft') {
-				baselineAssessment = reviews
-					.filter((review) => review.reviewKind === 'baseline_assessment')
-					.at(-1);
-			}
+			baselineAssessment = reviews
+				.filter((review) => review.reviewKind === 'baseline_assessment')
+				.at(-1);
 
-			if (args.requestKind && args.requestKind === 'review_revision') {
+			if (args.requestKind === 'review_revision') {
 				latestAssessment = reviews.filter((review) => review.reviewKind === 'draft_review').at(-1);
 			}
 
