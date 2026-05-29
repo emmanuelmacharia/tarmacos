@@ -144,7 +144,6 @@ export function buildReviewerPlanTaskMessage(args: BuildReviewerPlanTaskArgs): s
  */
 export function buildWriterTaskMessage(args: BuildWriterTaskArgs): string {
 	console.log('building the writer prompt');
-	console.log(args);
 	const parts = [
 		'Produce a tailored resume draft for the target job.',
 		'Use the critique plan as your main steering artifact.',
@@ -154,11 +153,16 @@ export function buildWriterTaskMessage(args: BuildWriterTaskArgs): string {
 		section('role_specific_run_instructions', args.runInstructions),
 		section('job_run_instructions', args.jobInstructions),
 		section('job_description', args.jobDescription),
-		section('baseline_cv', args.baselineCv),
+		section('baseline_cv', args.baselineCv)
+	].filter(Boolean);
+
+	const additionalSections = [
 		jsonSection('critique_plan_json', args.critiquePlan),
 		...(args.latestReview ? [jsonSection('review', args.latestReview)] : ''),
 		...(args.latestUserFeedback ? [section('user_feedback', args.latestUserFeedback)] : '')
 	];
+
+	parts.push(...additionalSections);
 
 	if (args.previousDraft) {
 		parts.push(section('previous_draft', args.previousDraft));
@@ -238,4 +242,61 @@ export function buildProfilerTaskMessage(input: {
 	]
 		.filter(Boolean)
 		.join('\n\n');
+}
+
+function safeJsonStringify(value: unknown): string {
+	try {
+		return JSON.stringify(value, null, 2);
+	} catch {
+		return String(value);
+	}
+}
+
+/**
+ * A repair prompt template when the model fails to meet the output contract.
+ * This is used for structured output calls that include a repairPromptSuffix function.
+ * The suffix is appended to the base repair prompt and should address the specific validation error.
+ */
+export function buildStructuredRepairPrompt(args: {
+	rawOutput: unknown;
+	validationError: Error;
+	repairPromptSuffix?: string;
+}): string {
+	return [
+		'Fix the following output to meet the required JSON schema. The output must be valid JSON and match the schema exactly',
+		'',
+		'Rules: ',
+		'- Do not perform a new review',
+		'- Do not add new substantive content or change the original meaning',
+		'- Preserve all original content that meets the schema requirements',
+		'- Fix only the structure, enum values, missing required fields, and invalid field shapes',
+		'- Return only the corrected JSON object',
+		'- No markdown, explanations, or comments',
+		'',
+		`Validation error: ${args.validationError.message}`,
+		`Original output: ${safeJsonStringify(args.rawOutput)}`,
+		args.repairPromptSuffix
+	].join('\n');
+}
+
+export function buildFreeformRepairPrompt(args: {
+	rawOutput: string;
+	validationError: Error;
+	repairPromptSuffix?: string;
+}): string {
+	return [
+		'Fix the following output to meet the required format of a resume. The output must conform to the standard convention of a resume format.',
+		'',
+		'Rules: ',
+		'- Do not perform a new review',
+		'- Do not add new substantive content or change the original meaning',
+		'- Preserve all original content that meets the schema requirements',
+		'- Fix only the structure, enum values, missing required fields, and invalid field shapes',
+		'- Return only the corrected JSON object',
+		'- No markdown, explanations, or comments',
+		'',
+		`Validation error: ${args.validationError.message}`,
+		`Original output: ${args.rawOutput}`,
+		args.repairPromptSuffix
+	].join('\n');
 }
