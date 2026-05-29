@@ -200,7 +200,8 @@ export const completeAiCall = mutation({
 			rawResponse: v.string(),
 			structuredOutput: v.optional(v.string()),
 			reasoning: v.optional(v.string()),
-			error: v.optional(v.any())
+			error: v.optional(v.any()),
+			normalizedOutput: v.optional(v.any())
 		})
 	},
 	handler: async (ctx, args) => {
