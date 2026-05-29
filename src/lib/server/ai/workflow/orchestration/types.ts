@@ -123,6 +123,7 @@ export interface CompleteLLMCallParams {
 		structuredOutput?: unknown;
 		reasoning?: string;
 		error?: unknown;
+		normalizedOutput?: unknown;
 	};
 }
 
