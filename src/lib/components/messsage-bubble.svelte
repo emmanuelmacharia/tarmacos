@@ -5,7 +5,7 @@
 
 	type Props = {
 		message: Doc<'messages'>;
-		authors: Record<string, { model: string; role: 'reviewer' | 'writer' }>;
+		authors: { model: string; role: 'reviewer' | 'writer' };
 		messageAttachments?: Doc<'runDocuments'>[];
 		messageData?: {
 			isStreamingReasoning?: boolean;
@@ -57,7 +57,7 @@
 				<span
 					class="flex items-center rounded border border-border/40 bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium tracking-wider text-muted-foreground/70 md:text-[10px]"
 				>
-					{authors[message.authorRole].model}
+					{authors.role === message.authorRole ? authors.model : ''}
 				</span>
 			{/if}
 		</div>
