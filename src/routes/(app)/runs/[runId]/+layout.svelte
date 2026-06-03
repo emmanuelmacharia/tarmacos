@@ -1,6 +1,6 @@
 <script lang="ts">
 	import MesssageBubble from '$lib/components/messsage-bubble.svelte';
-	import { ArrowLeft, Loader2, LoaderCircle, Network } from '@lucide/svelte';
+	import { ArrowLeft, LoaderCircle, Network } from '@lucide/svelte';
 	import { useQuery } from 'convex-svelte';
 	// import { fade, fly, slide } from 'svelte/transition';
 	import { api } from '../../../../convex/_generated/api';
