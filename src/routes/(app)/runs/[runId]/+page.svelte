@@ -11,7 +11,6 @@
 	async function resumeRun() {
 		// takes the run id and calls resume workflow
 		const url = `/api/ai/runs/${params.runId}/resumeRun`;
-		console.log(url);
 
 		const response = await fetch(url, {
 			method: 'POST',

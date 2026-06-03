@@ -1,8 +1,39 @@
 <script lang="ts">
-	import { ArrowLeft, Network } from '@lucide/svelte';
-	let { children } = $props();
+	import MesssageBubble from '$lib/components/messsage-bubble.svelte';
+	import { ArrowLeft, Loader2, LoaderCircle, Network } from '@lucide/svelte';
+	import { useQuery } from 'convex-svelte';
+	// import { fade, fly, slide } from 'svelte/transition';
+	import { api } from '../../../../convex/_generated/api';
+	import type { Doc, Id } from '../../../../convex/_generated/dataModel';
+	import { fade } from 'svelte/transition';
+	let chatContainer;
 	let showPreview = $state(false);
 	let activeMobileTab = $state('chat');
+	let { children, params } = $props();
+
+	const runId = $state<Id<'runs'>>(params.runId as Id<'runs'>);
+
+	const messageFetch = useQuery(api.messages.index.getMessagesByRunId, { runId });
+
+	const runFetch = useQuery(api.runs.index.getRun, { runId });
+
+	const messages: Doc<'messages'>[] | undefined = $derived(messageFetch.data);
+
+	const run: Doc<'runs'> = $derived(runFetch.data?.data.run);
+
+	const modelAuthor = $derived.by(() => {
+		const modelConfig = run.agentConfig;
+		return {
+			writer: {
+				model: modelConfig.writer.modelSlug,
+				role: 'writer' as const
+			},
+			reviewer: {
+				model: modelConfig.reviewer.modelSlug,
+				role: 'reviewer' as const
+			}
+		};
+	});
 </script>
 
 <div
@@ -55,7 +86,36 @@
 		{/if}
 
 		<!-- chat -->
-		<div class="flex flex-1 flex-col overflow-y-auto p-3 pt-6 md:p-8 md:pt-10"></div>
+		<div
+			class="flex flex-1 flex-col overflow-y-auto p-3 pt-6 md:p-8 md:pt-10"
+			bind:this={chatContainer}
+		>
+			<div class="relative mx-auto w-full space-y-6 md:max-w-2xl md:space-y-8">
+				{#each messages as message (message._id)}
+					<MesssageBubble
+						{message}
+						authors={message.authorRole === 'writer'
+							? { model: modelAuthor.writer.model, role: modelAuthor.writer.role }
+							: { model: modelAuthor.reviewer.model, role: modelAuthor.reviewer.role }}
+					/>
+				{/each}
+				<!-- loader -->
+				<div class="flex w-full justify-start" in:fade={{ duration: 200 }}>
+					<div
+						class="z-10 mr-3 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-[3px] border-border bg-background md:h-8 md:w-8"
+					>
+						<LoaderCircle size={12} class="animate-spin text-muted-foreground" aria-hidden="true" />
+					</div>
+					<div class="flex h-7 items-center md:h-8">
+						<div
+							class="animate-pulse text-[10px] font-medium tracking-widest text-muted-foreground uppercase md:text-xs"
+						>
+							Running process...
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 		{@render children()}
 	</div>
 </div>
