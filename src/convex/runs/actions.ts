@@ -383,6 +383,16 @@ export const getWriterContext = action({
 				}
 			}
 
+			// revisions (review- or user-driven) build on the latest draft; the initial
+			// draft is based on the imported source, which is not a draft to revise
+			const previousDraftMarkdown =
+				args.requestKind === 'initial_draft' ? '' : artifactVersionToPromptText(artifactVersion);
+
+			const latestReview =
+				currentPassedReview && currentPassedReview._id !== baselineAssessment?._id
+					? currentPassedReview.content
+					: '';
+
 			return ok(
 				{
 					runId: run._id,
@@ -397,13 +407,12 @@ export const getWriterContext = action({
 					baselineAssessment: baselineAssessment?.content,
 					profileInstructions: run.instructionSnapshot?.profile?.writer,
 					jobInstructions: run.instructionSnapshot?.job,
-					latestAssessment:
-						currentPassedReview?._id !== baselineAssessment?._id
-							? currentPassedReview?.content
-							: '',
+					latestAssessment: latestReview,
 					requestKind: args.requestKind,
 					currentPassedReview: currentPassedReview?.content,
-					userReview: userReview?.body || ''
+					previousDraftMarkdown,
+					latestReview,
+					latestUserFeedback: userReview?.body || ''
 				},
 				{ message: 'Writer context found' }
 			);
