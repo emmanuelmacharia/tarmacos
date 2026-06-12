@@ -42,6 +42,7 @@ When revising:
 A good revision should:
 
 - fix the highest-severity issues first
+- fix the blocking issues from the review feedback returned
 - strengthen alignment to the target job
 - improve specificity where the draft is too generic
 - remove or soften unsupported or risky claims
