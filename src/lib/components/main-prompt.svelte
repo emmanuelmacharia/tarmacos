@@ -6,6 +6,7 @@
 		ClipboardPen,
 		FileIcon,
 		Info,
+		LoaderCircle,
 		Maximize,
 		Minimize,
 		PaperclipIcon,
@@ -15,6 +16,7 @@
 		Sparkles,
 		X
 	} from '@lucide/svelte';
+	import { fade } from 'svelte/transition';
 	import ModelSelection from './model-selection.svelte';
 	import * as aiProviders from '$lib/data/ai_providers.json';
 	import * as aiModels from '$lib/data/models.json';
@@ -26,9 +28,12 @@
 	import * as Tooltip from './ui/tooltip';
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
 	import { useConvexClient } from 'convex-svelte';
+	import { useClerkContext } from 'svelte-clerk';
 	import { api } from '../../convex/_generated/api';
+	import { savePromptDraft } from '$lib/utils/promptDraft';
 
 	const convex = useConvexClient();
+	const clerkCtx = useClerkContext();
 
 	type UploadStatus =
 		| 'pending' // uploaded client side
@@ -54,6 +59,9 @@
 
 	type Props = {
 		activeProfile?: ActiveProfile;
+		showHeading?: boolean;
+		initialJobDescription?: string;
+		initialInstructions?: string;
 		onsubmit: (data: {
 			jobDescription: string;
 			jobInstructions: string;
@@ -63,15 +71,52 @@
 		}) => void | Promise<void>;
 	};
 
+	let {
+		activeProfile,
+		onsubmit,
+		showHeading = true,
+		initialJobDescription = '',
+		initialInstructions = ''
+	}: Props = $props();
+
+	const isSignedIn = $derived(!!clerkCtx.auth.userId);
+
 	let uploadWorkerRunning = $state(false);
+	let isSubmitting = $state(false);
+
+	const tailoringPhrases = [
+		'Reading the job description…',
+		'Taking your measurements…',
+		'Threading the needle…',
+		'Cutting the cloth…',
+		'Stitching your story together…',
+		'Pressing the final seams…'
+	];
+	let phraseIndex = $state(0);
+
+	$effect(() => {
+		if (!isSubmitting) return;
+
+		phraseIndex = 0;
+		const interval = setInterval(() => {
+			phraseIndex = (phraseIndex + 1) % tailoringPhrases.length;
+		}, 2200);
+
+		return () => clearInterval(interval);
+	});
 
 	// 0 = Normal, 1 = Slightly Expanded, 2 = Fully Expanded
 	let expansionState = $state(0);
 
-	let promptText = $state('');
+	// The initial* props are deliberately read once: they seed the draft restored
+	// after sign-in, and the textarea owns the value from then on.
+	// svelte-ignore state_referenced_locally
+	let promptText = $state(initialJobDescription);
 	let attachedFiles = $state<AttachedFile[]>([]);
-	let showInstructions = $state(false);
-	let additionalInstructions = $state('');
+	// svelte-ignore state_referenced_locally
+	let showInstructions = $state(!!initialInstructions.trim());
+	// svelte-ignore state_referenced_locally
+	let additionalInstructions = $state(initialInstructions);
 	let modelSelections = $state<Record<Role, SelectedModel>>({
 		writer: {
 			provider: null,
@@ -93,7 +138,6 @@
 		}
 	});
 
-	let { activeProfile, onsubmit }: Props = $props();
 	let textareaRef: HTMLTextAreaElement | null = null;
 	let fileInput: HTMLInputElement;
 	let showExpandedIcon = $derived.by(() => {
@@ -110,6 +154,21 @@
 		submitPrompt();
 	}
 
+	/**
+	 * Runs must be created by a signed-in user. When a visitor tries to submit or
+	 * attach files, stash their prompt so the dashboard can restore it after the
+	 * Clerk round-trip, then open the sign-in modal.
+	 */
+	function ensureSignedIn(): boolean {
+		if (isSignedIn) return true;
+		savePromptDraft({
+			jobDescription: promptText,
+			jobInstructions: additionalInstructions
+		});
+		void clerkCtx.clerk?.openSignIn();
+		return false;
+	}
+
 	function toggleExpand() {
 		if (!textareaRef) return;
 
@@ -120,7 +179,9 @@
 		}
 	}
 
-	function submitPrompt() {
+	async function submitPrompt() {
+		if (isSubmitting) return;
+		if (!ensureSignedIn()) return;
 		const resume = attachedFiles[0];
 		if (!promptText.trim() || !attachedFiles.length || resume.status !== 'ready') return;
 		// begin a run
@@ -132,7 +193,12 @@
 			supportingDocuments: attachedFiles.slice(1).filter((f) => f.status === 'ready')
 		};
 
-		onsubmit(payload);
+		isSubmitting = true;
+		try {
+			await onsubmit(payload);
+		} finally {
+			isSubmitting = false;
+		}
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
@@ -162,6 +228,7 @@
 	}
 
 	function addFiles(files: File[]) {
+		if (!ensureSignedIn()) return;
 		const newItems: AttachedFile[] = files.map((file) => ({
 			localId: crypto.randomUUID(),
 			file,
@@ -330,13 +397,15 @@
 </script>
 
 <div class="mx-auto flex w-full max-w-3xl flex-col items-center">
-	<h1
-		class="text-center {expansionState < 2
-			? 'text-3xl md:text-4xl'
-			: 'text-xl md:text-2xl'} mb-6 font-semibold tracking-tight text-foreground transition-all"
-	>
-		What role are we targeting today?
-	</h1>
+	{#if showHeading}
+		<h1
+			class="text-center {expansionState < 2
+				? 'text-3xl md:text-4xl'
+				: 'text-xl md:text-2xl'} mb-6 font-semibold tracking-tight text-foreground transition-all"
+		>
+			What role are we targeting today?
+		</h1>
+	{/if}
 
 	<div class="mb-8 flex w-full items-center justify-center gap-0 px-2">
 		<div class="step-item flex max-w-35 flex-1 flex-col items-center text-center">
@@ -392,8 +461,40 @@
 		action=""
 		onsubmit={handleSubmit}
 		class="relative flex w-full flex-col rounded-2xl border border-primary/30 bg-background shadow-lg transition-all duration-500 ease-out focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 hover:border-border
-		{expansionState === 2 ? 'z-40 h-[75vh]' : expansionState === 1 ? 'z-10 h-80' : 'z-0 min-h-18'}"
+		{expansionState === 2 ? 'z-40 h-[75vh]' : expansionState === 1 ? 'z-10 h-80' : 'z-0 min-h-18'}
+		{isSubmitting ? 'tailoring-active' : ''}"
 	>
+		{#if isSubmitting}
+			<div
+				class="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 rounded-2xl bg-background/85 backdrop-blur-[2px]"
+				transition:fade={{ duration: 200 }}
+				role="status"
+				aria-live="polite"
+			>
+				<svg
+					class="stitch text-primary"
+					width="180"
+					height="28"
+					viewBox="0 0 180 28"
+					fill="none"
+					aria-hidden="true"
+				>
+					<path
+						class="stitch-path"
+						d="M4 14 C 22 4, 38 24, 58 14 C 78 4, 94 24, 114 14 C 134 4, 150 24, 176 14"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-dasharray="7 7"
+					/>
+				</svg>
+				{#key phraseIndex}
+					<p class="text-sm font-medium text-muted-foreground" in:fade={{ duration: 300 }}>
+						{tailoringPhrases[phraseIndex]}
+					</p>
+				{/key}
+			</div>
+		{/if}
 		{#if attachedFiles.length > 0}
 			<div class="flex shrink-0 flex-wrap gap-2 p-3 pb-0">
 				{#each attachedFiles as fileData, index (index)}
@@ -478,7 +579,9 @@
 				<button
 					type="button"
 					class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-background/50 hover:text-foreground"
-					onclick={() => fileInput.click()}
+					onclick={() => {
+						if (ensureSignedIn()) fileInput.click();
+					}}
 					title="Attach files"
 				>
 					<Paperclip size={18} />
@@ -565,9 +668,13 @@
 				<ModelSelection {providers} {models} bind:modelSelections />
 			{/if}
 
-			<Button class="flex gap-4" type="submit">
-				<SendHorizontal size={18} />
-				<span class="block sm:hidden">Tailor resume</span>
+			<Button class="flex gap-4" type="submit" disabled={isSubmitting}>
+				{#if isSubmitting}
+					<LoaderCircle size={18} class="animate-spin" />
+				{:else}
+					<SendHorizontal size={18} />
+				{/if}
+				<span class="block sm:hidden">{isSubmitting ? 'Tailoring…' : 'Tailor resume'}</span>
 			</Button>
 		</div>
 	</form>
@@ -590,3 +697,65 @@
 		>
 	</div> -->
 </div>
+
+<style>
+	@property --thread-angle {
+		syntax: '<angle>';
+		initial-value: 0deg;
+		inherits: false;
+	}
+
+	/* A single point of light circling the form border, like thread pulled around a hem */
+	form.tailoring-active {
+		border-color: transparent;
+	}
+
+	form.tailoring-active::before {
+		content: '';
+		position: absolute;
+		inset: -1px;
+		z-index: 40;
+		border-radius: 1rem;
+		padding: 1.5px;
+		background: conic-gradient(
+			from var(--thread-angle),
+			transparent 0%,
+			var(--color-primary) 12%,
+			transparent 28%
+		);
+		-webkit-mask:
+			linear-gradient(#fff 0 0) content-box,
+			linear-gradient(#fff 0 0);
+		-webkit-mask-composite: xor;
+		mask:
+			linear-gradient(#fff 0 0) content-box,
+			linear-gradient(#fff 0 0);
+		mask-composite: exclude;
+		pointer-events: none;
+		animation: thread-around 2.4s linear infinite;
+	}
+
+	@keyframes thread-around {
+		to {
+			--thread-angle: 360deg;
+		}
+	}
+
+	/* Running stitch: the dashes travel along the thread */
+	.stitch-path {
+		animation: stitch-run 0.9s linear infinite;
+	}
+
+	@keyframes stitch-run {
+		to {
+			stroke-dashoffset: -14;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		form.tailoring-active::before,
+		.stitch-path {
+			animation: none;
+		}
+	}
+</style>
