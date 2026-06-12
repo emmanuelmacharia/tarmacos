@@ -14,7 +14,7 @@ export const OPERATION_KIND = {
 } as const;
 
 export const MESSAGE_LIMITS = {
-	summary: 600,
-	review: 1200,
-	preview: 500
+	summary: 4000,
+	review: 1800,
+	preview: 1000
 } as const;
