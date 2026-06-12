@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { internal } from '../_generated/api';
+import { api, internal } from '../_generated/api';
 import { internalMutation, internalQuery } from '../_generated/server';
 import { assertFound } from '../lib/errorMapper';
 import {
@@ -55,7 +55,8 @@ export const createRunWithDocumentsAndArtifact = internalMutation({
 				plainText: v.string(),
 				contentHash: v.optional(v.string())
 			})
-		})
+		}),
+		message: v.string()
 	},
 	handler: async (ctx, args) => {
 		const now = Date.now();
@@ -91,7 +92,26 @@ export const createRunWithDocumentsAndArtifact = internalMutation({
 			versionData: { ...args.artifact.data }
 		});
 
-		return run;
+		const messagePayload = {
+			runId: run._id,
+			messageType: 'user_prompt' as const,
+			authorRole: 'user' as const,
+			authorType: 'user' as const,
+			visibility: 'user_visible' as const,
+			bodyFormat: 'markdown' as const,
+			body: args.message
+		};
+
+		await ctx.runMutation(api.messages.index.createMessage, messagePayload);
+
+		await ctx.runMutation(api.runs.index.updateRun, {
+			runId: run._id,
+			nextMessageSequenceNumber: run.nextMessageSequenceNumber + 1
+		});
+
+		const updatedRun = assertFound(await ctx.db.get(run._id));
+
+		return updatedRun;
 	}
 });
 
