@@ -12,6 +12,10 @@ export const PROFILE_INFERENCE_MODEL = {
 
 export const DEFAULT_MAX_ITERATIONS = 3;
 
+// hard cap on user-feedback rounds (writer revisions or reviewer re-reviews)
+// after the agent loop hands the draft back to the user
+export const DEFAULT_MAX_USER_FEEDBACK_ITERATIONS = 3;
+
 export const DEFAULT_ALLOW_ALL_MODELS = true;
 
 export const DEFAULT_MODELS = {
