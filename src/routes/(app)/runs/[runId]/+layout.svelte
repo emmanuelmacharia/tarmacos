@@ -6,6 +6,7 @@
 	import { api } from '../../../../convex/_generated/api';
 	import type { Doc, Id } from '../../../../convex/_generated/dataModel';
 	import { fade } from 'svelte/transition';
+	import { resolve } from '$app/paths';
 	let chatContainer;
 	let showPreview = $state(false);
 	let activeMobileTab = $state('chat');
@@ -47,11 +48,12 @@
 		<div
 			class="z-10 flex h-14 shrink-0 items-center border-b border-border bg-transparent px-4 md:h-16 md:px-6"
 		>
-			<div
+			<a
 				class="flex items-center gap-2 rounded px-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+				href={resolve('/dashboard')}
 			>
 				<ArrowLeft size={16} aria-hidden="true" /> Dashboard
-			</div>
+			</a>
 			{#if !showPreview}
 				<div class="flex flex-1 justify-center gap-2 text-center text-sm font-medium text-primary">
 					<Network size={16} aria-hidden="true" /> Workflow execution
