@@ -39,12 +39,8 @@ export function buildInitialPromptMessage(
 }
 
 export function buildBaselineAssessmentMessage(plan: NormalizedCritiquePlan): string {
-	const confidenceScoreUserView = calculateConfidenceScore(
-		plan.resumeAlignmentScore,
-		plan.keywordMatchScore,
-		plan.yearsOfExperienceScore
-	);
-
+	// scores are intentionally omitted from the body — the chat UI renders them
+	// graphically from the linked review row
 	const message = [
 		'## Baseline Assessment',
 		'',
@@ -62,16 +58,6 @@ export function buildBaselineAssessmentMessage(plan: NormalizedCritiquePlan): st
 		'',
 		...plan.gapsOrRisks.slice(0, 3).map((g) => `- ${g.title} (severity: ${g.severity})`),
 		'',
-		'### Confidence score',
-		'',
-		`${confidenceScoreUserView}% confidence based on alignment (${(
-			plan.resumeAlignmentScore * 100
-		).toFixed(
-			0
-		)}%), keyword match (${(plan.keywordMatchScore * 100).toFixed(0)}%), and experience (${(
-			plan.yearsOfExperienceScore * 100
-		).toFixed(0)}%).`,
-		'',
 		'### Next steps',
 		'',
 		...plan.writerStrategy.slice(0, 3).map((s) => `- ${s}`)
@@ -83,11 +69,14 @@ export function buildBaselineAssessmentMessage(plan: NormalizedCritiquePlan): st
 export function buildDraftAnnouncementMessage(args: {
 	iteration: number;
 	isRevision: boolean;
+	isUserFeedback?: boolean;
 	draft: NormalizedDraft;
 }): string {
-	const label = args.isRevision
-		? `Revision ${args.iteration} ready for review. `
-		: 'First tailored draft ready for review. ';
+	const label = args.isUserFeedback
+		? 'I have updated the draft based on your feedback. '
+		: args.isRevision
+			? `Revision ${args.iteration} ready for review. `
+			: 'First tailored draft ready for review. ';
 
 	const message = [`${label}`, ''].join('\n');
 
@@ -139,14 +128,16 @@ export function buildMaxIterationsMessage(iterations: number): string {
 	);
 }
 
+export function buildUserFeedbackLimitMessage(maxFeedbackRounds: number): string {
+	return clampMessage(
+		`You've reached the limit of ${maxFeedbackRounds} feedback round${
+			maxFeedbackRounds === 1 ? '' : 's'
+		} for this run. The latest draft is final — you can download it or start a new run to keep iterating.`
+	);
+}
+
 function clampMessage(text: string): string {
 	return text.length > MESSAGE_LIMITS.summary
 		? `${text.slice(0, MESSAGE_LIMITS.summary - 1)}…`
 		: text;
-}
-
-function calculateConfidenceScore(alignment: number, keywords: number, experience: number): number {
-	const sum = alignment + keywords + experience;
-	const average = (sum / 3) * 100;
-	return average.toFixed(0) as unknown as number;
 }
