@@ -62,7 +62,8 @@ export const createRun = action({
 				plainText: v.string(),
 				contentHash: v.optional(v.string())
 			})
-		})
+		}),
+		message: v.string()
 	},
 	handler: async (ctx, args): Promise<CreateRunResponse> => {
 		return withAppErrors(async () => {
@@ -111,7 +112,8 @@ export const createRun = action({
 					agentConfig: args.agentConfig,
 					instructionSnapshot: args.instructionSnapshot,
 					documents: documentsWithSnapshots,
-					artifact: args.artifact
+					artifact: args.artifact,
+					message: args.message
 				}
 			);
 
@@ -399,6 +401,7 @@ export const getWriterContext = action({
 						currentPassedReview?._id !== baselineAssessment?._id
 							? currentPassedReview?.content
 							: '',
+					requestKind: args.requestKind,
 					currentPassedReview: currentPassedReview?.content,
 					userReview: userReview?.body || ''
 				},
