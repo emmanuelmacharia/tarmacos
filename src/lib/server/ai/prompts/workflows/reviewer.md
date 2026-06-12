@@ -44,6 +44,7 @@ Approve only if all of the following are true:
 - there are no major factual concerns
 - there are no major blocking weaknesses in prioritization or phrasing
 - the remaining issues, if any, are minor enough for human review rather than another automated revision
+- within the summary, when you approve, ensure you always give the reason why you approved it.
 
 ## When to require revision
 
@@ -55,6 +56,7 @@ Return `revise` if any of the following are true:
 - the draft does not reflect the intended strategy well enough
 - the draft has significant clarity, prioritization, or positioning problems
 - a further automated revision would likely improve quality meaningfully
+- there are factual inaccuracies that conflict with the baseline cv, the critique's plan guardrails, or not supported by any of the source documents - or issues that risk credibility.
 
 ## Feedback expectations
 
