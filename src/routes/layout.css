@@ -126,6 +126,44 @@ body {
 	}
 }
 
+@layer components {
+	.markdown-body {
+		@apply text-[13px] leading-[1.6] wrap-break-word md:text-sm;
+	}
+
+	.markdown-body h2 {
+		@apply mt-0 mb-4 text-lg font-bold tracking-tight;
+	}
+
+	.markdown-body h3 {
+		@apply mt-6 mb-2 text-base font-bold;
+	}
+
+	.markdown-body p {
+		@apply my-2;
+	}
+
+	.markdown-body ul {
+		@apply my-2 list-disc pl-5;
+	}
+
+	.markdown-body ol {
+		@apply my-2 list-decimal pl-5;
+	}
+
+	.markdown-body li {
+		@apply my-1;
+	}
+
+	.markdown-body > :first-child {
+		@apply mt-0;
+	}
+
+	.markdown-body > :last-child {
+		@apply mb-0;
+	}
+}
+
 body {
 	background-color: var(--color-background);
 	background-image:
