@@ -429,7 +429,13 @@ export const completeReview = mutation({
 
 			const reviewId = await ctx.db.insert('reviews', reviewPayload);
 
-			const sequenceNumber = run.nextMessageSequenceNumber;
+			let sequenceNumber = run.nextMessageSequenceNumber;
+
+			const loopCount = run.loopCount + 1;
+
+			const maxIterationsMessage =
+				args.maxIterationsMessage ??
+				'Review limit reached. The latest draft is ready for your review.';
 
 			const messagePayload = {
 				runId: run._id,
@@ -447,11 +453,40 @@ export const completeReview = mutation({
 
 			await ctx.db.insert('messages', messagePayload);
 
+			if (loopCount > run.agentConfig.maxIterations) {
+				const maxIterMessagePayload = {
+					runId: run._id,
+					sequenceNumber: sequenceNumber + 1,
+					authorType: 'system' as const,
+					authorRole: 'system' as const,
+					messageType: 'system_status' as const,
+					visibility: 'user_visible' as const,
+					bodyFormat: 'markdown' as const,
+					body: maxIterationsMessage,
+					relatedArtifactVersionId: run.currentArtifactVersionId,
+					relatedReviewId: reviewId,
+					createdAt: now
+				};
+
+				await ctx.db.insert('messages', maxIterMessagePayload);
+
+				sequenceNumber++;
+			}
+
+			const status =
+				args.canonical.decision === 'approve' || loopCount > run.agentConfig.maxIterations
+					? 'awaiting_user'
+					: ('running' as const);
+			const phase =
+				args.canonical.decision === 'approve' || loopCount > run.agentConfig.maxIterations
+					? 'user_review'
+					: ('revision' as const);
+
 			await ctx.db.patch(run._id, {
-				status: args.canonical.decision === 'approve' ? 'awaiting_user' : ('running' as const),
-				phase: args.canonical.decision === 'approve' ? 'user_review' : ('revision' as const),
+				status,
+				phase,
 				nextMessageSequenceNumber: sequenceNumber + 1,
-				loopCount: run.loopCount + 1,
+				loopCount,
 				updatedAt: now
 			});
 
