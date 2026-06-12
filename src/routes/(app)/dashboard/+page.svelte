@@ -54,8 +54,8 @@
 			profileId: activeUserProfile?._id,
 			jobDescription: data.jobDescription,
 			models: {
-				reviewerModelSlug: data.models.reviewer.name ?? undefined,
-				writerModelSlug: data.models.writer.name ?? undefined
+				reviewerModelSlug: data.models.reviewer.id ?? undefined,
+				writerModelSlug: data.models.writer.id ?? undefined
 			},
 			jobInstructions: data.jobInstructions,
 			baselineCv: {
