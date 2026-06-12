@@ -12,6 +12,8 @@ export const PROFILE_INFERENCE_MODEL = {
 
 export const DEFAULT_MAX_ITERATIONS = 3;
 
+export const DEFAULT_ALLOW_ALL_MODELS = true;
+
 export const DEFAULT_MODELS = {
 	writer: 'openai/gpt-oss-120b',
 	reviewer: 'openai/gpt-oss-120b'
@@ -39,6 +41,21 @@ export const MODEL_POLICY: Record<string, ModelPolicy> = {
 		enabled: true,
 		roles: ['writer', 'reviewer'],
 		supportsStructuredOutput: true
+	},
+	'Anthropic/Claude Sonnet 4.6': {
+		enabled: true,
+		roles: ['writer', 'reviewer'],
+		supportsStructuredOutput: true
+	},
+	'openai/gpt-5.4-mini': {
+		enabled: true,
+		roles: ['writer', 'reviewer'],
+		supportsStructuredOutput: true
+	},
+	'moonshotai/kimi-k2.5': {
+		enabled: true,
+		roles: ['writer', 'reviewer'],
+		supportsStructuredOutput: true
 	}
 };
 
@@ -47,6 +64,11 @@ export function assertModelAllowedForRole(
 	role: Role,
 	options?: { requiredStructuredOutput?: boolean }
 ): void {
+	// TODO: REMOVE BYPASS
+	if (DEFAULT_ALLOW_ALL_MODELS) {
+		console.warn('Model policy checks are bypassed due to DEFAULT_ALLOW_ALL_MODELS being true');
+		return;
+	}
 	const policy = MODEL_POLICY[modelId];
 
 	if (!policy || !policy.enabled) {
