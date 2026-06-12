@@ -543,6 +543,7 @@ async function handleWriterInstruction(
 	const messageSummary = buildDraftAnnouncementMessage({
 		iteration: context.loopCount,
 		isRevision: context.requestKind !== 'initial_draft',
+		isUserFeedback: context.requestKind === 'user_feedback_revision',
 		draft: normalized.data
 	});
 
@@ -551,7 +552,8 @@ async function handleWriterInstruction(
 		llmCallId: normalized.llmCallId,
 		canonical,
 		messageSummary,
-		basedOnVersionId: instruction.basedOnVersionId
+		basedOnVersionId: instruction.basedOnVersionId,
+		requestKind: instruction.requestKind
 	});
 
 	return next;
