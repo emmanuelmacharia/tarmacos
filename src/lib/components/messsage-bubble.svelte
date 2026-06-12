@@ -3,6 +3,7 @@
 	import { marked } from 'marked';
 	import type { Doc } from '../../convex/_generated/dataModel';
 	import { BrainCircuit, CircleCheckBig, FileText, SquarePen, User } from '@lucide/svelte';
+	import { MENTION_PATTERN } from '$lib/utils/mentions';
 
 	type Props = {
 		message: Doc<'messages'>;
@@ -13,7 +14,7 @@
 			reasoning?: string;
 			isComplete?: boolean;
 			isStreamingContent?: boolean;
-			metrics: {
+			metrics?: {
 				experienceAlignment: number;
 				keywordMatch: number;
 				resumeAlignment: number;
@@ -22,7 +23,24 @@
 	};
 	let { message, authors, messageAttachments, messageData }: Props = $props();
 
-	let messageContent = $derived(marked.parse(message.body));
+	// wrap supported @agent mentions in user feedback so they render as chips;
+	// marked passes inline HTML through untouched
+	let messageContent = $derived(
+		marked.parse(
+			message.authorType === 'user'
+				? message.body.replace(MENTION_PATTERN, '$1<span class="mention-chip">$2</span>')
+				: message.body
+		)
+	);
+
+	let metrics = $derived(messageData?.metrics);
+	let confidence = $derived(
+		metrics
+			? Math.round(
+					(metrics.resumeAlignment + metrics.keywordMatch + metrics.experienceAlignment) / 3
+				)
+			: 0
+	);
 
 	//  we need to figure out the logical relationship between messages and run documents;
 	// for now it's safe to say that run documents are only attached to the first run message
@@ -124,15 +142,14 @@
 		{/if}
 
 		<div
-			class="markdown-body w-full border p-4 shadow-sm {message.authorType ===
-			'user'
+			class="markdown-body w-full border p-4 shadow-sm {message.authorType === 'user'
 				? 'rounded-2xl rounded-tr-sm border-primary/20 bg-primary text-primary-foreground'
 				: 'rounded-2xl rounded-tl-sm border-border/60 bg-card text-foreground/90'}"
 		>
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			{@html messageContent}{messageData?.isStreamingContent ? '▋' : ''}
 
-			{#if messageData?.metrics && messageData?.isComplete}
+			{#if metrics && messageData?.isComplete}
 				<div
 					class="mt-3.5 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border/50 pt-3.5"
 					in:fade={{ duration: 400 }}
@@ -143,12 +160,12 @@
 							class="flex items-center justify-between text-[9px] font-bold tracking-widest text-muted-foreground uppercase md:text-[10px]"
 						>
 							<span>Alignment</span>
-							<span class="text-foreground">{messageData?.metrics.resumeAlignment}%</span>
+							<span class="text-foreground">{metrics.resumeAlignment}%</span>
 						</div>
 						<div class="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
 							<div
 								class="animate-progress absolute top-0 left-0 h-full rounded-full bg-blue-500"
-								style="width: {messageData?.metrics.resumeAlignment}%"
+								style="width: {metrics.resumeAlignment}%"
 							></div>
 						</div>
 					</div>
@@ -158,12 +175,12 @@
 							class="flex items-center justify-between text-[9px] font-bold tracking-widest text-muted-foreground uppercase md:text-[10px]"
 						>
 							<span>Keywords</span>
-							<span class="text-foreground">{messageData?.metrics.keywordMatch}%</span>
+							<span class="text-foreground">{metrics.keywordMatch}%</span>
 						</div>
 						<div class="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
 							<div
 								class="animate-progress absolute top-0 left-0 h-full rounded-full bg-amber-500"
-								style="width: {messageData?.metrics.keywordMatch}%"
+								style="width: {metrics.keywordMatch}%"
 							></div>
 						</div>
 					</div>
@@ -173,12 +190,12 @@
 							class="flex items-center justify-between text-[9px] font-bold tracking-widest text-muted-foreground uppercase md:text-[10px]"
 						>
 							<span>Experience</span>
-							<span class="text-foreground">{messageData?.metrics.experienceAlignment}%</span>
+							<span class="text-foreground">{metrics.experienceAlignment}%</span>
 						</div>
 						<div class="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
 							<div
 								class="animate-progress absolute top-0 left-0 h-full rounded-full bg-emerald-500"
-								style="width: {messageData?.metrics.experienceAlignment}%"
+								style="width: {metrics.experienceAlignment}%"
 							></div>
 						</div>
 					</div>
@@ -188,24 +205,12 @@
 							class="flex items-center justify-between text-[9px] font-bold tracking-widest text-primary uppercase md:text-[10px]"
 						>
 							<span>Confidence</span>
-							<span class="font-black text-primary"
-								>{Math.round(
-									(messageData?.metrics.resumeAlignment +
-										messageData?.metrics.keywordMatch +
-										messageData?.metrics.experienceAlignment) /
-										3
-								)}%</span
-							>
+							<span class="font-black text-primary">{confidence}%</span>
 						</div>
 						<div class="relative h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
 							<div
 								class="animate-progress absolute top-0 left-0 h-full rounded-full bg-primary"
-								style="width: {Math.round(
-									(messageData?.metrics.resumeAlignment +
-										messageData?.metrics.keywordMatch +
-										messageData?.metrics.experienceAlignment) /
-										3
-								)}%"
+								style="width: {confidence}%"
 							></div>
 						</div>
 					</div>
@@ -225,6 +230,14 @@
 </div>
 
 <style>
+	/* user bubbles are bg-primary, so the chip tints with the foreground color */
+	.markdown-body :global(.mention-chip) {
+		border-radius: 0.25rem;
+		background: color-mix(in oklab, var(--color-primary-foreground) 22%, transparent);
+		padding: 0 0.2rem;
+		font-weight: 600;
+	}
+
 	.animate-progress {
 		animation: progressFill 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 	}
