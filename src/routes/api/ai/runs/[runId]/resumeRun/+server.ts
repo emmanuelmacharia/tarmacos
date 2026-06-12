@@ -12,6 +12,11 @@ export const POST = withApiErrorHandling(async (event) => {
 	const isRunId = (id: string | undefined): id is Id<'runs'> => typeof id === 'string';
 
 	if (!isRunId(runId)) return json({ message: 'Bad request' }, { status: 400 });
+
+	// recover failed runs and clear stale execution claims so 'continue' can
+	// resume a workflow that errored out or stalled mid-execution
+	await convex.mutation(api.runs.index.resetRunForResume, { runId });
+
 	const runExists = await convex.query(api.runs.index.getRun, { runId, getInstructions: true });
 
 	const { run, next } = runExists.data;
