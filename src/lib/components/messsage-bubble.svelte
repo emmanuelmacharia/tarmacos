@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
+	import { marked } from 'marked';
 	import type { Doc } from '../../convex/_generated/dataModel';
 	import { BrainCircuit, CircleCheckBig, FileText, SquarePen, User } from '@lucide/svelte';
 
@@ -20,6 +21,8 @@
 		};
 	};
 	let { message, authors, messageAttachments, messageData }: Props = $props();
+
+	let messageContent = $derived(marked.parse(message.body));
 
 	//  we need to figure out the logical relationship between messages and run documents;
 	// for now it's safe to say that run documents are only attached to the first run message
@@ -121,12 +124,13 @@
 		{/if}
 
 		<div
-			class="wrap-break-words w-full border p-3 text-[13px] leading-[1.6] whitespace-pre-wrap shadow-sm md:p-4 md:text-sm {message.authorType ===
+			class="markdown-body w-full border p-4 shadow-sm {message.authorType ===
 			'user'
 				? 'rounded-2xl rounded-tr-sm border-primary/20 bg-primary text-primary-foreground'
 				: 'rounded-2xl rounded-tl-sm border-border/60 bg-card text-foreground/90'}"
 		>
-			{message.body}{messageData?.isStreamingContent ? '▋' : ''}
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			{@html messageContent}{messageData?.isStreamingContent ? '▋' : ''}
 
 			{#if messageData?.metrics && messageData?.isComplete}
 				<div
