@@ -15,6 +15,7 @@ import { callFreeform, callStructuredOutput } from './llm';
 import {
 	buildBaselineAssessmentMessage,
 	buildDraftAnnouncementMessage,
+	buildInitialPromptMessage,
 	buildMaxIterationsMessage,
 	buildReviewMessage
 } from './messages';
@@ -75,9 +76,16 @@ async function persistRun(input: WorkflowRequest, convex: ConvexHttpClient) {
 		job: userInstructions
 	};
 
+	const runTitle =
+		jobDescription
+			.split('\n')
+			.map((l) => l.trim())
+			.find(Boolean)
+			?.slice(0, 60) || 'Cv tailoring';
+
 	const payload = {
 		profileId: input.profileId as Id<'profiles'>,
-		title: '',
+		title: runTitle,
 		instructionSnapshot,
 		documents: [
 			{
@@ -140,7 +148,8 @@ async function persistRun(input: WorkflowRequest, convex: ConvexHttpClient) {
 						${userInstructions}
 					`
 			}
-		}
+		},
+		message: buildInitialPromptMessage(instructionSnapshot, runTitle) // initial message from user;
 	};
 
 	payload.documents.map((doc) => console.table({ id: doc.documentId, purpose: doc.purpose }));
@@ -531,9 +540,8 @@ async function handleWriterInstruction(
 		canonical
 	);
 
-	console.log(normalized.data);
 	const messageSummary = buildDraftAnnouncementMessage({
-		iteration: context.currentIteration,
+		iteration: context.loopCount,
 		isRevision: context.requestKind !== 'initial_draft',
 		draft: normalized.data
 	});
