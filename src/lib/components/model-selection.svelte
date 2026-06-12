@@ -121,6 +121,7 @@
 
 		// let's use this for now - not the best pattern though - you have 2 variables representing the same thing
 		modelSelections = $state.snapshot(selections);
+		console.log('modelSelections', modelSelections);
 	}
 
 	function setReasoning(role: Role, enabled: boolean) {
@@ -164,7 +165,8 @@
 				models: aiModels.filter((model) => {
 					const slug = provider.slug;
 					const id = model.id;
-					return id.split('/')[0] === slug;
+
+					return slug.includes(id.split('/')[0]);
 				})
 			};
 			return providerModels;
