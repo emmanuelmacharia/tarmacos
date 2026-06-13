@@ -156,13 +156,17 @@ async function extractTextFromBytes(input: {
 }
 
 async function extractPdfText(bytes: Uint8Array): Promise<string> {
+	// pdfjs-dist (loaded by pdf-parse) touches browser globals like DOMMatrix at
+	// module-evaluation time, which don't exist on Vercel's serverless runtime.
+	const { installPdfPolyfills } = await import('./pdf-polyfills');
+	installPdfPolyfills();
+
 	const { PDFParse } = await import('pdf-parse');
 	const parser = new PDFParse({
 		data: Buffer.from(bytes)
 	});
 	try {
 		const result = await parser.getText();
-		console.log('Extracted text from PDF:', result.text);
 		return result.text;
 	} finally {
 		await parser.destroy();
