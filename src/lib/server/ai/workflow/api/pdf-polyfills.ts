@@ -107,3 +107,21 @@ export function installPdfPolyfills(): void {
 		globalScope.ImageData = ImageDataStub;
 	}
 }
+
+/**
+ * Pre-loads the pdfjs worker module on the main thread and registers it on
+ * `globalThis.pdfjsWorker`. pdfjs checks for this before falling back to its
+ * "fake worker" path, which dynamically `import()`s `pdf.worker.mjs` by file
+ * path — a file Vercel's serverless file tracer omits because the import target
+ * is computed at runtime. The static specifier here also forces the bundler to
+ * include the worker. Idempotent.
+ */
+export async function ensurePdfWorker(): Promise<void> {
+	const globalScope = globalThis as Record<string, unknown>;
+	if (globalScope.pdfjsWorker) {
+		return;
+	}
+	// @ts-expect-error - the worker subpath ships no type declarations
+	const pdfjsWorker = await import('pdfjs-dist/legacy/build/pdf.worker.mjs');
+	globalScope.pdfjsWorker = pdfjsWorker;
+}
