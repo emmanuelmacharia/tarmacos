@@ -31,6 +31,7 @@ class DOMMatrixStub {
 	m43 = 0;
 	m44 = 1;
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	constructor(_init?: unknown) {}
 
 	multiplySelf() {
@@ -57,6 +58,7 @@ class DOMMatrixStub {
 }
 
 class Path2DStub {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	constructor(_path?: unknown) {}
 	addPath() {}
 	moveTo() {}
