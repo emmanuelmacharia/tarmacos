@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { useQuery } from 'convex-svelte';
 	import { fade, slide } from 'svelte/transition';
 	import { marked } from 'marked';
@@ -108,8 +107,17 @@
 		});
 	});
 
-	onMount(() => {
-		resumeRun();
+	// only auto-resume once, and only for runs that have work left to do —
+	// re-running on every mount/refresh triggers needless orchestration and
+	// unexpected state transitions
+	let autoResumeTriggered = $state(false);
+
+	$effect(() => {
+		if (autoResumeTriggered || !run) return;
+		if (run.status === 'created' || run.status === 'running' || run.status === 'failed') {
+			autoResumeTriggered = true;
+			void resumeRun();
+		}
 	});
 
 	async function resumeRun() {
@@ -119,7 +127,8 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ runId })
 			});
-			await response.json();
+			if (!response.ok) throw new Error('Failed to resume run');
+			await response.json().catch(() => null);
 		} catch (error) {
 			console.error('Failed to resume run', error);
 		}
