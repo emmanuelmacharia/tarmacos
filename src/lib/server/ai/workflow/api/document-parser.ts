@@ -134,6 +134,7 @@ async function extractTextFromBytes(input: {
 	mimeType: string;
 	fileName: string;
 }): Promise<string> {
+	console.log(input.mimeType, 'is the mime type of the document');
 	switch (input.mimeType) {
 		case 'text/plain':
 		case 'text/markdown':
@@ -161,6 +162,7 @@ async function extractPdfText(bytes: Uint8Array): Promise<string> {
 	});
 	try {
 		const result = await parser.getText();
+		console.log('Extracted text from PDF:', result.text);
 		return result.text;
 	} finally {
 		await parser.destroy();
