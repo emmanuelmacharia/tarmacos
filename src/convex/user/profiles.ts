@@ -117,7 +117,7 @@ export const fetchUserProfiles = query({
 export const deleteProfile = mutation({
 	args: { profileId: v.id('profiles') },
 	handler: async (ctx, args) => {
-		withAppErrors(async () => {
+		return withAppErrors(async () => {
 			const identity = assertFound(await ctx.auth.getUserIdentity(), 'Not authorized');
 			const clerkId = identity.subject;
 

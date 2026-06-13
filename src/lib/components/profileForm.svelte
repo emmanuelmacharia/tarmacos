@@ -11,11 +11,14 @@
 	import { api } from '../../convex/_generated/api';
 	import { toast } from 'svelte-sonner';
 	import { getAppErrorMessage } from '$lib/utils/errorHandler';
-	import type { Level } from '$lib/data/models';
+	import type { Level, Profile } from '$lib/data/models';
 
 	const convex = useConvexClient();
 
-	let { isOpen = $bindable(), allUserProfiles = $bindable() } = $props();
+	let { isOpen = $bindable(), profile = null }: { isOpen: boolean; profile?: Profile | null } =
+		$props();
+
+	const isEditing = $derived(!!profile);
 
 	const seniorityLevel = [
 		'intern',
@@ -51,34 +54,73 @@
 
 	type formInput = z.infer<typeof formSchema>;
 
+	const emptyValues: formInput = {
+		name: '',
+		summary: '',
+		primaryFocus: '',
+		yearsExperience: undefined,
+		seniority: undefined,
+		writerPrompt: '',
+		reviewerPrompt: ''
+	};
+
+	function profileToValues(p: Profile | null): formInput {
+		if (!p) return { ...emptyValues };
+		return {
+			name: p.name,
+			summary: p.summary ?? '',
+			primaryFocus: p.primaryFocus ?? '',
+			yearsExperience: p.yearsOfExperience,
+			seniority: p.seniorityLevel,
+			writerPrompt: p.profileWriterPrompt ?? '',
+			reviewerPrompt: p.profileReaderPrompt ?? ''
+		};
+	}
+
 	const form = createForm(() => ({
-		defaultValues: {
-			name: '',
-			summary: '',
-			primaryFocus: '',
-			yearsExperience: undefined,
-			seniority: undefined,
-			writerPrompt: '',
-			reviewerPrompt: ''
-		} as formInput,
+		defaultValues: { ...emptyValues },
 		validators: {
 			onSubmit: formSchema
 		},
 		onSubmit: async ({ value }) => {
-			// Handle form submission logic here, e.g. send data to server or update state
-			const payload = {
-				profileReaderPrompt: value.reviewerPrompt,
-				profileWriterPrompt: value.writerPrompt,
-				seniorityLevel: value.seniority,
-				yearsOfExperience: value.yearsExperience,
-				name: value.name,
-				primaryFocus: value.primaryFocus,
-				summary: value.summary
-			};
 			try {
-				const profiles = await convex.mutation(api.user.profiles.createProfile, payload);
-				toast.success('profile created successfully');
-				allUserProfiles = profiles.data;
+				if (isEditing && profile) {
+					const changed = (a: unknown, b: unknown) => a !== b;
+					await convex.mutation(api.user.profiles.updateProfile, {
+						profileId: profile._id,
+						name: value.name,
+						...(changed(value.summary ?? '', profile.summary ?? '')
+							? { summary: value.summary }
+							: {}),
+						...(changed(value.primaryFocus ?? '', profile.primaryFocus ?? '')
+							? { primaryFocus: value.primaryFocus }
+							: {}),
+						...(changed(value.yearsExperience, profile.yearsOfExperience)
+							? { yearsOfExperience: value.yearsExperience }
+							: {}),
+						...(changed(value.seniority, profile.seniorityLevel)
+							? { seniorityLevel: value.seniority }
+							: {}),
+						...(changed(value.writerPrompt ?? '', profile.profileWriterPrompt ?? '')
+							? { profileWriterPrompt: value.writerPrompt }
+							: {}),
+						...(changed(value.reviewerPrompt ?? '', profile.profileReaderPrompt ?? '')
+							? { profileReaderPrompt: value.reviewerPrompt }
+							: {})
+					});
+					toast.success('profile updated successfully');
+				} else {
+					await convex.mutation(api.user.profiles.createProfile, {
+						name: value.name,
+						summary: value.summary,
+						primaryFocus: value.primaryFocus,
+						yearsOfExperience: value.yearsExperience,
+						seniorityLevel: value.seniority,
+						profileWriterPrompt: value.writerPrompt,
+						profileReaderPrompt: value.reviewerPrompt
+					});
+					toast.success('profile created successfully');
+				}
 				isOpen = false;
 			} catch (error) {
 				const message = getAppErrorMessage(error);
@@ -86,6 +128,14 @@
 			}
 		}
 	}));
+
+	// Seed the form whenever the dialog opens: with the selected profile when
+	// customizing, or blank when creating a new one.
+	$effect(() => {
+		if (isOpen) {
+			form.reset(profileToValues(profile));
+		}
+	});
 
 	function handleCancel() {
 		isOpen = false;
@@ -95,7 +145,9 @@
 <Dialog.Root bind:open={isOpen}>
 	<Dialog.Content class="bg-background p-4 backdrop-blur-xs sm:max-w-100 md:max-w-200">
 		<Dialog.Header>
-			<Dialog.Title class="text-2xl font-bold">Create target profile</Dialog.Title>
+			<Dialog.Title class="text-2xl font-bold">
+				{isEditing ? 'Edit target profile' : 'Create target profile'}
+			</Dialog.Title>
 			<Dialog.Description class="text-sm text-foreground">
 				Define the skills and requirements for your target job and customize your ai experience.
 			</Dialog.Description>
