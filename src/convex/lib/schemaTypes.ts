@@ -346,9 +346,17 @@ export const NormalizedReviewResultRevise = v.object({
 	yearsOfExperienceScore: v.number()
 });
 
-export const CanonicalReviewResult = v.object({
-	decision: v.union(v.literal('approve'), v.literal('revise')),
-	summary: v.string(),
-	content: v.union(NormalizedReviewResultApproved, NormalizedReviewResultRevise),
-	schemaVersion: v.string()
-});
+export const CanonicalReviewResult = v.union(
+	v.object({
+		decision: v.literal('approve'),
+		summary: v.string(),
+		content: NormalizedReviewResultApproved,
+		schemaVersion: v.string()
+	}),
+	v.object({
+		decision: v.literal('revise'),
+		summary: v.string(),
+		content: NormalizedReviewResultRevise,
+		schemaVersion: v.string()
+	})
+);

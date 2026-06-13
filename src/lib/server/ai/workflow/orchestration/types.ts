@@ -123,7 +123,6 @@ export interface CompleteLLMCallParams {
 		structuredOutput?: unknown;
 		reasoning?: string;
 		error?: unknown;
-		normalizedOutput?: unknown;
 	};
 }
 
@@ -149,12 +148,19 @@ export interface CanonicalDraft {
 	previewText: string;
 }
 
-export interface CanonicalReview {
-	decision: 'approve' | 'revise';
-	summary: string;
-	content: NormalizedReviewResult;
-	schemaVersion: string;
-}
+export type CanonicalReview =
+	| {
+			decision: 'approve';
+			summary: string;
+			content: Extract<NormalizedReviewResult, { verdict: 'approved' }>;
+			schemaVersion: string;
+	  }
+	| {
+			decision: 'revise';
+			summary: string;
+			content: Extract<NormalizedReviewResult, { verdict: 'revise' }>;
+			schemaVersion: string;
+	  };
 
 export interface ConvexClient {
 	mutation<Args, Result>(fn: unknown, args: Args): Promise<Result>;
