@@ -20,7 +20,7 @@ import {
 	getSafeMetadataObject,
 	sameInstruction
 } from '../lib/run/utils';
-import type { Doc } from '../_generated/dataModel';
+import type { Doc, Id } from '../_generated/dataModel';
 
 const CanonicalResumeSectionValidator = v.object({
 	kind: v.union(
@@ -47,6 +47,65 @@ const CompleteDraftCanonicalValidator = v.object({
 	markdown: v.string(),
 	plainText: v.string(),
 	previewText: v.string()
+});
+
+const DEFAULT_RUN_LIST_LIMIT = 20;
+const MAX_RUN_LIST_LIMIT = 100;
+
+export const listUserRuns = query({
+	args: {
+		limit: v.optional(v.number())
+	},
+	handler: async (ctx, args) => {
+		return withAppErrors(async () => {
+			const identity = assertFound(
+				await ctx.auth.getUserIdentity(),
+				'Please log in to continue',
+				true
+			);
+			const clerkId = identity.subject;
+			const user = assertFound(
+				await ctx.db
+					.query('users')
+					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
+					.unique(),
+				'User not found',
+				true
+			);
+
+			const limit = Math.min(Math.max(args.limit ?? DEFAULT_RUN_LIST_LIMIT, 1), MAX_RUN_LIST_LIMIT);
+
+			// fetch one extra row so the client knows whether a "load more" remains
+			const rows = await ctx.db
+				.query('runs')
+				.withIndex('by_user_updated', (q) => q.eq('userId', user._id))
+				.order('desc')
+				.take(limit + 1);
+
+			const hasMore = rows.length > limit;
+			const runs = hasMore ? rows.slice(0, limit) : rows;
+
+			// runs typically share a handful of profiles, so resolve each name once
+			const profileNames = new Map<Id<'profiles'>, string>();
+			for (const run of runs) {
+				if (!profileNames.has(run.profileId)) {
+					const profile = await ctx.db.get(run.profileId);
+					profileNames.set(run.profileId, profile?.name ?? 'Deleted profile');
+				}
+			}
+
+			return ok(
+				{
+					hasMore,
+					runs: runs.map((run) => ({
+						...run,
+						profileName: profileNames.get(run.profileId) ?? ''
+					}))
+				},
+				{ message: 'Runs found', status: 200 }
+			);
+		});
+	}
 });
 
 export const getRun = query({

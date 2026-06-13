@@ -18,11 +18,11 @@
 	setProfileState(sharedProfileState);
 </script>
 
-<main class="min-h-screen bg-transparent font-sans text-foreground">
-	<div class="flex min-h-screen flex-col md:flex-row">
+<main class="h-screen overflow-hidden bg-transparent font-sans text-foreground">
+	<div class="flex h-full flex-col md:flex-row">
 		<Dashboardnav {profiles} bind:activeProfile={sharedProfileState.activeUserProfile} />
-		<div class="flex flex-1">
-			<div class="mx-auto w-full max-w-4xl px-4 py-6 md:px-8 md:py-10">
+		<div class="flex min-h-0 flex-1 overflow-hidden">
+			<div class="mx-auto flex h-full w-full max-w-4xl flex-col px-4 py-6 md:px-8 md:py-10">
 				{@render children()}
 			</div>
 		</div>
