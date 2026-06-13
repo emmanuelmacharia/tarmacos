@@ -21,6 +21,10 @@ export const POST = withApiErrorHandling(async (event) => {
 
 	const { run, next } = runExists.data;
 
+	if (!next) {
+		return json({ message: 'No next instruction for run' }, { status: 409 });
+	}
+
 	const result = await resumeWorkflow(convex, {
 		runId: run._id,
 		instruction: next
