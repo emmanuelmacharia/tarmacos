@@ -1,0 +1,34 @@
+import { requireAuthedEvent } from '$lib/server/ai/workflow/api/route';
+import { resumeWorkflow } from '$lib/server/ai/workflow/orchestration/orchestrator';
+import { json } from '@sveltejs/kit';
+import { api } from '../../../../../../convex/_generated/api';
+import { withApiErrorHandling } from '$lib/utils/errorHandler';
+import type { Id } from '../../../../../../convex/_generated/dataModel';
+
+export const POST = withApiErrorHandling(async (event) => {
+	const apiEvent = await requireAuthedEvent(event);
+	const { convex } = apiEvent.ctx;
+	const { runId } = event.params;
+	const isRunId = (id: string | undefined): id is Id<'runs'> => typeof id === 'string';
+
+	if (!isRunId(runId)) return json({ message: 'Bad request' }, { status: 400 });
+
+	// recover failed runs and clear stale execution claims so 'continue' can
+	// resume a workflow that errored out or stalled mid-execution
+	await convex.mutation(api.runs.index.resetRunForResume, { runId });
+
+	const runExists = await convex.query(api.runs.index.getRun, { runId, getInstructions: true });
+
+	const { run, next } = runExists.data;
+
+	if (!next) {
+		return json({ message: 'No next instruction for run' }, { status: 409 });
+	}
+
+	const result = await resumeWorkflow(convex, {
+		runId: run._id,
+		instruction: next
+	});
+
+	return json(result, { status: 200 });
+});

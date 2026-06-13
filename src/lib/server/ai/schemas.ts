@@ -1,5 +1,338 @@
 import { z } from 'zod';
 
+function truncateString(max: number) {
+	return z.preprocess((value) => {
+		if (value == null) return value;
+
+		const text = typeof value === 'string' ? value : JSON.stringify(value);
+
+		const trimmed = text.trim();
+
+		if (trimmed.length <= max) return trimmed;
+
+		return trimmed.slice(0, max);
+	}, z.string().min(1).max(max));
+}
+
+function stringArray(options: {
+	maxItems?: number;
+	maxStringLength: number;
+	minItems?: number;
+	defaultValue?: string[];
+}) {
+	return z.preprocess(
+		(value) => {
+			if (value == null) return options.defaultValue ?? [];
+
+			const arr = Array.isArray(value) ? value : [value];
+
+			const cleaned = arr
+				.map((item) => {
+					if (item == null) return '';
+
+					if (typeof item === 'string') return item.trim();
+
+					return JSON.stringify(item).trim();
+				})
+				.filter(Boolean)
+				.map((item) => item.slice(0, options.maxStringLength));
+
+			const deduped = [...new Set(cleaned)];
+
+			return typeof options.maxItems === 'number' ? deduped.slice(0, options.maxItems) : deduped;
+		},
+		z
+			.array(z.string().min(1).max(options.maxStringLength))
+			.min(options.minItems ?? 0)
+			.max(options.maxItems ?? Number.MAX_SAFE_INTEGER)
+			.default(options.defaultValue ?? [])
+	);
+}
+
+// function numberFromUnknown(options: { min?: number; max?: number; defaultValue?: number }) {
+// 	return z.preprocess(
+// 		(value) => {
+// 			if (typeof value === 'number' && Number.isFinite(value)) {
+// 				return value;
+// 			}
+
+// 			if (typeof value === 'string') {
+// 				const parsed = Number(value.replace('%', '').trim());
+
+// 				if (Number.isFinite(parsed)) {
+// 					return parsed;
+// 				}
+// 			}
+
+// 			return options.defaultValue ?? value;
+// 		},
+// 		z
+// 			.number()
+// 			.min(options.min ?? Number.NEGATIVE_INFINITY)
+// 			.max(options.max ?? Number.POSITIVE_INFINITY)
+// 	);
+// }
+
+/**
+ * Accepts:
+ * - 0..1
+ * - 0..100
+ * - "0.82"
+ * - "82"
+ * - "82%"
+ *
+ * Outputs:
+ * - 0..1
+ */
+function score01(defaultValue = 0) {
+	return z.preprocess((value) => {
+		let parsed: number | null = null;
+
+		if (typeof value === 'number' && Number.isFinite(value)) {
+			parsed = value;
+		}
+
+		if (typeof value === 'string') {
+			const numeric = Number(value.replace('%', '').trim());
+
+			if (Number.isFinite(numeric)) {
+				parsed = numeric;
+			}
+		}
+
+		if (parsed === null) return defaultValue;
+
+		const normalized = parsed > 1 ? parsed / 100 : parsed;
+
+		return Math.min(Math.max(normalized, 0), 1);
+	}, z.number().min(0).max(1));
+}
+
+function yearsOfExperience(defaultValue = 0) {
+	return z.preprocess((value) => {
+		let parsed: number | null = null;
+
+		if (typeof value === 'number' && Number.isFinite(value)) {
+			parsed = value;
+		}
+
+		if (typeof value === 'string') {
+			const match = value.match(/\d+(\.\d+)?/);
+			const numeric = match ? Number(match[0]) : NaN;
+
+			if (Number.isFinite(numeric)) {
+				parsed = numeric;
+			}
+		}
+
+		if (parsed === null) return defaultValue;
+
+		return Math.max(parsed, 0);
+	}, z.number().min(0));
+}
+
+function seniorityLevel(defaultValue = 'mid' as const) {
+	return z.preprocess(
+		(value) => {
+			if (typeof value !== 'string') return defaultValue;
+
+			const normalized = value.toLowerCase().trim();
+
+			if (['intern', 'internship', 'student', 'trainee'].includes(normalized)) {
+				return 'intern';
+			}
+
+			if (
+				['junior', 'jr', 'entry', 'entry-level', 'entry level', 'associate'].includes(normalized)
+			) {
+				return 'junior';
+			}
+
+			if (['mid', 'mid-level', 'mid level', 'intermediate', 'professional'].includes(normalized)) {
+				return 'mid';
+			}
+
+			if (['senior', 'sr', 'experienced'].includes(normalized)) {
+				return 'senior';
+			}
+
+			if (['lead', 'principal', 'staff', 'tech lead', 'technical lead'].includes(normalized)) {
+				return 'lead';
+			}
+
+			if (['manager', 'management', 'people manager', 'engineering manager'].includes(normalized)) {
+				return 'manager';
+			}
+
+			return defaultValue;
+		},
+		z.enum(['intern', 'junior', 'mid', 'senior', 'lead', 'manager'])
+	);
+}
+
+const LLMBlockingIssueSchema = z
+	.object({
+		title: truncateString(200),
+		severity: z.preprocess(
+			(value) => {
+				if (typeof value !== 'string') return 'medium';
+
+				const normalized = value.toLowerCase().trim();
+
+				if (['critical', 'blocker', 'high', 'major'].includes(normalized)) {
+					return 'high';
+				}
+
+				if (['medium', 'moderate', 'med'].includes(normalized)) {
+					return 'medium';
+				}
+
+				if (['low', 'minor', 'small'].includes(normalized)) {
+					return 'low';
+				}
+
+				return 'medium';
+			},
+			z.enum(['low', 'medium', 'high'])
+		),
+		explanation: truncateString(1000),
+		suggestedFix: truncateString(1000)
+	})
+	.strip();
+
+const LLMBlockingIssuesSchema = z.preprocess((value) => {
+	if (value == null) return [];
+
+	const arr = Array.isArray(value) ? value : [value];
+
+	return arr.slice(0, 10);
+}, z.array(LLMBlockingIssueSchema).max(10).default([]));
+
+export const LLMProfileCreationSchema = z
+	.object({
+		profileName: truncateString(200),
+		profileSummary: truncateString(2000),
+		primaryFocus: truncateString(500),
+		yearsOfExperience: yearsOfExperience(0),
+		seniorityLevel: seniorityLevel('mid')
+	})
+	.strip();
+
+export const LLMCritiqueAndPlanSchema = z
+	.object({
+		candidateFitSummary: truncateString(2000),
+		strengthsToEmphasize: stringArray({
+			maxItems: 12,
+			maxStringLength: 300
+		}),
+		gapsOrRisks: LLMBlockingIssuesSchema,
+		targetKeywords: stringArray({
+			maxItems: 30,
+			maxStringLength: 100
+		}),
+		experiencePriorities: stringArray({
+			maxItems: 12,
+			maxStringLength: 300
+		}),
+		writerStrategy: stringArray({
+			maxItems: 12,
+			maxStringLength: 500,
+			minItems: 1
+		}),
+		factualGuardrails: stringArray({
+			maxItems: 12,
+			maxStringLength: 300
+		}),
+		suggestedResumeFocus: truncateString(1000),
+		resumeAlignmentScore: score01(0),
+		keywordMatchScore: score01(0),
+		yearsOfExperienceScore: yearsOfExperience(0)
+	})
+	.strip();
+
+const LLMApprovedReviewSchema = z
+	.object({
+		verdict: z.literal('approved'),
+		summary: truncateString(4000),
+		handoffInstructions: stringArray({
+			maxItems: 10,
+			maxStringLength: 500,
+			defaultValue: []
+		}),
+		approvalReason: truncateString(2000),
+		resumeAlignmentScore: score01(0),
+		keywordMatchScore: score01(0),
+		yearsOfExperienceScore: yearsOfExperience(0)
+	})
+	.strip();
+
+const LLMReviseReviewSchema = z
+	.object({
+		verdict: z.literal('revise'),
+		summary: truncateString(4000),
+		blockingIssues: z.preprocess((value) => {
+			if (value == null) return [];
+
+			const arr = Array.isArray(value) ? value : [value];
+
+			return arr.slice(0, 10);
+		}, z.array(LLMBlockingIssueSchema).min(1).max(10)),
+		handoffInstructions: stringArray({
+			maxItems: 10,
+			maxStringLength: 500,
+			minItems: 1
+		}),
+		resumeAlignmentScore: score01(0),
+		keywordMatchScore: score01(0),
+		yearsOfExperienceScore: yearsOfExperience(0)
+	})
+	.strip();
+
+export const LLMReviewSchema = z.preprocess(
+	(value) => {
+		if (!value || typeof value !== 'object') return value;
+
+		const input = value as Record<string, unknown>;
+		const verdict = input.verdict;
+
+		if (typeof verdict !== 'string') return input;
+
+		const normalized = verdict.toLowerCase().trim();
+
+		if (['approve', 'approved', 'accept', 'accepted'].includes(normalized)) {
+			return {
+				...input,
+				verdict: 'approved'
+			};
+		}
+
+		if (
+			[
+				'revise',
+				'revision',
+				'needs_revision',
+				'needs revision',
+				'changes_requested',
+				'changes requested',
+				'fail',
+				'failed'
+			].includes(normalized)
+		) {
+			return {
+				...input,
+				verdict: 'revise'
+			};
+		}
+
+		return input;
+	},
+	z.discriminatedUnion('verdict', [LLMApprovedReviewSchema, LLMReviseReviewSchema])
+);
+
+export type LLMProfileCreation = z.infer<typeof LLMProfileCreationSchema>;
+export type LLMCritiquePlan = z.infer<typeof LLMCritiqueAndPlanSchema>;
+export type LLMReviewResult = z.infer<typeof LLMReviewSchema>;
+
 export const ProfileCreationSchema = z.object({
 	profileName: z.string().min(1).max(200),
 	profileSummary: z.string().min(1).max(2000),

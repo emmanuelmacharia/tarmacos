@@ -70,7 +70,7 @@ export async function parseBase64Document(
 
 // function extractTextFileDataWithoutEncoding(document: Base64DocumentInput): string | null {
 // 	const { mimeType } = document;
-// 	if (mimeType === 'text/plain' || mimeType === 'text/markdown' || mimeType.includes('md')) {
+// 	if (mimeType === 'text/plain' || mimeType === 'text/markdown' || mimeType === 'md') {
 // 		return document.base64;
 // 	}
 // 	return null;

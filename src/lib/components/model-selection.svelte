@@ -164,7 +164,8 @@
 				models: aiModels.filter((model) => {
 					const slug = provider.slug;
 					const id = model.id;
-					return id.split('/')[0] === slug;
+
+					return slug.includes(id.split('/')[0]);
 				})
 			};
 			return providerModels;

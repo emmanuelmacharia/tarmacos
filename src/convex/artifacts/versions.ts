@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { mutation } from '../_generated/server';
+import { mutation, query } from '../_generated/server';
 import { assertFound, forbiddenCheck, mapConvexError, withAppErrors } from '../lib/errorMapper';
 import { artifactVersionOrigin, artifactVersionStatus } from '../lib/schemaTypes';
 import { ok } from '../lib/responseMapper';
@@ -90,6 +90,50 @@ export const createArtifactVersion = mutation({
 			});
 
 			return ok(artifactVersion, { message: 'Artifact version created', statusCode: 201 });
+		});
+	}
+});
+
+export const getArtifactVersionsByRunId = query({
+	args: { runId: v.id('runs') },
+	handler: async (ctx, args) => {
+		return withAppErrors(async () => {
+			const identity = assertFound(
+				await ctx.auth.getUserIdentity(),
+				'Please log in to continue',
+				true
+			);
+			const clerkId = identity.subject;
+			const user = assertFound(
+				await ctx.db
+					.query('users')
+					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
+					.unique(),
+				'User not found',
+				true
+			);
+
+			const run = assertFound(await ctx.db.get(args.runId), 'Run not found');
+			forbiddenCheck(() => run.userId === user._id);
+
+			const versions = await ctx.db
+				.query('artifactVersions')
+				.withIndex('by_run', (q) => q.eq('runId', args.runId))
+				.collect();
+
+			// the imported source is the user's uploaded baseline, not a generated draft
+			return versions
+				.filter((version) => version.origin !== 'imported_source')
+				.sort((a, b) => a.versionNumber - b.versionNumber)
+				.map((version) => ({
+					_id: version._id,
+					versionNumber: version.versionNumber,
+					origin: version.origin,
+					status: version.status,
+					markdown: version.markdown,
+					previewText: version.previewText,
+					createdAt: version.createdAt
+				}));
 		});
 	}
 });

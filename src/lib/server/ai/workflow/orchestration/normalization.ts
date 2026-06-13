@@ -66,9 +66,9 @@ export function normalizeCritiquePlan(
 		experiencePriorities: dedupeString(parsed.data.experiencePriorities).slice(0, 12),
 		writerStrategy: dedupeString(parsed.data.writerStrategy).slice(0, 12),
 		factualGuardrails: dedupeString(parsed.data.factualGuardrails).slice(0, 12),
-		resumeAlignmentScore: clamp(parsed.data.resumeAlignmentScore, 0, 100),
-		keywordMatchScore: clamp(parsed.data.keywordMatchScore, 0, 100),
-		yearsOfExperienceScore: clamp(parsed.data.yearsOfExperienceScore, 0, 100)
+		resumeAlignmentScore: clamp(parsed.data.resumeAlignmentScore, 0, 1),
+		keywordMatchScore: clamp(parsed.data.keywordMatchScore, 0, 1),
+		yearsOfExperienceScore: clamp(parsed.data.yearsOfExperienceScore, 0, 1)
 	};
 	if (data.writerStrategy.length === 0) {
 		return {
@@ -91,9 +91,9 @@ export function normalizeReviewResult(
 
 	const data = {
 		...parsed.data,
-		resumeAlignmentScore: clamp(parsed.data.resumeAlignmentScore, 0, 100),
-		keywordMatchScore: clamp(parsed.data.keywordMatchScore, 0, 100),
-		yearsOfExperienceScore: clamp(parsed.data.yearsOfExperienceScore, 0, 100),
+		resumeAlignmentScore: clamp(parsed.data.resumeAlignmentScore, 0, 1),
+		keywordMatchScore: clamp(parsed.data.keywordMatchScore, 0, 1),
+		yearsOfExperienceScore: clamp(parsed.data.yearsOfExperienceScore, 0, 1),
 		handoffInstructions: dedupeString(parsed.data.handoffInstructions).slice(0, 10)
 	};
 

@@ -15,6 +15,7 @@ import { callFreeform, callStructuredOutput } from './llm';
 import {
 	buildBaselineAssessmentMessage,
 	buildDraftAnnouncementMessage,
+	buildInitialPromptMessage,
 	buildMaxIterationsMessage,
 	buildReviewMessage
 } from './messages';
@@ -22,8 +23,7 @@ import {
 	normalizeCritiquePlan,
 	normalizeDraft,
 	normalizeReviewResult,
-	type NormalizationResult,
-	type NormalizedDraft
+	type NormalizationResult
 } from './normalization';
 import { assertModelAllowedForRole } from '../../models';
 import { resolveCustomProfileInstructions } from '../../profile-customization';
@@ -34,7 +34,7 @@ import {
 	buildWriterTaskMessage,
 	sanitizeUserText
 } from '../../prompt-builder';
-import { CritiqueAndPlanSchema, ReviewSchema, type WorkflowRequest } from '../../schemas';
+import { LLMCritiqueAndPlanSchema, LLMReviewSchema, type WorkflowRequest } from '../../schemas';
 import type {
 	CanonicalBaselineReview,
 	CanonicalDraft,
@@ -76,9 +76,16 @@ async function persistRun(input: WorkflowRequest, convex: ConvexHttpClient) {
 		job: userInstructions
 	};
 
+	const runTitle =
+		jobDescription
+			.split('\n')
+			.map((l) => l.trim())
+			.find(Boolean)
+			?.slice(0, 60) || 'Cv tailoring';
+
 	const payload = {
 		profileId: input.profileId as Id<'profiles'>,
-		title: '',
+		title: runTitle,
 		instructionSnapshot,
 		documents: [
 			{
@@ -141,14 +148,14 @@ async function persistRun(input: WorkflowRequest, convex: ConvexHttpClient) {
 						${userInstructions}
 					`
 			}
-		}
+		},
+		message: buildInitialPromptMessage(instructionSnapshot, runTitle) // initial message from user;
 	};
 
 	payload.documents.map((doc) => console.table({ id: doc.documentId, purpose: doc.purpose }));
 
 	try {
 		const run = await convex.action(api.runs.actions.createRun, payload);
-		console.log('==================created run ==============\n', run);
 		return run.data;
 	} catch (error) {
 		if (error instanceof Error) {
@@ -197,6 +204,15 @@ export async function startWorkflow(
 	return;
 }
 
+export async function createRun(convex: ConvexHttpClient, input: WorkflowRequest) {
+	assertModelAllowedForRole(input.writer.modelId, 'writer');
+	assertModelAllowedForRole(input.reviewer.modelId, 'reviewer', {
+		requiredStructuredOutput: true
+	});
+
+	return await persistRun(input, convex);
+}
+
 export async function resumeWorkflow(
 	convex: ConvexHttpClient,
 	args: {
@@ -205,6 +221,7 @@ export async function resumeWorkflow(
 		signal?: AbortSignal;
 	}
 ): Promise<{ terminalAction: 'done' | 'await_user' }> {
+	console.log('Resuming workflow with runId', args.runId);
 	const terminalAction = await executeLoop(convex, args.runId, args.instruction, args.signal);
 
 	return { terminalAction };
@@ -233,12 +250,15 @@ async function executeLoop(
 				instruction
 			});
 
+			console.log(instruction);
 			switch (instruction.action) {
 				case 'call_reviewer':
+					console.log('calling the reviewer instruction handler');
 					instruction = await handleReviewerInstruction(convex, runId, instruction, signal);
 					break;
 
 				case 'call_writer':
+					console.log('calling writer instruction handler');
 					instruction = await handleWriterInstruction(convex, runId, instruction, signal);
 					break;
 
@@ -326,7 +346,7 @@ async function handleBaselineAssessment(
 		requestParams: context.agent.defaultRequestParams,
 		system,
 		basePrompt,
-		schema: CritiqueAndPlanSchema,
+		schema: LLMCritiqueAndPlanSchema,
 		loopNumber: context.loopNumber,
 		operationKind: OPERATION_KIND.baselineReview,
 		maxRetriesPerCall: context.agent.defaultRequestParams.responseFormat === 'json' ? 1 : 3,
@@ -392,7 +412,7 @@ async function handleDraftReview(
 		requestParams: context.agent.defaultRequestParams,
 		system,
 		basePrompt,
-		schema: ReviewSchema,
+		schema: LLMReviewSchema,
 		loopNumber: context.loopNumber,
 		operationKind:
 			context.loopNumber === 1 ? OPERATION_KIND.draftReview : OPERATION_KIND.revisionReview,
@@ -410,12 +430,20 @@ async function handleDraftReview(
 			].join('\n')
 	});
 
-	const canonical: CanonicalReview = {
-		decision: normalized.data.verdict === 'approved' ? 'approve' : 'revise',
-		summary: normalized.data.summary,
-		content: normalized.data,
-		schemaVersion: SCHEMA_VERSIONS.reviewResult
-	};
+	const canonical: CanonicalReview =
+		normalized.data.verdict === 'approved'
+			? {
+					decision: 'approve',
+					summary: normalized.data.summary,
+					content: normalized.data,
+					schemaVersion: SCHEMA_VERSIONS.reviewResult
+				}
+			: {
+					decision: 'revise',
+					summary: normalized.data.summary,
+					content: normalized.data,
+					schemaVersion: SCHEMA_VERSIONS.reviewResult
+				};
 
 	const messageSummary = buildReviewMessage(normalized.data, context.currentIteration);
 
@@ -452,15 +480,12 @@ async function handleWriterInstruction(
 		userMessageId: instruction.userMessageId
 	});
 
-	console.log('writer context ==========================> \n', context);
 	const workflow = context.requestKind === 'initial_draft' ? 'writerDraft' : 'writerRevise';
 
 	const system = buildSystemPrompt({
 		role: 'writer',
 		workflow
 	});
-
-	console.log('writer system prompt', system);
 
 	const basePrompt = buildWriterTaskMessage({
 		jobDescription: context.jobDescription,
@@ -513,9 +538,15 @@ async function handleWriterInstruction(
 		previewText: normalized.data.previewText
 	};
 
+	console.log(
+		'---------------------------------------------------Generated drafts---------------------------------------------------------\n',
+		canonical
+	);
+
 	const messageSummary = buildDraftAnnouncementMessage({
-		iteration: context.currentIteration,
+		iteration: context.loopCount,
 		isRevision: context.requestKind !== 'initial_draft',
+		isUserFeedback: context.requestKind === 'user_feedback_revision',
 		draft: normalized.data
 	});
 
@@ -524,7 +555,8 @@ async function handleWriterInstruction(
 		llmCallId: normalized.llmCallId,
 		canonical,
 		messageSummary,
-		basedOnVersionId: instruction.basedOnVersionId
+		basedOnVersionId: instruction.basedOnVersionId,
+		requestKind: instruction.requestKind
 	});
 
 	return next;
@@ -578,56 +610,32 @@ async function generateStructuredWithRepair<T>(args: {
 	llmCallId: Id<'llmCalls'>;
 	data: T;
 }> {
-	let prompt = args.basePrompt;
-	let lastError = 'Unknown normalization error';
+	const result = await callStructuredOutput({
+		convex: args.convex,
+		runId: args.runId,
+		phase: args.phase,
+		role: args.role,
+		modelSlug: args.modelSlug,
+		gatewayProvider: args.gatewayProvider,
+		requestParams: args.requestParams,
+		system: args.system,
+		prompt: args.basePrompt,
+		schema: args.schema,
+		loopNumber: args.loopNumber,
+		operationKind: args.operationKind,
+		maxRetries: args.maxRetriesPerCall,
+		signal: args.signal,
+		normalize: args.normalize,
+		repairPromptSuffix: args.repairPromptSuffix
+	});
 
-	for (let repairAttempt = 0; repairAttempt <= args.maxNormalizationRepairs; repairAttempt += 1) {
-		const result = await callStructuredOutput({
-			convex: args.convex,
-			runId: args.runId,
-			phase: args.phase,
-			role: args.role,
-			modelSlug: args.modelSlug,
-			gatewayProvider: args.gatewayProvider,
-			requestParams: args.requestParams,
-			system: args.system,
-			prompt,
-			schema: args.schema,
-			loopNumber: args.loopNumber,
-			operationKind: args.operationKind,
-			maxRetries: args.maxRetriesPerCall,
-			signal: args.signal
-		});
-
-		const normalized = args.normalize(result.output, result.strategy);
-
-		if (normalized.ok) {
-			await finalizeNormalization(args.convex, {
-				llmCallId: result.llmCallId,
-				normalizationStatus: 'succeeded'
-			});
-
-			return {
-				llmCallId: result.llmCallId,
-				data: normalized.data
-			};
-		}
-
-		lastError = normalized.error;
-
-		if (!normalized.repairable || repairAttempt === args.maxNormalizationRepairs) {
-			throw new Error(normalized.error);
-		}
-
-		prompt = `${args.basePrompt}
-
-${args.repairPromptSuffix(normalized.error)}`;
-	}
-
-	throw new Error(lastError);
+	return {
+		llmCallId: result.llmCallId,
+		data: result.output
+	};
 }
 
-async function generateFreeformWithRepair(args: {
+async function generateFreeformWithRepair<T>(args: {
 	convex: ConvexHttpClient;
 	runId: Id<'runs'>;
 	phase: 'drafting' | 'revision';
@@ -651,73 +659,34 @@ async function generateFreeformWithRepair(args: {
 	maxRetriesPerCall: number;
 	maxNormalizationRepairs: number;
 	signal?: AbortSignal;
-	normalize: (raw: string) => NormalizationResult<NormalizedDraft>;
+	normalize: (raw: string) => NormalizationResult<T>;
 	repairPromptSuffix: (errorMessage: string) => string;
 }): Promise<{
 	llmCallId: Id<'llmCalls'>;
-	data: NormalizedDraft;
+	data: T;
 }> {
-	let prompt = args.basePrompt;
-	let lastError = 'Unknown draft normalization error';
+	const result = await callFreeform<T>({
+		convex: args.convex,
+		runId: args.runId,
+		phase: args.phase,
+		role: args.role,
+		modelSlug: args.modelSlug,
+		gatewayProvider: args.gatewayProvider,
+		requestParams: args.requestParams,
+		system: args.system,
+		prompt: args.basePrompt,
+		loopNumber: args.loopNumber,
+		operationKind: args.operationKind,
+		maxRetries: args.maxRetriesPerCall,
+		signal: args.signal,
+		normalize: args.normalize,
+		repairPromptSuffix: args.repairPromptSuffix
+	});
 
-	for (let repairAttempt = 0; repairAttempt <= args.maxNormalizationRepairs; repairAttempt += 1) {
-		const result = await callFreeform({
-			convex: args.convex,
-			runId: args.runId,
-			phase: args.phase,
-			role: args.role,
-			modelSlug: args.modelSlug,
-			gatewayProvider: args.gatewayProvider,
-			requestParams: args.requestParams,
-			system: args.system,
-			prompt,
-			loopNumber: args.loopNumber,
-			operationKind: args.operationKind,
-			maxRetries: args.maxRetriesPerCall,
-			signal: args.signal
-		});
-
-		const normalized = args.normalize(result.output);
-
-		if (normalized.ok) {
-			await finalizeNormalization(args.convex, {
-				llmCallId: result.llmCallId,
-				normalizationStatus: 'succeeded'
-			});
-
-			return {
-				llmCallId: result.llmCallId,
-				data: normalized.data
-			};
-		}
-
-		lastError = normalized.error;
-
-		await finalizeNormalization(args.convex, {
-			llmCallId: result.llmCallId,
-			normalizationStatus: 'failed',
-			normalizationError: normalized.error
-		});
-
-		if (!normalized.repairable || repairAttempt === args.maxNormalizationRepairs) {
-			throw new Error(normalized.error);
-		}
-
-		prompt = `${args.basePrompt} \n ${args.repairPromptSuffix(normalized.error)}`;
-	}
-
-	throw new Error(lastError);
-}
-
-async function finalizeNormalization(
-	convex: ConvexHttpClient,
-	args: {
-		llmCallId: Id<'llmCalls'>;
-		normalizationStatus: 'succeeded' | 'failed';
-		normalizationError?: string;
-	}
-): Promise<void> {
-	await convex.mutation(api.ai.index.updateNormalization, args);
+	return {
+		llmCallId: result.llmCallId,
+		data: result.output
+	};
 }
 
 function isAbortError(error: unknown): boolean {

@@ -12,10 +12,22 @@ export const PROFILE_INFERENCE_MODEL = {
 
 export const DEFAULT_MAX_ITERATIONS = 3;
 
+// hard cap on user-feedback rounds (writer revisions or reviewer re-reviews)
+// after the agent loop hands the draft back to the user
+export const DEFAULT_MAX_USER_FEEDBACK_ITERATIONS = 3;
+
+// Off by default. Only an explicit, non-production opt-in can bypass model
+// policy checks, so writer/reviewer policy and structured-output guarantees
+// stay enforced in production.
+export const DEFAULT_ALLOW_ALL_MODELS =
+	process.env.ALLOW_ALL_MODELS === '1' && process.env.NODE_ENV !== 'production';
+
 export const DEFAULT_MODELS = {
 	writer: 'openai/gpt-oss-120b',
 	reviewer: 'openai/gpt-oss-120b'
 };
+
+export const DEFAULT_MAX_RETRIES = 1;
 
 export const MODEL_POLICY: Record<string, ModelPolicy> = {
 	'minimax/minimax-m2.5:free': {
@@ -37,6 +49,21 @@ export const MODEL_POLICY: Record<string, ModelPolicy> = {
 		enabled: true,
 		roles: ['writer', 'reviewer'],
 		supportsStructuredOutput: true
+	},
+	'Anthropic/Claude Sonnet 4.6': {
+		enabled: true,
+		roles: ['writer', 'reviewer'],
+		supportsStructuredOutput: true
+	},
+	'openai/gpt-5.4-mini': {
+		enabled: true,
+		roles: ['writer', 'reviewer'],
+		supportsStructuredOutput: true
+	},
+	'moonshotai/kimi-k2.5': {
+		enabled: true,
+		roles: ['writer', 'reviewer'],
+		supportsStructuredOutput: true
 	}
 };
 
@@ -45,6 +72,10 @@ export function assertModelAllowedForRole(
 	role: Role,
 	options?: { requiredStructuredOutput?: boolean }
 ): void {
+	if (DEFAULT_ALLOW_ALL_MODELS) {
+		console.warn('Model policy checks are bypassed due to DEFAULT_ALLOW_ALL_MODELS being true');
+		return;
+	}
 	const policy = MODEL_POLICY[modelId];
 
 	if (!policy || !policy.enabled) {
