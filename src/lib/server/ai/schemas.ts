@@ -299,9 +299,7 @@ export const LLMReviewSchema = z.preprocess(
 
 		const normalized = verdict.toLowerCase().trim();
 
-		if (
-			['approve', 'approved', 'accept', 'accepted'].includes(normalized)
-		) {
+		if (['approve', 'approved', 'accept', 'accepted'].includes(normalized)) {
 			return {
 				...input,
 				verdict: 'approved'

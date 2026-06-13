@@ -131,13 +131,8 @@ export const getRun = query({
 
 			forbiddenCheck(() => run.userId === user._id);
 
-			const next = args.getInstructions
-				? await deriveNextInstructionForRun(ctx, run)
-				: undefined;
-			return ok<
-				{ run: Doc<'runs'>; next?: NextInstruction },
-				{ message: string; status: number }
-			>(
+			const next = args.getInstructions ? await deriveNextInstructionForRun(ctx, run) : undefined;
+			return ok<{ run: Doc<'runs'>; next?: NextInstruction }, { message: string; status: number }>(
 				{ run, ...(next ? { next } : {}) },
 				{
 					message: 'Run found',
