@@ -158,8 +158,8 @@ export function buildWriterTaskMessage(args: BuildWriterTaskArgs): string {
 
 	const additionalSections = [
 		jsonSection('critique_plan_json', args.critiquePlan),
-		...(args.latestReview ? [jsonSection('review', args.latestReview)] : ''),
-		...(args.latestUserFeedback ? [section('user_feedback', args.latestUserFeedback)] : '')
+		...(args.latestReview ? [jsonSection('review', args.latestReview)] : []),
+		...(args.latestUserFeedback ? [section('user_feedback', args.latestUserFeedback)] : [])
 	];
 
 	parts.push(...additionalSections);
