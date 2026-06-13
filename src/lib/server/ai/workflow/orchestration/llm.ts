@@ -139,13 +139,9 @@ export async function callStructuredOutput<T>(
 				executor: () => executeStructuredCall(args, strategy)
 			});
 
-			console.log(
+			console.debug(
 				`Attempt ${attemptNumber} for structured call completed with status: ${result.kind}`
 			);
-			console.log(
-				'-------------------------------------------------------------------------------'
-			);
-			console.log('Structured call attempt result: ', JSON.parse(JSON.stringify(result)));
 
 			if (result.kind === 'success') {
 				/**
@@ -159,7 +155,6 @@ export async function callStructuredOutput<T>(
 					result.outcome.output,
 					strategy
 				);
-				console.log(validated);
 				if (validated.success) {
 					console.log('Structured call successful, marking call as completed.');
 					await completeCall(args.convex, {
@@ -235,8 +230,7 @@ export async function callStructuredOutput<T>(
 						systemPrompt: args.system,
 						userPrompt: args.prompt,
 						rawResponse: result.outcome.output,
-						error: validated.error,
-						normalizedOutput: validated.normalizedOutput
+						error: validated.error
 					}
 				});
 
@@ -341,9 +335,9 @@ export async function callFreeform<T>(args: FreeFormCallArgs<T>): Promise<LLMCal
 			executor: () => executeFreeformCall(args)
 		});
 
-		console.log(`Attempt ${attemptNumber} for freeform call completed with status: ${result.kind}`);
-		console.log('-------------------------------------------------------------------------------');
-		console.log('Freeform call attempt result: ', result);
+		console.debug(
+			`Attempt ${attemptNumber} for freeform call completed with status: ${result.kind}`
+		);
 
 		if (result.kind === 'success') {
 			const rawText = result.outcome.rawText.trim();
@@ -414,8 +408,7 @@ export async function callFreeform<T>(args: FreeFormCallArgs<T>): Promise<LLMCal
 					systemPrompt: args.system,
 					userPrompt: args.prompt,
 					rawResponse: result.outcome.output,
-					error: validatedOutput.error,
-					normalizedOutput: validatedOutput.normalizedOutput
+					error: validatedOutput.error
 				}
 			});
 
@@ -454,7 +447,17 @@ export async function callFreeform<T>(args: FreeFormCallArgs<T>): Promise<LLMCal
 				lastError = repairResult.error;
 			} else {
 				lastError = validatedOutput.error;
+				previousCallId = llmCallId;
+				attemptNumber += 1;
 			}
+
+			// a failed normalization/repair is just another failed attempt: honor
+			// the configured retry policy instead of bailing out immediately
+			if (retry < args.maxRetries - 1) {
+				await sleep(backOffMs(retry));
+				continue;
+			}
+
 			throw lastError;
 		}
 
@@ -689,7 +692,7 @@ async function executeFreeformCall<T>(args: FreeFormCallArgs<T>): Promise<Attemp
 		providerOptions: buildProviderOptions(args.requestParams)
 	});
 
-	console.log('======================== FREE FORM ==================================\n', result);
+	console.debug('Freeform call completed');
 
 	return {
 		latencyMs: Date.now() - startedAt,
@@ -892,7 +895,7 @@ async function attemptSmallStructuredRepair<T>(args: {
 		strategy: 'native_structured',
 		attemptNumber: args.attemptNumber,
 		retryOfCallId: args.previousCallId,
-		executor: () => executeStructuredRepairCall(args.callArgs, 'native_structured')
+		executor: () => executeStructuredRepairCall(args.callArgs, repairPrompt)
 	});
 
 	if (result.kind === 'cancelled') {
@@ -970,7 +973,6 @@ async function attemptSmallStructuredRepair<T>(args: {
 					'You repair malformed structured JSON. You do not perform the original task again.',
 				userPrompt: repairPrompt,
 				rawResponse: result.outcome.output,
-				normalizedOutput: repaired.normalizedOutput,
 				error: repaired.error
 			}
 		});
@@ -1068,7 +1070,8 @@ async function attemptSmallFreeformRepair<T>(args: {
 	if (result.kind === 'cancelled') {
 		await completeCall(args.callArgs.convex, {
 			llmCallId,
-			status: 'failed',
+			status: 'cancelled',
+			strategyUsed: 'freeform_text',
 			retryOfCallId: args.previousCallId,
 			attemptNumber: args.attemptNumber,
 			content: {
@@ -1123,7 +1126,7 @@ async function attemptSmallFreeformRepair<T>(args: {
 			normalizationStatus: 'failed',
 			normalizationError: repaired.normalizationError ?? 'AI repair did not match format',
 			gatewayProvider: args.callArgs.gatewayProvider ?? 'openrouter',
-			strategyUsed: 'native_structured',
+			strategyUsed: 'freeform_text',
 			loopNumber: args.callArgs.loopNumber,
 			retryOfCallId: args.previousCallId,
 			attemptNumber: args.attemptNumber,
@@ -1132,7 +1135,6 @@ async function attemptSmallFreeformRepair<T>(args: {
 					'You repair malformed freeform text. You do not perform the original task again.',
 				userPrompt: repairPrompt,
 				rawResponse: result.outcome.output,
-				normalizedOutput: repaired.normalizedOutput,
 				error: repaired.error
 			}
 		});
@@ -1166,7 +1168,7 @@ async function attemptSmallFreeformRepair<T>(args: {
 		finishReason: result.outcome.finishReason ?? '',
 		normalizationStatus: 'succeeded',
 		gatewayProvider: args.callArgs.gatewayProvider ?? 'openrouter',
-		strategyUsed: 'native_structured',
+		strategyUsed: 'freeform_text',
 		loopNumber: args.callArgs.loopNumber,
 		retryOfCallId: args.previousCallId,
 		attemptNumber: args.attemptNumber,
