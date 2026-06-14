@@ -6,21 +6,65 @@
 		Briefcase,
 		ChevronLeft,
 		ChevronRight,
+		Ellipsis,
 		History,
 		PanelLeft,
+		Pencil,
 		Plus,
 		Settings,
 		Sparkles,
+		Trash2,
 		X
 	} from '@lucide/svelte';
-	import AddProfileForm from './addProfileForm.svelte';
+	import ProfileForm from './profileForm.svelte';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from './ui/button';
+	import { useConvexClient } from 'convex-svelte';
+	import { api } from '../../convex/_generated/api';
+	import { toast } from 'svelte-sonner';
+	import { getAppErrorMessage } from '$lib/utils/errorHandler';
 	import type { Profile } from '$lib/data/models';
+
+	const convex = useConvexClient();
 
 	let isCollapsed = $state(false);
 	let isMobileOpen = $state(false);
 	let isModalOpen = $state(false);
+	let editingProfile = $state<Profile | null>(null);
+	let profilePendingDelete = $state<Profile | null>(null);
+	let isDeleting = $state(false);
 
 	let { profiles = [] as Profile[], activeProfile = $bindable<Profile | undefined>() } = $props();
+
+	function openCreate() {
+		editingProfile = null;
+		isModalOpen = true;
+	}
+
+	function openEdit(profile: Profile) {
+		editingProfile = profile;
+		isModalOpen = true;
+	}
+
+	async function confirmDelete() {
+		if (!profilePendingDelete) return;
+		isDeleting = true;
+		try {
+			await convex.mutation(api.user.profiles.deleteProfile, {
+				profileId: profilePendingDelete._id
+			});
+			if (activeProfile?._id === profilePendingDelete._id) {
+				activeProfile = undefined;
+			}
+			toast.success('Profile deleted successfully');
+			profilePendingDelete = null;
+		} catch (error) {
+			toast.error(getAppErrorMessage(error));
+		} finally {
+			isDeleting = false;
+		}
+	}
 
 	let profilesState: Profile[] = $derived([...profiles]);
 
@@ -63,13 +107,43 @@
 
 	$effect(() => {
 		document.body.style.overflow = isMobileOpen ? 'hidden' : '';
-		console.log(isModalOpen);
 
 		return () => {
 			document.body.style.overflow = '';
 		};
 	});
 </script>
+
+{#snippet profileMenu(profile: Profile, triggerClass: string)}
+	<DropdownMenu.Root>
+		<DropdownMenu.Trigger
+			aria-label="Profile actions"
+			class={cn(
+				'flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background-secondary/10 hover:text-foreground focus:outline-none data-[state=open]:bg-background-secondary/10 data-[state=open]:text-foreground',
+				triggerClass
+			)}
+		>
+			<Ellipsis size={16} />
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content
+			align="end"
+			class="min-w-36 rounded-md border border-border bg-background p-1"
+		>
+			<DropdownMenu.Item onSelect={() => openEdit(profile)} class="cursor-pointer">
+				<Pencil size={14} />
+				Edit
+			</DropdownMenu.Item>
+			<DropdownMenu.Item
+				variant="destructive"
+				onSelect={() => (profilePendingDelete = profile)}
+				class="cursor-pointer"
+			>
+				<Trash2 size={14} />
+				Delete
+			</DropdownMenu.Item>
+		</DropdownMenu.Content>
+	</DropdownMenu.Root>
+{/snippet}
 
 <header
 	class="sticky top-0 z-50 flex items-center justify-between border-b border-gray-300 bg-background/80 px-4 py-3 backdrop-blur md:hidden"
@@ -137,34 +211,37 @@
 
 			<div class="my-4 flex flex-col gap-2">
 				{#each profilesState as profile (profile._id)}
-					<button
-						type="button"
-						onclick={() => activateProfile(profile._id)}
-						class={cn(
-							'flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors',
-							profile._id === defaultActiveProfile._id
-								? 'bg-primary/10 font-medium text-primary'
-								: 'cursor-pointer text-muted-foreground hover:font-bold hover:text-foreground'
-						)}
-						aria-label={profile.name}
-					>
-						<span
+					<div class="relative flex items-center">
+						<button
+							type="button"
+							onclick={() => activateProfile(profile._id)}
 							class={cn(
-								'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background-secondary/5 text-lg',
+								'flex w-full items-center gap-3 rounded-lg p-2 pr-10 text-left transition-colors',
 								profile._id === defaultActiveProfile._id
-									? 'border-primary/30 shadow-sm'
-									: 'border-border'
+									? 'bg-primary/10 font-medium text-primary'
+									: 'cursor-pointer text-muted-foreground hover:font-bold hover:text-foreground'
 							)}
+							aria-label={profile.name}
 						>
-							🎨
-						</span>
-						<span class="truncate text-sm">{profile.name}</span>
-					</button>
+							<span
+								class={cn(
+									'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background-secondary/5 text-lg',
+									profile._id === defaultActiveProfile._id
+										? 'border-primary/30 shadow-sm'
+										: 'border-border'
+								)}
+							>
+								🎨
+							</span>
+							<span class="truncate text-sm">{profile.name}</span>
+						</button>
+						{@render profileMenu(profile, 'absolute top-1/2 right-2 -translate-y-1/2')}
+					</div>
 				{/each}
 
 				<button
 					type="button"
-					onclick={() => (isModalOpen = true)}
+					onclick={openCreate}
 					aria-label="Add new profile"
 					class="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 text-muted-foreground transition-colors hover:font-bold hover:text-foreground"
 				>
@@ -252,37 +329,47 @@
 
 			<div class="flex flex-col gap-2">
 				{#each profilesState as profile (profile._id)}
-					<button
-						type="button"
-						onclick={() => activateProfile(profile._id)}
-						class={cn(
-							'flex w-full items-center gap-3 rounded-lg p-2 transition-colors',
-							profile._id === defaultActiveProfile._id
-								? 'bg-primary/10 font-medium text-primary'
-								: 'cursor-pointer text-muted-foreground hover:font-bold hover:text-foreground'
-						)}
-						aria-label={profile.name}
-					>
-						<span
+					<div class="group relative flex items-center">
+						<button
+							type="button"
+							onclick={() => activateProfile(profile._id)}
 							class={cn(
-								'mx-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background-secondary/5 text-lg md:mx-0 md:h-8 md:w-8 md:text-base',
+								'flex w-full items-center gap-3 rounded-lg p-2 transition-colors',
+								!isCollapsed && 'md:pr-9',
 								profile._id === defaultActiveProfile._id
-									? 'border-primary/30 shadow-sm'
-									: 'border-border'
+									? 'bg-primary/10 font-medium text-primary'
+									: 'cursor-pointer text-muted-foreground hover:font-bold hover:text-foreground'
 							)}
+							aria-label={profile.name}
 						>
-							🎨
-						</span>
+							<span
+								class={cn(
+									'mx-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background-secondary/5 text-lg md:mx-0 md:h-8 md:w-8 md:text-base',
+									profile._id === defaultActiveProfile._id
+										? 'border-primary/30 shadow-sm'
+										: 'border-border'
+								)}
+							>
+								🎨
+							</span>
 
-						<span class={cn('truncate text-sm', isCollapsed ? 'hidden' : 'hidden md:block')}>
-							{profile.name}
-						</span>
-					</button>
+							<span class={cn('truncate text-sm', isCollapsed ? 'hidden' : 'hidden md:block')}>
+								{profile.name}
+							</span>
+						</button>
+						{@render profileMenu(
+							profile,
+							cn(
+								'absolute top-1/2 right-2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100 data-[state=open]:opacity-100',
+								isCollapsed && 'hidden'
+							)
+						)}
+					</div>
 				{/each}
 
 				<button
 					type="button"
-					onclick={() => (isModalOpen = true)}
+					onclick={openCreate}
 					aria-label="Add new profile"
 					class="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 text-muted-foreground transition-colors hover:font-bold hover:text-foreground"
 				>
@@ -332,5 +419,37 @@
 </aside>
 
 <div>
-	<AddProfileForm bind:isOpen={isModalOpen} bind:allUserProfiles={profilesState} />
+	<ProfileForm bind:isOpen={isModalOpen} profile={editingProfile} />
 </div>
+
+<Dialog.Root
+	open={!!profilePendingDelete}
+	onOpenChange={(open) => {
+		if (!open) profilePendingDelete = null;
+	}}
+>
+	<Dialog.Content class="bg-background p-4 backdrop-blur-xs sm:max-w-100">
+		<Dialog.Header>
+			<Dialog.Title class="text-xl font-bold">Delete profile</Dialog.Title>
+			<Dialog.Description class="text-sm text-foreground">
+				Are you sure you want to delete
+				<span class="font-semibold">{profilePendingDelete?.name}</span>? This action cannot be
+				undone.
+			</Dialog.Description>
+		</Dialog.Header>
+		<div class="mt-6 flex justify-end gap-3">
+			<Button
+				type="button"
+				variant="outline"
+				class="border-primary/40"
+				onclick={() => (profilePendingDelete = null)}
+				disabled={isDeleting}
+			>
+				Cancel
+			</Button>
+			<Button type="button" variant="destructive" onclick={confirmDelete} disabled={isDeleting}>
+				{isDeleting ? 'Deleting…' : 'Delete'}
+			</Button>
+		</div>
+	</Dialog.Content>
+</Dialog.Root>
