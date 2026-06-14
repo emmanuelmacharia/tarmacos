@@ -21,11 +21,9 @@ export const POST = withApiErrorHandling(async (event) => {
 
 	const result = await createRun(workflowRequest.convex, workflowRequest.input);
 
-	if (result?._id) {
-		// success
-		return json({ id: result._id, title: result.title }, { status: 201 });
+	if (!result?._id) {
+		throw new Error('Failed to create run');
 	}
 
-	// failure
-	return json({ result }, { status: 400 });
+	return json({ id: result._id, title: result.title }, { status: 201 });
 });

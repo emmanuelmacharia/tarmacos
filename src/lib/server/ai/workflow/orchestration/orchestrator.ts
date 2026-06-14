@@ -210,12 +210,7 @@ export async function createRun(convex: ConvexHttpClient, input: WorkflowRequest
 		requiredStructuredOutput: true
 	});
 
-	const run = await persistRun(input, convex).catch((error) => {
-		console.log(error);
-		console.log(error instanceof Error);
-	});
-
-	return run;
+	return await persistRun(input, convex);
 }
 
 export async function resumeWorkflow(
@@ -435,12 +430,20 @@ async function handleDraftReview(
 			].join('\n')
 	});
 
-	const canonical: CanonicalReview = {
-		decision: normalized.data.verdict === 'approved' ? 'approve' : 'revise',
-		summary: normalized.data.summary,
-		content: normalized.data,
-		schemaVersion: SCHEMA_VERSIONS.reviewResult
-	};
+	const canonical: CanonicalReview =
+		normalized.data.verdict === 'approved'
+			? {
+					decision: 'approve',
+					summary: normalized.data.summary,
+					content: normalized.data,
+					schemaVersion: SCHEMA_VERSIONS.reviewResult
+				}
+			: {
+					decision: 'revise',
+					summary: normalized.data.summary,
+					content: normalized.data,
+					schemaVersion: SCHEMA_VERSIONS.reviewResult
+				};
 
 	const messageSummary = buildReviewMessage(normalized.data, context.currentIteration);
 

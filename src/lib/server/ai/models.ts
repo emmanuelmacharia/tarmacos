@@ -16,7 +16,11 @@ export const DEFAULT_MAX_ITERATIONS = 3;
 // after the agent loop hands the draft back to the user
 export const DEFAULT_MAX_USER_FEEDBACK_ITERATIONS = 3;
 
-export const DEFAULT_ALLOW_ALL_MODELS = true;
+// Off by default. Only an explicit, non-production opt-in can bypass model
+// policy checks, so writer/reviewer policy and structured-output guarantees
+// stay enforced in production.
+export const DEFAULT_ALLOW_ALL_MODELS =
+	process.env.ALLOW_ALL_MODELS === '1' && process.env.NODE_ENV !== 'production';
 
 export const DEFAULT_MODELS = {
 	writer: 'openai/gpt-oss-120b',
@@ -68,7 +72,6 @@ export function assertModelAllowedForRole(
 	role: Role,
 	options?: { requiredStructuredOutput?: boolean }
 ): void {
-	// TODO: REMOVE BYPASS
 	if (DEFAULT_ALLOW_ALL_MODELS) {
 		console.warn('Model policy checks are bypassed due to DEFAULT_ALLOW_ALL_MODELS being true');
 		return;

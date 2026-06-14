@@ -134,6 +134,7 @@ async function extractTextFromBytes(input: {
 	mimeType: string;
 	fileName: string;
 }): Promise<string> {
+	console.log(input.mimeType, 'is the mime type of the document');
 	switch (input.mimeType) {
 		case 'text/plain':
 		case 'text/markdown':
@@ -155,6 +156,13 @@ async function extractTextFromBytes(input: {
 }
 
 async function extractPdfText(bytes: Uint8Array): Promise<string> {
+	// pdfjs-dist (loaded by pdf-parse) touches browser globals like DOMMatrix at
+	// module-evaluation time, and tries to dynamically import its worker by file
+	// path — neither works on Vercel's serverless runtime.
+	const { installPdfPolyfills, ensurePdfWorker } = await import('./pdf-polyfills');
+	installPdfPolyfills();
+	await ensurePdfWorker();
+
 	const { PDFParse } = await import('pdf-parse');
 	const parser = new PDFParse({
 		data: Buffer.from(bytes)
