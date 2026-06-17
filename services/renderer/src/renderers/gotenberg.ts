@@ -38,7 +38,7 @@ export async function htmlToPdf(
 	config: Config,
 	html: string,
 	options: PdfOptions | undefined
-): Promise<Uint8Array> {
+): Promise<Uint8Array<ArrayBuffer>> {
 	const form = new FormData();
 	form.set('files', new Blob([html], { type: 'text/html' }), 'index.html');
 	appendPdfOptions(form, options);

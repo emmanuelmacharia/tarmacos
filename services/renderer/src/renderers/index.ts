@@ -4,7 +4,7 @@ import { badRequest, notImplemented } from '../errors.js';
 import { htmlToPdf, PDF_MIME } from './gotenberg.js';
 
 export interface RenderResult {
-	bytes: Uint8Array;
+	bytes: Uint8Array<ArrayBuffer>;
 	contentType: string;
 }
 
