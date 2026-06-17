@@ -6,6 +6,7 @@ import { resolve } from '$app/paths';
 import type { AttachedFile } from '$lib/components/main-prompt.svelte';
 import type { Role, SelectedModel } from '$lib/data/models';
 import type { StartWorkflowApiRequest } from '$lib/server/ai/workflow/api/types';
+import posthog from 'posthog-js';
 
 export type PromptSubmission = {
 	jobDescription: string;
@@ -66,6 +67,14 @@ export async function startRun(
 		supportingDocuments
 	};
 
+	posthog.capture('run_started', {
+		has_instructions: !!data.jobInstructions.trim(),
+		supporting_document_count: data.supportingDocuments.length,
+		writer_model: data.models.writer.id ?? null,
+		reviewer_model: data.models.reviewer.id ?? null,
+		resume_file_name: data.resume.file.name
+	});
+
 	const response = await fetch('/api/ai/runs', {
 		method: 'POST',
 		headers: {
@@ -76,6 +85,7 @@ export async function startRun(
 
 	if (!response.ok || !response.body) {
 		console.error('failed to start workflow', response);
+		posthog.captureException(new Error(`Failed to start workflow: ${response.status}`));
 		throw new Error(`Failed to start workflow: ${response.status}`);
 	}
 

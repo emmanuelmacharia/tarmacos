@@ -3,11 +3,12 @@ import { resumeWorkflow } from '$lib/server/ai/workflow/orchestration/orchestrat
 import { json } from '@sveltejs/kit';
 import { api } from '../../../../../../convex/_generated/api';
 import { withApiErrorHandling } from '$lib/utils/errorHandler';
+import { getPostHogClient } from '$lib/server/posthog';
 import type { Id } from '../../../../../../convex/_generated/dataModel';
 
 export const POST = withApiErrorHandling(async (event) => {
 	const apiEvent = await requireAuthedEvent(event);
-	const { convex } = apiEvent.ctx;
+	const { convex, id: userId } = apiEvent.ctx;
 	const { runId } = event.params;
 	const isRunId = (id: string | undefined): id is Id<'runs'> => typeof id === 'string';
 
@@ -29,6 +30,17 @@ export const POST = withApiErrorHandling(async (event) => {
 		runId: run._id,
 		instruction: next
 	});
+
+	const posthog = getPostHogClient();
+	posthog.capture({
+		distinctId: userId,
+		event: 'run_resume_requested',
+		properties: {
+			run_id: runId,
+			run_status: run.status
+		}
+	});
+	await posthog.flush();
 
 	return json(result, { status: 200 });
 });

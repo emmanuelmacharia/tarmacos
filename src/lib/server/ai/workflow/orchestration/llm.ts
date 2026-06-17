@@ -532,6 +532,10 @@ export async function profileCreationInference<T>(input: {
 					order: ['deepinfra/bf16']
 				}
 			}
+		},
+		experimental_telemetry: {
+			isEnabled: true,
+			functionId: 'resume-tailor/profile/inference'
 		}
 	});
 
@@ -624,7 +628,12 @@ async function executeStructuredCall<T>(
 			output: Output.object({
 				schema: args.schema
 			}),
-			providerOptions: buildProviderOptions(args.requestParams)
+			providerOptions: buildProviderOptions(args.requestParams),
+			experimental_telemetry: {
+				isEnabled: true,
+				functionId: `resume-tailor/${args.role}/structured`,
+				metadata: { run_id: args.runId, phase: args.phase, loop: args.loopNumber }
+			}
 		});
 		return {
 			latencyMs: Date.now() - startedAt,
@@ -657,7 +666,12 @@ async function executeStructuredCall<T>(
 		abortSignal: args.signal,
 		stopSequences: args.requestParams.stopSequences,
 		seed: args.requestParams.seed,
-		providerOptions: buildProviderOptions(args.requestParams)
+		providerOptions: buildProviderOptions(args.requestParams),
+		experimental_telemetry: {
+			isEnabled: true,
+			functionId: `resume-tailor/${args.role}/structured-prompted`,
+			metadata: { run_id: args.runId, phase: args.phase, loop: args.loopNumber }
+		}
 	});
 
 	const parsed = parseJSONResponse(result.text);
@@ -689,7 +703,12 @@ async function executeFreeformCall<T>(args: FreeFormCallArgs<T>): Promise<Attemp
 		abortSignal: args.signal,
 		stopSequences: args.requestParams.stopSequences,
 		seed: args.requestParams.seed,
-		providerOptions: buildProviderOptions(args.requestParams)
+		providerOptions: buildProviderOptions(args.requestParams),
+		experimental_telemetry: {
+			isEnabled: true,
+			functionId: `resume-tailor/${args.role}/freeform`,
+			metadata: { run_id: args.runId, phase: args.phase, loop: args.loopNumber }
+		}
 	});
 
 	console.debug('Freeform call completed');
@@ -725,7 +744,12 @@ async function executeStructuredRepairCall<T>(
 		output: Output.object({
 			schema: args.schema
 		}),
-		providerOptions: buildProviderOptions(args.requestParams)
+		providerOptions: buildProviderOptions(args.requestParams),
+		experimental_telemetry: {
+			isEnabled: true,
+			functionId: `resume-tailor/${args.role}/repair-structured`,
+			metadata: { run_id: args.runId, phase: args.phase, loop: args.loopNumber }
+		}
 	});
 
 	return {
@@ -760,7 +784,12 @@ async function executeFreeformRepairCall<T>(
 		topP: 1,
 		maxOutputTokens: Math.min(args.requestParams.maxOutputTokens ?? 1000, 1000),
 		abortSignal: args.signal,
-		providerOptions: buildProviderOptions(args.requestParams)
+		providerOptions: buildProviderOptions(args.requestParams),
+		experimental_telemetry: {
+			isEnabled: true,
+			functionId: `resume-tailor/${args.role}/repair-freeform`,
+			metadata: { run_id: args.runId, phase: args.phase, loop: args.loopNumber }
+		}
 	});
 
 	return {

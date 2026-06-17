@@ -54,6 +54,9 @@
 	},
 	"dependencies": {
 		"@openrouter/ai-sdk-provider": "^2.3.3",
+		"@opentelemetry/resources": "^2.8.0",
+		"@opentelemetry/sdk-node": "^0.219.0",
+		"@posthog/ai": "^8.2.0",
 		"@tanstack/svelte-form": "^1.28.6",
 		"convex": "^1.34.1",
 		"convex-svelte": "^0.0.12",
@@ -61,6 +64,14 @@
 		"marked": "^18.0.4",
 		"pdf-parse": "^2.4.5",
 		"pdfjs-dist": "5.4.296",
+		"posthog-js": "^1.386.6",
+		"posthog-node": "^5.37.0",
 		"svelte-clerk": "^1.0.2"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"core-js",
+			"protobufjs"
+		]
 	}
 }
