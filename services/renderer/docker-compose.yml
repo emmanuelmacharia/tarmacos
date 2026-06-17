@@ -1,0 +1,29 @@
+# Local dev: the Hono renderer + its Gotenberg (Chromium/LibreOffice) sidecar.
+# Mirrors the Railway topology (two services on a private network).
+services:
+  renderer:
+    build: .
+    ports:
+      - '8080:8080'
+    environment:
+      PORT: '8080'
+      GOTENBERG_URL: 'http://gotenberg:3000'
+      RENDERER_SHARED_SECRET: '${RENDERER_SHARED_SECRET:-dev-secret}'
+      GOTENBERG_TIMEOUT_MS: '30000'
+    depends_on:
+      gotenberg:
+        condition: service_healthy
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    # Not published to the host by default — only the renderer needs it.
+    expose:
+      - '3000'
+    command:
+      - 'gotenberg'
+      - '--chromium-disable-javascript=false'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5

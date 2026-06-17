@@ -1,0 +1,10 @@
+# Standalone pnpm root for the renderer service.
+#
+# This file exists ONLY to stop pnpm from walking up and attaching this project
+# to the main app's workspace at the repo root. With its own workspace file,
+# `pnpm install` here is fully self-contained: deps install into
+# services/renderer/node_modules and are written to a local pnpm-lock.yaml.
+#
+# Intentionally declares no `packages:` — this is a single-package project, not
+# a monorepo. See README.md ("Why this is isolated").
+packages: []
