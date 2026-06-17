@@ -26,7 +26,8 @@ export const documentType = v.union(
 	v.literal('uploaded_coverletter'),
 	v.literal('promoted_generated_coverletter'),
 	v.literal('job_description'),
-	v.literal('supporting_documents')
+	v.literal('supporting_documents'),
+	v.literal('generated_export')
 );
 
 export const documentFormat = v.union(
@@ -205,6 +206,19 @@ export const llmContentFormat = v.union(v.literal('json'), v.literal('text'));
 export const exportFormat = v.union(v.literal('pdf'), v.literal('docx'), v.literal('txt'));
 
 export const exportStatus = v.union(v.literal('pending'), v.literal('ready'), v.literal('failed'));
+
+// Renderer pipeline for a template. `html` = Chromium/LibreOffice pipeline over
+// canonicalJson; `docx` = docxtemplater-driven .docx template (higher Word fidelity).
+export const templateEngine = v.union(v.literal('html'), v.literal('docx'));
+
+export const templateStatus = v.union(
+	v.literal('draft'),
+	v.literal('published'),
+	v.literal('archived')
+);
+
+// Which DOCX rendering strategy a build request asks the renderer to use.
+export const renderStrategy = v.union(v.literal('libreoffice'), v.literal('docxtemplater'));
 
 export const llmRequestKind = v.union(
 	v.literal('initial_draft'),
