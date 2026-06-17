@@ -8,3 +8,5 @@
 # Intentionally declares no `packages:` — this is a single-package project, not
 # a monorepo. See README.md ("Why this is isolated").
 packages: []
+allowBuilds:
+  esbuild: false
