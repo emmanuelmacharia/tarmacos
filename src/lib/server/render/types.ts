@@ -36,6 +36,26 @@ export interface RenderRequest {
 	pdfOptions?: PdfOptions;
 }
 
+/** Raster formats the screenshot route can emit. */
+export type ImageFormat = 'png' | 'jpeg' | 'webp';
+
+/**
+ * A template-thumbnail screenshot request (mirrors the service's
+ * `screenshotRequestSchema`). Renders the same compiled HTML as an export but
+ * captures it as an image; defaults to a clipped single US-Letter page.
+ */
+export interface ScreenshotRequest {
+	html: string;
+	format?: ImageFormat;
+	width?: number;
+	height?: number;
+	/** clip to width×height (one page) vs the full scrollable height */
+	clip?: boolean;
+	/** jpeg/webp only */
+	quality?: number;
+	fileName?: string;
+}
+
 export interface RenderResult {
 	bytes: Uint8Array<ArrayBuffer>;
 	contentType: string;

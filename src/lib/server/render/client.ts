@@ -3,7 +3,8 @@ import {
 	RENDERER_API_VERSION,
 	type RenderErrorPayload,
 	type RenderRequest,
-	type RenderResult
+	type RenderResult,
+	type ScreenshotRequest
 } from './types';
 
 /** Error thrown by the renderer client. `retryable` reflects the failed attempt. */
@@ -62,7 +63,8 @@ function parseFileName(disposition: string | null): string | undefined {
 async function attempt(
 	url: string,
 	secret: string,
-	req: RenderRequest,
+	path: string,
+	req: RenderRequest | ScreenshotRequest,
 	timeoutMs: number
 ): Promise<RenderResult> {
 	const controller = new AbortController();
@@ -70,7 +72,7 @@ async function attempt(
 
 	let response: Response;
 	try {
-		response = await fetch(`${url}/${RENDERER_API_VERSION}/render`, {
+		response = await fetch(`${url}/${RENDERER_API_VERSION}/${path}`, {
 			method: 'POST',
 			headers: {
 				authorization: `Bearer ${secret}`,
@@ -114,13 +116,14 @@ async function attempt(
 }
 
 /**
- * Render a document via the renderer service, with bounded exponential backoff
- * on transient (network/timeout/5xx) failures. Non-retryable errors (bad
- * request, auth, not-configured) throw immediately.
+ * POST a request to `<renderer>/v1/<path>` with bounded exponential backoff on
+ * transient (network/timeout/5xx) failures. Non-retryable errors (bad request,
+ * auth, not-configured) throw immediately.
  */
-export async function renderDocument(
-	req: RenderRequest,
-	options: RenderOptions = {}
+async function withRetry(
+	path: string,
+	req: RenderRequest | ScreenshotRequest,
+	options: RenderOptions
 ): Promise<RenderResult> {
 	const { url, secret } = resolveConfig();
 	const maxAttempts = options.maxAttempts ?? 3;
@@ -130,7 +133,7 @@ export async function renderDocument(
 	let lastError: RendererClientError | undefined;
 	for (let i = 0; i < maxAttempts; i++) {
 		try {
-			return await attempt(url, secret, req, timeoutMs);
+			return await attempt(url, secret, path, req, timeoutMs);
 		} catch (err) {
 			if (!(err instanceof RendererClientError) || !err.retryable) throw err;
 			lastError = err;
@@ -138,4 +141,23 @@ export async function renderDocument(
 		}
 	}
 	throw lastError;
+}
+
+/** Render a document (PDF/DOCX) via the renderer service. */
+export function renderDocument(
+	req: RenderRequest,
+	options: RenderOptions = {}
+): Promise<RenderResult> {
+	return withRetry('render', req, options);
+}
+
+/**
+ * Render a template thumbnail (PNG/JPEG/WebP) via the renderer service. Same
+ * compiled HTML as an export, captured as an image (plan §2/§11.5).
+ */
+export function renderScreenshot(
+	req: ScreenshotRequest,
+	options: RenderOptions = {}
+): Promise<RenderResult> {
+	return withRetry('screenshot', req, options);
 }
