@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Resume</title>
+		<style>
+			/* ──────────────────────────────────────────────────────────────────
+			   Modern ATS-friendly resume template.
+
+			   Designed for the app's compile contract (src/lib/render/compile.ts):
+			   the {{RESUME_SECTIONS}} token below is replaced with the compiled
+			   markup, where each section is rendered as:
+
+			     <header class="resume-header">
+			       <ul class="resume-lines"><li>Name</li><li>contact…</li></ul>
+			     </header>
+
+			     <section class="resume-section resume-section--{kind}">
+			       <h2 class="resume-heading">Title</h2>
+			       <ul class="resume-lines"><li>…</li></ul>
+			     </section>
+
+			   The header section already carries the candidate name (first line)
+			   and contact lines, so we style those directly instead of also using
+			   the {{RESUME_NAME}}/{{RESUME_CONTACT}} tokens (which would duplicate
+			   the name). Single column, standard headings, real selectable text,
+			   no tables/images/icons — all of which keeps it ATS-parseable.
+			   ────────────────────────────────────────────────────────────────── */
+
+			/* Page geometry for the Chromium → PDF path. Letter size with a
+			   comfortable, ATS-safe margin; body padding mirrors it for the
+			   on-screen iframe preview so both look identical. */
+			@page {
+				size: Letter;
+				margin: 0.6in 0.7in;
+			}
+
+			:root {
+				--ink: #1a1a1a;
+				--muted: #444;
+				--rule: #c9c9c9;
+				--accent: #1a1a1a;
+				--font: 'Calibri', 'Carlito', 'Helvetica Neue', Arial, sans-serif;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+			}
+
+			body {
+				font-family: var(--font);
+				color: var(--ink);
+				font-size: 10.5pt;
+				line-height: 1.4;
+				background: #ffffff;
+				/* mirrors @page margin so the preview matches the PDF */
+				padding: 0.6in 0.7in;
+				-webkit-print-color-adjust: exact;
+				print-color-adjust: exact;
+			}
+
+			/* ── Header (name + contact) ───────────────────────────────────── */
+			.resume-header {
+				text-align: center;
+				margin-bottom: 14px;
+				padding-bottom: 12px;
+				border-bottom: 2px solid var(--accent);
+			}
+
+			.resume-header .resume-lines {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+			}
+
+			/* first line = candidate name */
+			.resume-header .resume-lines li:first-child {
+				font-size: 22pt;
+				font-weight: 700;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				line-height: 1.15;
+				margin-bottom: 5px;
+			}
+
+			/* remaining lines = contact details, laid out inline with dot dividers */
+			.resume-header .resume-lines li:not(:first-child) {
+				display: inline;
+				font-size: 9.5pt;
+				color: var(--muted);
+			}
+
+			.resume-header .resume-lines li:not(:first-child)::after {
+				content: '  •  ';
+				color: var(--rule);
+			}
+
+			.resume-header .resume-lines li:last-child::after {
+				content: '';
+			}
+
+			/* ── Sections ──────────────────────────────────────────────────── */
+			.resume-section {
+				margin-top: 14px;
+				/* keep a heading with at least its first lines when paginating */
+				break-inside: avoid-page;
+			}
+
+			.resume-heading {
+				font-size: 11pt;
+				font-weight: 700;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--accent);
+				margin: 0 0 6px;
+				padding-bottom: 3px;
+				border-bottom: 1px solid var(--rule);
+			}
+
+			.resume-section .resume-lines {
+				margin: 0;
+				padding: 0;
+				list-style: none;
+			}
+
+			.resume-section .resume-lines li {
+				margin: 0 0 4px;
+				/* avoid orphaning a single wrapped bullet across a page break */
+				break-inside: avoid;
+			}
+
+			/* Skills read better as a compact, comma-flowing block than a
+			   bulleted list; keep it single-column for ATS. */
+			.resume-section--skills .resume-lines li {
+				margin-bottom: 3px;
+			}
+
+			/* The summary is prose, not a list — drop the gaps. */
+			.resume-section--summary .resume-lines li {
+				margin-bottom: 2px;
+			}
+
+			a {
+				color: inherit;
+				text-decoration: none;
+			}
+		</style>
+	</head>
+	<body>
+		{{RESUME_SECTIONS}}
+	</body>
+</html>

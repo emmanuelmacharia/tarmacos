@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Resume</title>
+		<style>
+			/* ──────────────────────────────────────────────────────────────────
+			   Modern ATS-friendly resume template.
+
+			   Designed for the app's compile contract (src/lib/render/compile.ts):
+			   the <header class="resume-header"><ul class="resume-lines"><li>Jordan A. Rivera</li><li>Senior Software Engineer</li><li>jordan.rivera@example.com</li><li>(555) 123-4567</li><li>San Francisco, CA</li><li>linkedin.com/in/jordanrivera</li></ul></header>
+<section class="resume-section resume-section--summary"><h2 class="resume-heading">Summary</h2><ul class="resume-lines"><li>Senior software engineer with 8+ years building scalable web platforms and developer tooling. Proven record of leading cross-functional teams, shipping reliable systems, and mentoring engineers.</li></ul></section>
+<section class="resume-section resume-section--experience"><h2 class="resume-heading">Experience</h2><ul class="resume-lines"><li>Staff Engineer — Acme Cloud (2021–Present)</li><li>Led migration of the billing platform to event-driven services, cutting p99 latency by 43%.</li><li>Mentored 6 engineers; introduced a design-review process adopted org-wide.</li><li>Senior Engineer — Northwind Labs (2018–2021)</li><li>Built a multi-tenant analytics pipeline processing 2B+ events/day.</li><li>Owned the on-call rotation and reduced critical incidents by 60%.</li></ul></section>
+<section class="resume-section resume-section--skills"><h2 class="resume-heading">Skills</h2><ul class="resume-lines"><li>Languages: TypeScript, Go, Python, SQL</li><li>Platforms: AWS, GCP, Kubernetes, Terraform</li><li>Practices: Distributed systems, CI/CD, observability, TDD</li></ul></section>
+<section class="resume-section resume-section--education"><h2 class="resume-heading">Education</h2><ul class="resume-lines"><li>B.S. Computer Science — University of Washington (2016)</li></ul></section>
+<section class="resume-section resume-section--certifications"><h2 class="resume-heading">Certifications</h2><ul class="resume-lines"><li>AWS Certified Solutions Architect — Professional (2023)</li></ul></section> token below is replaced with the compiled
+			   markup, where each section is rendered as:
+
+			     <header class="resume-header">
+			       <ul class="resume-lines"><li>Name</li><li>contact…</li></ul>
+			     </header>
+
+			     <section class="resume-section resume-section--{kind}">
+			       <h2 class="resume-heading">Title</h2>
+			       <ul class="resume-lines"><li>…</li></ul>
+			     </section>
+
+			   The header section already carries the candidate name (first line)
+			   and contact lines, so we style those directly instead of also using
+			   the Jordan A. Rivera/Senior Software Engineer · jordan.rivera@example.com · (555) 123-4567 · San Francisco, CA · linkedin.com/in/jordanrivera tokens (which would duplicate
+			   the name). Single column, standard headings, real selectable text,
+			   no tables/images/icons — all of which keeps it ATS-parseable.
+			   ────────────────────────────────────────────────────────────────── */
+
+			/* Page geometry for the Chromium → PDF path. Letter size with a
+			   comfortable, ATS-safe margin; body padding mirrors it for the
+			   on-screen iframe preview so both look identical. */
+			@page {
+				size: Letter;
+				margin: 0.6in 0.7in;
+			}
+
+			:root {
+				--ink: #1a1a1a;
+				--muted: #444;
+				--rule: #c9c9c9;
+				--accent: #1a1a1a;
+				--font: 'Calibri', 'Carlito', 'Helvetica Neue', Arial, sans-serif;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+			}
+
+			body {
+				font-family: var(--font);
+				color: var(--ink);
+				font-size: 10.5pt;
+				line-height: 1.4;
+				background: #ffffff;
+				/* mirrors @page margin so the preview matches the PDF */
+				padding: 0.6in 0.7in;
+				-webkit-print-color-adjust: exact;
+				print-color-adjust: exact;
+			}
+
+			/* ── Header (name + contact) ───────────────────────────────────── */
+			.resume-header {
+				text-align: center;
+				margin-bottom: 14px;
+				padding-bottom: 12px;
+				border-bottom: 2px solid var(--accent);
+			}
+
+			.resume-header .resume-lines {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+			}
+
+			/* first line = candidate name */
+			.resume-header .resume-lines li:first-child {
+				font-size: 22pt;
+				font-weight: 700;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				line-height: 1.15;
+				margin-bottom: 5px;
+			}
+
+			/* remaining lines = contact details, laid out inline with dot dividers */
+			.resume-header .resume-lines li:not(:first-child) {
+				display: inline;
+				font-size: 9.5pt;
+				color: var(--muted);
+			}
+
+			.resume-header .resume-lines li:not(:first-child)::after {
+				content: '  •  ';
+				color: var(--rule);
+			}
+
+			.resume-header .resume-lines li:last-child::after {
+				content: '';
+			}
+
+			/* ── Sections ──────────────────────────────────────────────────── */
+			.resume-section {
+				margin-top: 14px;
+				/* keep a heading with at least its first lines when paginating */
+				break-inside: avoid-page;
+			}
+
+			.resume-heading {
+				font-size: 11pt;
+				font-weight: 700;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--accent);
+				margin: 0 0 6px;
+				padding-bottom: 3px;
+				border-bottom: 1px solid var(--rule);
+			}
+
+			.resume-section .resume-lines {
+				margin: 0;
+				padding: 0;
+				list-style: none;
+			}
+
+			.resume-section .resume-lines li {
+				margin: 0 0 4px;
+				/* avoid orphaning a single wrapped bullet across a page break */
+				break-inside: avoid;
+			}
+
+			/* Skills read better as a compact, comma-flowing block than a
+			   bulleted list; keep it single-column for ATS. */
+			.resume-section--skills .resume-lines li {
+				margin-bottom: 3px;
+			}
+
+			/* The summary is prose, not a list — drop the gaps. */
+			.resume-section--summary .resume-lines li {
+				margin-bottom: 2px;
+			}
+
+			a {
+				color: inherit;
+				text-decoration: none;
+			}
+		</style>
+	</head>
+	<body>
+		<header class="resume-header"><ul class="resume-lines"><li>Jordan A. Rivera</li><li>Senior Software Engineer</li><li>jordan.rivera@example.com</li><li>(555) 123-4567</li><li>San Francisco, CA</li><li>linkedin.com/in/jordanrivera</li></ul></header>
+<section class="resume-section resume-section--summary"><h2 class="resume-heading">Summary</h2><ul class="resume-lines"><li>Senior software engineer with 8+ years building scalable web platforms and developer tooling. Proven record of leading cross-functional teams, shipping reliable systems, and mentoring engineers.</li></ul></section>
+<section class="resume-section resume-section--experience"><h2 class="resume-heading">Experience</h2><ul class="resume-lines"><li>Staff Engineer — Acme Cloud (2021–Present)</li><li>Led migration of the billing platform to event-driven services, cutting p99 latency by 43%.</li><li>Mentored 6 engineers; introduced a design-review process adopted org-wide.</li><li>Senior Engineer — Northwind Labs (2018–2021)</li><li>Built a multi-tenant analytics pipeline processing 2B+ events/day.</li><li>Owned the on-call rotation and reduced critical incidents by 60%.</li></ul></section>
+<section class="resume-section resume-section--skills"><h2 class="resume-heading">Skills</h2><ul class="resume-lines"><li>Languages: TypeScript, Go, Python, SQL</li><li>Platforms: AWS, GCP, Kubernetes, Terraform</li><li>Practices: Distributed systems, CI/CD, observability, TDD</li></ul></section>
+<section class="resume-section resume-section--education"><h2 class="resume-heading">Education</h2><ul class="resume-lines"><li>B.S. Computer Science — University of Washington (2016)</li></ul></section>
+<section class="resume-section resume-section--certifications"><h2 class="resume-heading">Certifications</h2><ul class="resume-lines"><li>AWS Certified Solutions Architect — Professional (2023)</li></ul></section>
+	</body>
+</html>
