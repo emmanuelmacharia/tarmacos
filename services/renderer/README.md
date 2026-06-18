@@ -1,9 +1,10 @@
 # tarmac-renderer
 
 Stateless document renderer for the resume/cover-letter export pipeline. Turns
-fully-compiled HTML into downloadable bytes (PDF today; DOCX scaffolded). It is
-the renderer service from the [download/export plan](../../docs/download-export-plan.md)
-(§2 Q1, §11.2).
+fully-compiled HTML into downloadable bytes — **PDF** (Chromium) and **DOCX**
+(in-process `@turbodocx/html-to-docx`) — plus **thumbnail screenshots** (PNG)
+for the template catalogue. It is the renderer service from the
+[download/export plan](../../docs/download-export-plan.md) (§2 Q1, §11.2/§11.5).
 
 It **never** touches the database or auth — Convex/SvelteKit own persistence and
 ownership. This service receives `{ format, html, ... }` and returns bytes.
@@ -31,21 +32,27 @@ changes — the app already references this only by URL + shared secret.
 ## Architecture
 
 ```
-SvelteKit/Convex ──HTTP──> tarmac-renderer (Hono) ──HTTP──> Gotenberg (Chromium + LibreOffice)
+SvelteKit/Convex ──HTTP──> tarmac-renderer (Hono) ──HTTP──> Gotenberg (Chromium: PDF + screenshots)
+                            ├ @turbodocx/html-to-docx (in-process HTML→DOCX, default strategy)
                             └ docxtemplater (in-process, high-fidelity DOCX) [future]
 ```
 
-Gotenberg is the heavy rendering engine (headless Chromium for HTML→PDF, and
-LibreOffice for the HTML→DOCX strategy). The Hono service is the API layer that
-adds auth, validation, retries, a stable versioned contract, and will host the
-docxtemplater strategy.
+Gotenberg (headless Chromium) renders **HTML→PDF** and **HTML→screenshot** (the
+template thumbnails). DOCX is produced **in-process** by `@turbodocx/html-to-docx`
+from the same compiled HTML — Gotenberg only *outputs* PDF, so HTML→DOCX cannot
+go through it (the plan §2/§12 assumed a LibreOffice-via-Gotenberg path that
+isn't available; the `renderStrategy: 'libreoffice'` label is kept for the API
+contract). The higher-fidelity `docxtemplater` strategy (over a real `.docx`
+template) is still future work. The Hono service is the API layer that adds
+auth, validation, retries, and a stable versioned contract.
 
 ## Endpoints
 
-| Method | Path          | Auth   | Description                          |
-| ------ | ------------- | ------ | ------------------------------------ |
-| GET    | `/health`     | none   | Liveness probe                       |
-| POST   | `/v1/render`  | Bearer | Render HTML → bytes                  |
+| Method | Path             | Auth   | Description                          |
+| ------ | ---------------- | ------ | ------------------------------------ |
+| GET    | `/health`        | none   | Liveness probe                       |
+| POST   | `/v1/render`     | Bearer | Render HTML → PDF/DOCX bytes         |
+| POST   | `/v1/screenshot` | Bearer | Render HTML → thumbnail image bytes  |
 
 ### `POST /v1/render`
 
@@ -61,13 +68,29 @@ Header: `Authorization: Bearer <RENDERER_SHARED_SECRET>`
     "preferCssPageSize": true,
     "marginTop": "0", "marginBottom": "0"
   }
-  // docx: "renderStrategy": "libreoffice" | "docxtemplater"  (not implemented yet)
+  // docx: "renderStrategy": "libreoffice" (default, html-to-docx) | "docxtemplater" (501, future)
 }
 ```
 
 Success → `200` with the binary body and `Content-Type`/`Content-Disposition`.
 Failure → JSON `{ "error": { "code", "message", "details?" } }`. `502` upstream
 errors are transient and safe for the caller to retry with backoff.
+
+### `POST /v1/screenshot`
+
+Header: `Authorization: Bearer <RENDERER_SHARED_SECRET>`
+
+```jsonc
+{
+  "html": "<!doctype html>...",    // fully-compiled template + sample data
+  "format": "png",                  // optional: 'png' | 'jpeg' | 'webp' (default png)
+  "width": 816, "height": 1056,     // optional; default = one US-Letter page @96dpi
+  "clip": true                      // optional; clip to one page vs full scroll height
+}
+```
+
+Success → `200` with the image body. Used by the admin preview-generation path to
+produce template thumbnails from neutral sample data.
 
 ## Local development
 
