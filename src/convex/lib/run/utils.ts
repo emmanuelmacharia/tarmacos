@@ -181,19 +181,11 @@ export async function deriveNextInstructionForRun(
 		}
 
 		case 'finalizing': {
-			if (!run.currentArtifactVersionId) {
-				mapConvexError({
-					message: `Run ${run._id} is missing currentArtifactVersionId`,
-					status: 400,
-					details: '',
-					code: 'BAD_REQUEST'
-				});
-			}
-
-			return {
-				action: 'generate_export',
-				artifactVersionId: run.currentArtifactVersionId
-			};
+			// The export build is a standalone job (plan §4): `finalizing` only ever
+			// coexists with `awaiting_user` (→ await_user above) or `completed`
+			// (→ done above), so this is defensive — a finalizing run is awaiting the
+			// user's download action, never a loop instruction.
+			return { action: 'await_user' };
 		}
 
 		default: {
@@ -228,9 +220,6 @@ export function sameInstruction(a: NextInstruction, b: NextInstruction): boolean
 				a.basedOnVersionId === b.basedOnVersionId &&
 				a.userMessageId === b.userMessageId
 			);
-
-		case 'generate_export':
-			return b.action === 'generate_export' && a.artifactVersionId === b.artifactVersionId;
 
 		case 'await_user':
 		case 'done':

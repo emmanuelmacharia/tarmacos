@@ -37,7 +37,7 @@ export interface RenderRequest {
 }
 
 export interface RenderResult {
-	bytes: Uint8Array;
+	bytes: Uint8Array<ArrayBuffer>;
 	contentType: string;
 	fileName?: string;
 }

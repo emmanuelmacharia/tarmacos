@@ -1108,33 +1108,3 @@ export const getNextInstruction = query({
 	}
 });
 
-export const completeExport = mutation({
-	args: {
-		runId: v.id('runs'),
-		artifactVersionId: v.id('artifactVersions'),
-		format: v.literal('pdf')
-	},
-	handler: async (ctx, args) => {
-		// TODO: to be implemented in templates
-		return withAppErrors(async () => {
-			const identity = assertFound(
-				await ctx.auth.getUserIdentity(),
-				'Please log in or sign up to continue',
-				true
-			);
-			const clerkId = identity.subject;
-			const user = assertFound(
-				await ctx.db
-					.query('users')
-					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
-					.unique(),
-				'User not found',
-				true
-			);
-			const run = assertFound(await ctx.db.get(args.runId), 'Run not found');
-			forbiddenCheck(() => run.userId === user._id);
-
-			return { next: deriveNextInstructionForRun(ctx, run) };
-		});
-	}
-});

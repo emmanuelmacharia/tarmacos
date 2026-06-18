@@ -247,10 +247,6 @@ export const nextInstructions = v.union(
 		action: v.literal('await_user')
 	}),
 	v.object({
-		action: v.literal('generate_export'),
-		artifactVersionId: v.id('artifactVersions')
-	}),
-	v.object({
 		action: v.literal('done')
 	})
 );
@@ -269,10 +265,6 @@ export type NextInstruction =
 			userMessageId?: Id<'messages'>;
 	  }
 	| { action: 'await_user' }
-	| {
-			action: 'generate_export';
-			artifactVersionId: Id<'artifactVersions'>;
-	  }
 	| { action: 'done' };
 
 export const CritiquePlan = v.object({

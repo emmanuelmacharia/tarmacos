@@ -12,6 +12,7 @@ import type * as ai_index from "../ai/index.js";
 import type * as artifacts_index from "../artifacts/index.js";
 import type * as artifacts_versions from "../artifacts/versions.js";
 import type * as documents_upload from "../documents/upload.js";
+import type * as exports_build from "../exports/build.js";
 import type * as exports_index from "../exports/index.js";
 import type * as lib_admin from "../lib/admin.js";
 import type * as lib_ai_utils from "../lib/ai/utils.js";
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   "artifacts/index": typeof artifacts_index;
   "artifacts/versions": typeof artifacts_versions;
   "documents/upload": typeof documents_upload;
+  "exports/build": typeof exports_build;
   "exports/index": typeof exports_index;
   "lib/admin": typeof lib_admin;
   "lib/ai/utils": typeof lib_ai_utils;
