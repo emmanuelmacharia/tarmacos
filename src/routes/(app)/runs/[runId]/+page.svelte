@@ -12,6 +12,7 @@
 	} from '@lucide/svelte';
 	import MesssageBubble from '$lib/components/messsage-bubble.svelte';
 	import MentionTextarea from '$lib/components/mention-textarea.svelte';
+	import DownloadModal from '$lib/components/download-modal.svelte';
 	import { resolve } from '$app/paths';
 	import posthog from 'posthog-js';
 	import { api } from '../../../../convex/_generated/api';
@@ -70,6 +71,7 @@
 
 	let activeMobileTab = $state<'chat' | 'preview'>('chat');
 	let showHistory = $state(false);
+	let showDownloadModal = $state(false);
 	// null follows the latest version as new drafts land
 	let selectedVersionId = $state<Id<'artifactVersions'> | null>(null);
 	let composerText = $state('');
@@ -364,14 +366,9 @@
 						<History size={14} aria-hidden="true" />
 						<span class="hidden md:inline">History</span>
 					</button>
-					<!-- TODO: wire up the export/download functionality -->
 					<button
 						type="button"
-						onclick={() =>
-							posthog.capture('artifact_downloaded', {
-								run_id: runId,
-								version_count: versions.length
-							})}
+						onclick={() => (showDownloadModal = true)}
 						class="flex h-8 items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted md:px-3"
 					>
 						<Download size={14} aria-hidden="true" />
@@ -419,6 +416,8 @@
 		</div>
 	{/if}
 </div>
+
+<DownloadModal bind:open={showDownloadModal} {runId} />
 
 <style>
 	.artifact-document :global(h1) {
