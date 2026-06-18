@@ -63,6 +63,31 @@ export const renderRequestSchema = z
 	});
 export type RenderRequest = z.infer<typeof renderRequestSchema>;
 
+/** Raster formats Gotenberg's Chromium screenshot route can emit. */
+export const imageFormatSchema = z.enum(['png', 'jpeg', 'webp']);
+export type ImageFormat = z.infer<typeof imageFormatSchema>;
+
+/**
+ * A screenshot request (template thumbnails, plan §2/§11.5). Renders the same
+ * compiled HTML the export pipeline uses, captured as an image. Defaults to a
+ * single US-Letter page at ~96dpi (816×1056) so a thumbnail shows page one.
+ */
+export const screenshotRequestSchema = z
+	.object({
+		html: z.string().min(1),
+		format: imageFormatSchema.optional(),
+		width: z.number().int().positive().max(4000).optional(),
+		height: z.number().int().positive().max(8000).optional(),
+		// clip to width×height (one page) vs capture the full scrollable height
+		clip: z.boolean().optional(),
+		// jpeg/webp only
+		quality: z.number().int().min(0).max(100).optional(),
+		fileName: z.string().min(1).max(200).optional()
+	})
+	.strict();
+export type ScreenshotRequest = z.infer<typeof screenshotRequestSchema>;
+export type ScreenshotOptions = Omit<ScreenshotRequest, 'html' | 'fileName'>;
+
 export interface RenderErrorBody {
 	error: {
 		code: string;
