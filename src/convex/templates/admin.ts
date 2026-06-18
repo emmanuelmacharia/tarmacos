@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { mutation, type MutationCtx } from '../_generated/server';
+import { mutation, query, type MutationCtx } from '../_generated/server';
 import { assertAdmin } from '../lib/admin';
 import { assertFound, withAppErrors } from '../lib/errorMapper';
 import { ok } from '../lib/responseMapper';
@@ -130,6 +130,62 @@ export const archiveTemplate = mutation({
 	}
 });
 
+/**
+ * Admin-only fetch of everything the preview-generation route needs to render a
+ * template's thumbnail + sample: a signed URL to the HTML asset plus the
+ * provenance fields used to name/scope the generated files. Unlike the
+ * user-facing `getTemplateAssets`, this serves drafts/hidden templates too, so
+ * previews can be produced before a template is published.
+ */
+export const getTemplateForPreview = query({
+	args: { templateId: v.id('templates') },
+	handler: async (ctx, args) => {
+		return withAppErrors(async () => {
+			await assertAdmin(ctx);
+			const template = assertFound(await ctx.db.get(args.templateId), 'Template not found');
+			const assetUrl = await ctx.storage.getUrl(template.templateAssetStorageId);
+			return ok(
+				{
+					id: template._id,
+					key: template.key,
+					name: template.name,
+					templateType: template.templateType,
+					engine: template.engine,
+					assetUrl
+				},
+				{ message: 'Template fetched' }
+			);
+		});
+	}
+});
+
+/**
+ * Attach pre-rendered preview assets (thumbnail PNG, sample PDF) to a template.
+ * Kept separate from `upsertTemplate` so the generation route can patch just the
+ * preview pointers without re-sending the template's content fields. Either id
+ * may be omitted to leave that pointer unchanged.
+ */
+export const setTemplatePreviews = mutation({
+	args: {
+		templateId: v.id('templates'),
+		thumbnailStorageId: v.optional(v.id('_storage')),
+		sampleStorageId: v.optional(v.id('_storage'))
+	},
+	handler: async (ctx, args) => {
+		return withAppErrors(async () => {
+			await assertAdmin(ctx);
+			await loadTemplate(ctx, args.templateId);
+
+			const patch: Partial<Doc<'templates'>> = { updatedAt: Date.now() };
+			if (args.thumbnailStorageId) patch.thumbnailStorageId = args.thumbnailStorageId;
+			if (args.sampleStorageId) patch.sampleStorageId = args.sampleStorageId;
+			await ctx.db.patch(args.templateId, patch);
+
+			return ok({ id: args.templateId }, { message: 'Template previews updated' });
+		});
+	}
+});
+
 /** Toggle the hard visibility gate independent of status (plan §3.1). */
 export const setVisibility = mutation({
 	args: { templateId: v.id('templates'), isVisible: v.boolean() },
@@ -138,7 +194,10 @@ export const setVisibility = mutation({
 			await assertAdmin(ctx);
 			await loadTemplate(ctx, args.templateId);
 			await ctx.db.patch(args.templateId, { isVisible: args.isVisible, updatedAt: Date.now() });
-			return ok({ id: args.templateId, isVisible: args.isVisible }, { message: 'Visibility updated' });
+			return ok(
+				{ id: args.templateId, isVisible: args.isVisible },
+				{ message: 'Visibility updated' }
+			);
 		});
 	}
 });
