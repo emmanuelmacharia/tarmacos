@@ -94,16 +94,24 @@ export const listUserRuns = query({
 				}
 			}
 
-			return ok(
-				{
-					hasMore,
-					runs: runs.map((run) => ({
+			// count ready exports per run so the history list can flag runs that
+			// produced a downloadable file (plan §8, Phase 6)
+			const enriched = await Promise.all(
+				runs.map(async (run) => {
+					const exports = await ctx.db
+						.query('exports')
+						.withIndex('by_run_createdat', (q) => q.eq('runId', run._id))
+						.collect();
+					const exportCount = exports.filter((e) => e.status === 'ready' && e.documentId).length;
+					return {
 						...run,
-						profileName: profileNames.get(run.profileId) ?? ''
-					}))
-				},
-				{ message: 'Runs found', status: 200 }
+						profileName: profileNames.get(run.profileId) ?? '',
+						exportCount
+					};
+				})
 			);
+
+			return ok({ hasMore, runs: enriched }, { message: 'Runs found', status: 200 });
 		});
 	}
 });
@@ -1107,4 +1115,3 @@ export const getNextInstruction = query({
 		});
 	}
 });
-
