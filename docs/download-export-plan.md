@@ -24,17 +24,17 @@ Plus an **internal-only** path to upload/manage templates (never shown to users)
 The schema and workflow were scaffolded for this feature. We are filling in stubs, not
 starting fresh.
 
-| Concern | Already present | File |
-| --- | --- | --- |
-| Export record table | `exports` (runId, artifactVersionId, format, exporterVersion, `renderOptionHash`, status `pending/ready/failed`, documentId, contentHash, fileSizeBytes, mimeType) + `by_render_key` index | `src/convex/schema.ts` |
-| Export create mutation | `createExport` (links artifact final version + run final version) | `src/convex/exports/index.ts` |
-| Run document purpose | `documentPurpose` includes `'generated_export'` | `src/convex/lib/schemaTypes.ts` |
-| Run phase | `runPhase` includes `'finalizing'` | `src/convex/lib/schemaTypes.ts` |
-| Next instruction | `NextInstruction` includes `generate_export`; derived from `finalizing` phase | `src/convex/lib/run/utils.ts` |
-| Orchestrator hook | `handleExportInstruction` → `completeExport` (**stub**, hardcoded `format: 'pdf'`) | `orchestrator.ts`, `runs/index.ts` |
-| Document store | `documents` table over Convex `_storage`, upload URL + register flow | `src/convex/documents/upload.ts` |
-| Analytics | client `posthog-js` + server `posthog-node` (`getPostHogClient`) | `src/lib/server/posthog.ts` |
-| Download button | UI stub firing `artifact_downloaded` only | `runs/[runId]/+page.svelte:367` |
+| Concern                | Already present                                                                                                                                                                            | File                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
+| Export record table    | `exports` (runId, artifactVersionId, format, exporterVersion, `renderOptionHash`, status `pending/ready/failed`, documentId, contentHash, fileSizeBytes, mimeType) + `by_render_key` index | `src/convex/schema.ts`             |
+| Export create mutation | `createExport` (links artifact final version + run final version)                                                                                                                          | `src/convex/exports/index.ts`      |
+| Run document purpose   | `documentPurpose` includes `'generated_export'`                                                                                                                                            | `src/convex/lib/schemaTypes.ts`    |
+| Run phase              | `runPhase` includes `'finalizing'`                                                                                                                                                         | `src/convex/lib/schemaTypes.ts`    |
+| Next instruction       | `NextInstruction` includes `generate_export`; derived from `finalizing` phase                                                                                                              | `src/convex/lib/run/utils.ts`      |
+| Orchestrator hook      | `handleExportInstruction` → `completeExport` (**stub**, hardcoded `format: 'pdf'`)                                                                                                         | `orchestrator.ts`, `runs/index.ts` |
+| Document store         | `documents` table over Convex `_storage`, upload URL + register flow                                                                                                                       | `src/convex/documents/upload.ts`   |
+| Analytics              | client `posthog-js` + server `posthog-node` (`getPostHogClient`)                                                                                                                           | `src/lib/server/posthog.ts`        |
+| Download button        | UI stub firing `artifact_downloaded` only                                                                                                                                                  | `runs/[runId]/+page.svelte:367`    |
 
 ### Key gaps
 
@@ -98,7 +98,7 @@ the **same template applied to the same data**:
 - **Full-size preview** = render that template **client-side in a sandboxed iframe** with
   the user's `canonicalJson`. Instant, no server round-trip, pixel-identical to what the
   PDF pipeline will produce because it is the same HTML/CSS.
-- **PDF/DOCX export** = the renderer service runs the *same* HTML through Chromium.
+- **PDF/DOCX export** = the renderer service runs the _same_ HTML through Chromium.
 
 This sidesteps the LLM entirely for layout, so the "very high success rate" requirement is
 met structurally rather than probabilistically. An LLM is only needed if templates were
@@ -148,7 +148,7 @@ with the `exports` row as the durable job record. **Introduce a real queue** (Cl
 or Convex scheduled functions as a queue) only when concurrent export volume threatens the
 renderer — we'll watch the PostHog `export_build_*` volume/latency to decide. Designing the
 export as a job-record-driven step now means adding a queue later is a swap of the
-*invoker*, not a rewrite.
+_invoker_, not a rewrite.
 
 ---
 
@@ -158,25 +158,25 @@ export as a job-record-driven step now means adding a queue later is a swap of t
 
 ```ts
 templates: defineTable({
-  key: v.string(),                 // stable slug, e.g. "classic", "compact-senior"
-  name: v.string(),
-  description: v.optional(v.string()),
-  templateType: artifactType,      // reuse existing enum: 'resume' | 'cover_letter' | …
-  category: v.optional(v.string()),// e.g. "modern", "ats-safe"
-  engine: v.union(v.literal('html'), v.literal('docx')), // html = Chromium/LibreOffice pipeline
-  version: v.number(),             // bump on asset change; pins exporterVersion/renderKey
-  status: v.union(v.literal('draft'), v.literal('published'), v.literal('archived')),
-  supportedFormats: v.array(exportFormat), // ['pdf','docx']
-  // assets live in _storage; we keep pointers, not blobs
-  templateAssetStorageId: v.id('_storage'),   // HTML/CSS bundle (or docx for docxtemplater)
-  thumbnailStorageId: v.optional(v.id('_storage')),
-  sampleStorageId: v.optional(v.id('_storage')), // pre-rendered sample PDF (the "sample file in the document store")
-  isVisible: v.boolean(),          // hard gate so a published-but-hidden template never lists
-  createdAt: v.number(),
-  updatedAt: v.number()
+	key: v.string(), // stable slug, e.g. "classic", "compact-senior"
+	name: v.string(),
+	description: v.optional(v.string()),
+	templateType: artifactType, // reuse existing enum: 'resume' | 'cover_letter' | …
+	category: v.optional(v.string()), // e.g. "modern", "ats-safe"
+	engine: v.union(v.literal('html'), v.literal('docx')), // html = Chromium/LibreOffice pipeline
+	version: v.number(), // bump on asset change; pins exporterVersion/renderKey
+	status: v.union(v.literal('draft'), v.literal('published'), v.literal('archived')),
+	supportedFormats: v.array(exportFormat), // ['pdf','docx']
+	// assets live in _storage; we keep pointers, not blobs
+	templateAssetStorageId: v.id('_storage'), // HTML/CSS bundle (or docx for docxtemplater)
+	thumbnailStorageId: v.optional(v.id('_storage')),
+	sampleStorageId: v.optional(v.id('_storage')), // pre-rendered sample PDF (the "sample file in the document store")
+	isVisible: v.boolean(), // hard gate so a published-but-hidden template never lists
+	createdAt: v.number(),
+	updatedAt: v.number()
 })
-  .index('by_key', ['key'])
-  .index('by_type_status_visible', ['templateType', 'status', 'isVisible'])
+	.index('by_key', ['key'])
+	.index('by_type_status_visible', ['templateType', 'status', 'isVisible']);
 ```
 
 **`templateType`** (note #1) makes the table extensible to new document kinds without
@@ -241,8 +241,8 @@ I originally flipped it to `running`; that was wrong. Rationale for **not** chan
 2. **The status is redundant.** Export progress is already first-class and independently
    observable via `exports.status` (`pending → ready → failed`). The run doesn't need to
    mirror it.
-3. **The agentic loop is genuinely finished.** The run is legitimately *awaiting a user
-   action* — the terminal download. `awaiting_user` is the honest state; `phase='finalizing'`
+3. **The agentic loop is genuinely finished.** The run is legitimately _awaiting a user
+   action_ — the terminal download. `awaiting_user` is the honest state; `phase='finalizing'`
    records that the user has moved into the export leg (satisfies requirement #3 and lets the
    UI show the right state).
 4. **`deriveNextInstructionForRun` already short-circuits** `awaiting_user` to `await_user`
@@ -275,7 +275,7 @@ Notes:
      preview rendering.
    - **Admin path** (`templates/admin.ts`) — `upsertTemplate`, `publishTemplate`,
      `archiveTemplate`, `setVisibility`, plus an upload-URL mutation for assets/thumbnail.
-     Gated by an **admin check** (Clerk org role or a server-only admin secret), *never*
+     Gated by an **admin check** (Clerk org role or a server-only admin secret), _never_
      exposed in user navigation. Designed so an external app can call it (see §7).
 2. **Export build action** (`src/convex/exports/build.ts` as a Convex **action**, invoked by
    the SvelteKit build route — see §6): orchestrates create-pending → call renderer → store →
@@ -344,21 +344,54 @@ Notes:
 Funnel events (client unless noted), all carrying `run_id`, `template_id`/`template_key`,
 `format` where relevant:
 
-| Event | Fired when | Purpose |
-| --- | --- | --- |
-| `download_modal_opened` | modal opens | top of funnel |
-| `template_previewed` | "view more" full preview | which templates get inspected |
-| `template_selected` | template chosen | preference signal |
-| `export_format_selected` | format chosen | PDF vs Word demand |
-| `export_requested` | build confirmed | intent → build conversion |
-| `export_build_started` / `_succeeded` / `_failed` (server) | renderer lifecycle | success rate + **build latency** (critical-path timing) |
-| `export_downloaded` | first file download (→ run completed) | true conversion |
-| `export_redownloaded` | download from history | repeat value |
+| Event                                                      | Fired when                            | Purpose                                                 |
+| ---------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------- |
+| `download_modal_opened`                                    | modal opens                           | top of funnel                                           |
+| `template_previewed`                                       | "view more" full preview              | which templates get inspected                           |
+| `template_selected`                                        | template chosen                       | preference signal                                       |
+| `export_format_selected`                                   | format chosen                         | PDF vs Word demand                                      |
+| `export_requested`                                         | build confirmed                       | intent → build conversion                               |
+| `export_build_started` / `_succeeded` / `_failed` (server) | renderer lifecycle                    | success rate + **build latency** (critical-path timing) |
+| `export_downloaded`                                        | first file download (→ run completed) | true conversion                                         |
+| `export_redownloaded`                                      | download from history                 | repeat value                                            |
 
 We already emit `artifact_downloaded` from the stub — replace/augment it with the above.
 Server events go through `getPostHogClient()` with `distinctId = userId` (as `resumeRun`
 does). Build the funnel `modal_opened → requested → succeeded → downloaded` in PostHog and
 watch `export_build_*` volume+latency to answer the queue question (Q4) with data.
+
+### Status (Phase 7) — analytics wired; dashboard deferred until data flows
+
+All eight events above are emitted and verified:
+
+- **Client (`download-modal.svelte`):** `download_modal_opened`, `template_selected`,
+  `export_format_selected`, `template_previewed`.
+- **Server build route (`/api/runs/[runId]/export`):** `export_requested`,
+  `export_build_started`, `export_build_succeeded` (carries `build_latency_ms`),
+  `export_build_failed` (carries `error_code`).
+- **Server download route (`…/export/[exportId]/download`):** `export_downloaded` (first
+  download → run completed) / `export_redownloaded` (subsequent), with `run_id`, `export_id`.
+
+The PostHog **dashboard is intentionally deferred**: as of this writing none of the
+`export_*` / `download_modal_opened` / `template_*` events exist in the project's data
+schema (the renderer/export path hasn't produced data yet), so a dashboard built now would
+be empty and unvalidatable. Create it once ≥1 real export has run and the events appear in
+the schema. **Build recipe (PostHog project ResumeTailor, 471296):**
+
+1. **Funnel — "Export & download conversion"** (`query-funnel`, ordered, 14-day window):
+   `download_modal_opened` → `export_requested` → `export_build_succeeded` →
+   `export_downloaded`. Answers requirement #6's critical-path conversion.
+2. **Trend — "Build success rate"** (`query-trends`, daily): series A
+   `export_build_succeeded` (total count), series B `export_build_failed` (total count);
+   add formula `A / (A + B) * 100` for success %.
+3. **Trend — "Build latency"** (`query-trends`, daily): event `export_build_succeeded`,
+   property `build_latency_ms`, two series with `p50` and `p95` math. This is the signal
+   that answers the queue question (Q4 / §12.2 replica cap).
+4. **Trend — "PDF vs Word demand"** (`query-trends`, daily): event
+   `export_format_selected`, breakdown by event property `format`.
+
+Then `dashboard-create` "Export & Download Funnel" with the four insights. (Re-downloads:
+add a `export_redownloaded` count tile if repeat-value tracking is wanted.)
 
 ---
 
@@ -370,9 +403,20 @@ watch `export_build_*` volume+latency to answer the queue question (Q4) with dat
 3. **Build pipeline**: build endpoint + Convex export action + `completeExport` rewrite +
    run-state transitions + `markExportDownloaded`.
 4. **Frontend modal**: template grid, WYSIWYG iframe preview, format select, build/download.
-5. **DOCX format** + thumbnail/sample generation in the admin path.
-6. **Run history surfacing** of `generated_export` + re-download.
-7. **Analytics + funnel** wired across the path; dashboard in PostHog.
+5. **DOCX format** + thumbnail/sample generation in the admin path. ✅ _Implemented:_ DOCX
+   via in-process `@turbodocx/html-to-docx` (see §12.1 note); a Gotenberg Chromium
+   `/v1/screenshot` route for thumbnails; an admin-gated `POST
+/api/admin/templates/[id]/previews` that compiles neutral sample data
+   (`src/lib/render/sample.ts`) and stores a thumbnail PNG + sample PDF via
+   `templates.admin.{getTemplateForPreview,setTemplatePreviews}`.
+6. **Run history surfacing** of `generated_export` + re-download. ✅ _Implemented:_
+   `exports.index.listRunExports` (ready exports per run); run-detail page shows a "Files"
+   panel listing generated files with re-download (via the existing download endpoint);
+   `listUserRuns` returns a per-run `exportCount` surfaced as a badge on the history list.
+7. **Analytics + funnel** wired across the path; dashboard in PostHog. ✅ _Implemented
+   (analytics) / deferred (dashboard):_ all §10 events emit and are verified; the PostHog
+   dashboard is deferred until the `export_*` events appear in the data schema — concrete
+   build recipe captured in §10 "Status (Phase 7)".
 
 ---
 
@@ -383,6 +427,13 @@ watch `export_build_*` volume+latency to answer the queue question (Q4) with dat
    both, measure fidelity, gravitate to docxtemplater where it wins; may become a billing
    lever. v1 wires both behind the flag; LibreOffice is the default until docxtemplater
    templates exist.
+   - **Implementation note (Phase 5):** the "LibreOffice via Gotenberg" path assumed below
+     turned out **not to be buildable** — Gotenberg only _outputs_ PDF (its LibreOffice
+     module converts office docs → PDF; there is no HTML→DOCX route). The default DOCX
+     strategy is therefore implemented **in-process via `@turbodocx/html-to-docx`** over the
+     same compiled HTML. The `renderStrategy: 'libreoffice'` id is kept for contract
+     stability (the label is now historical); `docxtemplater` remains `501` until `.docx`
+     template assets exist. Fidelity is basic (headings, bold/italic, lists, links, tables).
 2. **Renderer host — DECIDED: Railway.** We're choosing **Railway** for the developer
    experience; the workload is low in v1 and DX/simplicity wins here. Spend is bounded with a
    **replica cap** and app **sleeping** (scale-to-zero-ish idle) so a burst can't run up the
@@ -404,4 +455,7 @@ watch `export_build_*` volume+latency to answer the queue question (Q4) with dat
 
 Remaining genuinely-open items: the **default** `renderStrategy` per format, and the
 **replica cap** value on Railway (right-sized from `export_build_*` volume once live).
+
+```
+
 ```
