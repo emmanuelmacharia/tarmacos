@@ -9,4 +9,6 @@
 # a monorepo. See README.md ("Why this is isolated").
 packages: []
 allowBuilds:
+  # ships a prebuilt dist/, so its install build script is unnecessary
+  '@turbodocx/html-to-docx': false
   esbuild: false
