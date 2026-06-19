@@ -13,6 +13,7 @@
 	import MesssageBubble from '$lib/components/messsage-bubble.svelte';
 	import MentionTextarea from '$lib/components/mention-textarea.svelte';
 	import { resolve } from '$app/paths';
+	import posthog from 'posthog-js';
 	import { api } from '../../../../convex/_generated/api';
 	import type { Doc, Id } from '../../../../convex/_generated/dataModel';
 	import type { PageProps } from './$types';
@@ -129,8 +130,10 @@
 			});
 			if (!response.ok) throw new Error('Failed to resume run');
 			await response.json().catch(() => null);
+			posthog.capture('run_resumed', { run_id: runId, run_status: run?.status });
 		} catch (error) {
 			console.error('Failed to resume run', error);
+			posthog.captureException(error);
 		}
 	}
 
@@ -144,6 +147,11 @@
 		if (!response.ok) {
 			throw new Error(payload?.error?.message ?? 'Failed to send your feedback. Please try again.');
 		}
+		posthog.capture('feedback_submitted', {
+			run_id: runId,
+			feedback_rounds_used: feedbackRoundsUsed + 1,
+			message_length: message.length
+		});
 	}
 
 	async function handleComposerSubmit() {
@@ -359,6 +367,11 @@
 					<!-- TODO: wire up the export/download functionality -->
 					<button
 						type="button"
+						onclick={() =>
+							posthog.capture('artifact_download_clicked', {
+								run_id: runId,
+								version_count: versions.length
+							})}
 						class="flex h-8 items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted md:px-3"
 					>
 						<Download size={14} aria-hidden="true" />

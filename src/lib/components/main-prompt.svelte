@@ -31,6 +31,7 @@
 	import { useClerkContext } from 'svelte-clerk';
 	import { api } from '../../convex/_generated/api';
 	import { savePromptDraft } from '$lib/utils/promptDraft';
+	import posthog from 'posthog-js';
 
 	const convex = useConvexClient();
 	const clerkCtx = useClerkContext();
@@ -317,6 +318,12 @@
 				documentId: docRecord,
 				abortController: undefined
 			});
+			posthog.capture('resume_uploaded', {
+				file_extension:
+					latestFileStateAfterPersist.file.name.split('.').pop()?.toLowerCase() ?? null,
+				file_size: latestFileStateAfterPersist.file.size,
+				mime_type: latestFileStateAfterPersist.file.type
+			});
 		} catch (error) {
 			if (error instanceof DOMException && error.name === 'AbortController') {
 				return;
@@ -393,6 +400,11 @@
 		}
 		promptMode = 'Basic';
 		return;
+	}
+
+	function showInstructionsPanel() {
+		showInstructions = true;
+		posthog.capture('instructions_added');
 	}
 </script>
 
@@ -612,7 +624,7 @@
 							<div class="flex-items-center gap-2 border border-border/40">
 								<button
 									type="button"
-									onclick={() => (showInstructions = true)}
+									onclick={() => showInstructionsPanel()}
 									class="flex w-full shrink-0 cursor-pointer items-center justify-between gap-4 rounded-lg border border-transparent py-4 pr-2 pl-2.5 text-muted-foreground transition hover:border-border hover:bg-background-secondary/10 hover:text-foreground"
 									title="Add instructions"
 								>

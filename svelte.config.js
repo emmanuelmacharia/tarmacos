@@ -9,6 +9,9 @@ const config = {
 		adapter: adapter(),
 		alias: {
 			'@/*': './path/to/lib/*'
+		},
+		paths: {
+			relative: false
 		}
 	},
 	vitePlugin: {

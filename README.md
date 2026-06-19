@@ -67,8 +67,8 @@ You can preview the production build with `npm run preview`.
   - [x] Data layer
   - [x] Orchestration layer
   - [x] API layer
-  - [ ] UI
-- [ ] Make it work serverless ( vercel workflows )
-- [ ] Add Posthog
+  - [x] UI
+- [ ] Make it work serverless ( vercel workflows ) - works right now as is without workflows
+- [x] Add Posthog
 - [ ] Add export functionality
 - [ ] Billing

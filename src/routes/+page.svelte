@@ -5,6 +5,7 @@
 	import MainPrompt from '$lib/components/main-prompt.svelte';
 	import { startRun, type PromptSubmission } from '$lib/utils/startRun';
 	import { BadgeCheck, History, PenLine, Scissors } from '@lucide/svelte';
+	import posthog from 'posthog-js';
 
 	const clerk = useClerkContext();
 	const convex = useConvexClient();
@@ -20,6 +21,10 @@
 			try {
 				await convex.mutation(api.user.user.createUser, {});
 				syncedUser = user.id;
+				posthog.identify(user.id, {
+					email: user.primaryEmailAddress?.emailAddress,
+					name: user.fullName ?? undefined
+				});
 			} catch (err) {
 				// we'll add helpers for error handling
 				console.log(err);
