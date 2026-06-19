@@ -72,7 +72,7 @@ export async function startRun(
 		supporting_document_count: data.supportingDocuments.length,
 		writer_model: data.models.writer.id ?? null,
 		reviewer_model: data.models.reviewer.id ?? null,
-		resume_file_name: data.resume.file.name
+		resume_mime_type: inferMimeType(data.resume.file)
 	});
 
 	const response = await fetch('/api/ai/runs', {
