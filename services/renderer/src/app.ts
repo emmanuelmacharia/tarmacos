@@ -34,6 +34,7 @@ export function createApp(config: Config): Hono {
 		let json: unknown;
 		try {
 			json = await c.req.json();
+			console.log('Received render request:', json);
 		} catch {
 			return c.json(errorBody('BAD_REQUEST', 'Request body must be valid JSON'), 400);
 		}

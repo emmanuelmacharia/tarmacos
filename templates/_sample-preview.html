@@ -114,8 +114,6 @@
 			/* ── Sections ──────────────────────────────────────────────────── */
 			.resume-section {
 				margin-top: 14px;
-				/* keep a heading with at least its first lines when paginating */
-				break-inside: avoid-page;
 			}
 
 			.resume-heading {
@@ -127,6 +125,11 @@
 				margin: 0 0 6px;
 				padding-bottom: 3px;
 				border-bottom: 1px solid var(--rule);
+				/* keep the heading with the lines that follow it, rather than
+				   forbidding any break inside the whole section (which would bump
+				   a long section wholesale to the next page and add pages) */
+				break-after: avoid;
+				break-inside: avoid;
 			}
 
 			.resume-section .resume-lines {
