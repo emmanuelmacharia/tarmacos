@@ -49,9 +49,7 @@ export const listPublishedTemplates = query({
 					engine: t.engine,
 					version: t.version,
 					supportedFormats: t.supportedFormats,
-					thumbnailUrl: t.thumbnailStorageId
-						? await ctx.storage.getUrl(t.thumbnailStorageId)
-						: null
+					thumbnailUrl: t.thumbnailStorageId ? await ctx.storage.getUrl(t.thumbnailStorageId) : null
 				}))
 			);
 

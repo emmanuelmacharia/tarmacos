@@ -25,11 +25,7 @@ function getAdminUserIds(): Set<string> {
  * gate never relies on the route alone.
  */
 export async function assertAdmin(ctx: QueryCtx | MutationCtx): Promise<Doc<'users'>> {
-	const identity = assertFound(
-		await ctx.auth.getUserIdentity(),
-		'Please log in to continue',
-		true
-	);
+	const identity = assertFound(await ctx.auth.getUserIdentity(), 'Please log in to continue', true);
 
 	const clerkId = identity.subject;
 
