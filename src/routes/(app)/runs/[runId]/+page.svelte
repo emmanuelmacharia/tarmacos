@@ -407,15 +407,17 @@
 					{/if}
 					<button
 						type="button"
-						onclick={() =>
+						onclick={() => {
+							showDownloadModal = true;
 							posthog.capture('artifact_download_clicked', {
 								run_id: runId,
 								version_count: versions.length
-							})}
+							});
+						}}
 						class="flex h-8 items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted md:px-3"
 					>
 						<Download size={14} aria-hidden="true" />
-						<span><span class="hidden md:inline">Download </span>Output</span>
+						<span><span class="hidden md:inline">Download &nbsp;</span>Output</span>
 					</button>
 				</div>
 			</div>
