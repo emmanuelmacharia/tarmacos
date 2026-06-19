@@ -2,13 +2,13 @@
 	import { useQuery } from 'convex-svelte';
 	import { fade } from 'svelte/transition';
 	import { resolve } from '$app/paths';
-	import { ChevronRight, History, LoaderCircle, Plus } from '@lucide/svelte';
+	import { ChevronRight, FileDown, History, LoaderCircle, Plus } from '@lucide/svelte';
 	import { api } from '../../../../convex/_generated/api';
 	import type { Doc } from '../../../../convex/_generated/dataModel';
 	import { Button } from '$lib/components/ui/button';
 	import { SvelteDate } from 'svelte/reactivity';
 
-	type RunListItem = Doc<'runs'> & { profileName: string };
+	type RunListItem = Doc<'runs'> & { profileName: string; exportCount: number };
 	type RunStatus = Doc<'runs'>['status'];
 
 	const PAGE_SIZE = 20;
@@ -161,6 +161,15 @@
 										<span class="truncate">{run.profileName}</span>
 										<span aria-hidden="true">·</span>
 										<span>{timeFormatter.format(run.updatedAt)}</span>
+										{#if run.exportCount > 0}
+											<span
+												class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-1.5 py-0.5 font-medium text-emerald-700 dark:text-emerald-400"
+												title="{run.exportCount} generated file{run.exportCount > 1 ? 's' : ''}"
+											>
+												<FileDown size={11} aria-hidden="true" />
+												{run.exportCount}
+											</span>
+										{/if}
 									</div>
 								</div>
 								<ChevronRight

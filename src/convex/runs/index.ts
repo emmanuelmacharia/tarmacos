@@ -94,16 +94,24 @@ export const listUserRuns = query({
 				}
 			}
 
-			return ok(
-				{
-					hasMore,
-					runs: runs.map((run) => ({
+			// count ready exports per run so the history list can flag runs that
+			// produced a downloadable file (plan §8, Phase 6)
+			const enriched = await Promise.all(
+				runs.map(async (run) => {
+					const exports = await ctx.db
+						.query('exports')
+						.withIndex('by_run_createdat', (q) => q.eq('runId', run._id))
+						.collect();
+					const exportCount = exports.filter((e) => e.status === 'ready' && e.documentId).length;
+					return {
 						...run,
-						profileName: profileNames.get(run.profileId) ?? ''
-					}))
-				},
-				{ message: 'Runs found', status: 200 }
+						profileName: profileNames.get(run.profileId) ?? '',
+						exportCount
+					};
+				})
 			);
+
+			return ok({ hasMore, runs: enriched }, { message: 'Runs found', status: 200 });
 		});
 	}
 });
@@ -1104,37 +1112,6 @@ export const getNextInstruction = query({
 			forbiddenCheck(() => run.userId === user._id);
 
 			return deriveNextInstructionForRun(ctx, run);
-		});
-	}
-});
-
-export const completeExport = mutation({
-	args: {
-		runId: v.id('runs'),
-		artifactVersionId: v.id('artifactVersions'),
-		format: v.literal('pdf')
-	},
-	handler: async (ctx, args) => {
-		// TODO: to be implemented in templates
-		return withAppErrors(async () => {
-			const identity = assertFound(
-				await ctx.auth.getUserIdentity(),
-				'Please log in or sign up to continue',
-				true
-			);
-			const clerkId = identity.subject;
-			const user = assertFound(
-				await ctx.db
-					.query('users')
-					.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkId))
-					.unique(),
-				'User not found',
-				true
-			);
-			const run = assertFound(await ctx.db.get(args.runId), 'Run not found');
-			forbiddenCheck(() => run.userId === user._id);
-
-			return { next: deriveNextInstructionForRun(ctx, run) };
 		});
 	}
 });

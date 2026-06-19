@@ -11,3 +11,6 @@ bun.lockb
 
 # convex
 src/convex/_generated/**
+
+# standalone renderer service (own tooling; see services/renderer/README.md)
+services/**

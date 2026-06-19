@@ -27,7 +27,9 @@ import {
 	llmContentKind,
 	llmContentFormat,
 	exportFormat,
-	exportStatus
+	exportStatus,
+	templateEngine,
+	templateStatus
 } from './lib/schemaTypes';
 
 // tables
@@ -269,13 +271,45 @@ export default defineSchema({
 		exporterVersion: v.string(),
 		renderOptionHash: v.string(),
 		status: exportStatus,
+		// template provenance (part of the render key); optional until the build
+		// pipeline (Phase 3) always supplies them.
+		templateId: v.optional(v.id('templates')),
+		templateVersion: v.optional(v.number()),
 		documentId: v.optional(v.id('documents')),
 		contentHash: v.optional(v.string()),
 		fileSizeBytes: v.number(),
 		mimeType: v.string(),
+		// failure surface for the retry UI (render error, not a run failure).
+		error: v.optional(v.any()),
+		// drives the "set run completed on first download" rule + analytics.
+		downloadedAt: v.optional(v.number()),
+		downloadCount: v.optional(v.number()),
 		createdAt: v.number(),
 		completedAt: v.optional(v.number())
 	})
 		.index('by_run_createdat', ['runId', 'createdAt'])
-		.index('by_render_key', ['artifactVersionId', 'format', 'exporterVersion', 'renderOptionHash'])
+		.index('by_render_key', ['artifactVersionId', 'format', 'exporterVersion', 'renderOptionHash']),
+
+	// Resume/cover-letter templates. Authored internally (never user-editable);
+	// assets live in _storage, we keep pointers. User-facing queries only ever
+	// return templateType = <run's artifact type> AND status='published' AND isVisible.
+	templates: defineTable({
+		key: v.string(), // stable slug, e.g. "classic", "compact-senior"
+		name: v.string(),
+		description: v.optional(v.string()),
+		templateType: artifactType, // reuse 'resume' | 'cover_letter' enum
+		category: v.optional(v.string()), // e.g. "modern", "ats-safe"
+		engine: templateEngine, // 'html' (Chromium/LibreOffice) | 'docx' (docxtemplater)
+		version: v.number(), // bump on asset change; pins exporterVersion/renderKey
+		status: templateStatus, // 'draft' | 'published' | 'archived'
+		supportedFormats: v.array(exportFormat),
+		templateAssetStorageId: v.id('_storage'), // HTML/CSS bundle (or .docx)
+		thumbnailStorageId: v.optional(v.id('_storage')),
+		sampleStorageId: v.optional(v.id('_storage')), // pre-rendered sample file
+		isVisible: v.boolean(), // hard gate independent of status
+		createdAt: v.number(),
+		updatedAt: v.number()
+	})
+		.index('by_key', ['key'])
+		.index('by_type_status_visible', ['templateType', 'status', 'isVisible'])
 });

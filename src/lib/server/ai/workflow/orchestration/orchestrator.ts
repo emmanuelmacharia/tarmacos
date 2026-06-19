@@ -262,10 +262,6 @@ async function executeLoop(
 					instruction = await handleWriterInstruction(convex, runId, instruction, signal);
 					break;
 
-				case 'generate_export':
-					instruction = await handleExportInstruction(convex, runId, instruction);
-					break;
-
 				default: {
 					const exhaustive: never = instruction;
 					throw new Error(`Unhandled instruction: ${JSON.stringify(exhaustive)}`);
@@ -557,20 +553,6 @@ async function handleWriterInstruction(
 		messageSummary,
 		basedOnVersionId: instruction.basedOnVersionId,
 		requestKind: instruction.requestKind
-	});
-
-	return next;
-}
-
-async function handleExportInstruction(
-	convex: ConvexHttpClient,
-	runId: Id<'runs'>,
-	instruction: Extract<NextInstruction, { action: 'generate_export' }>
-): Promise<NextInstruction> {
-	const { next } = await convex.mutation(api.runs.index.completeExport, {
-		runId,
-		artifactVersionId: instruction.artifactVersionId,
-		format: 'pdf'
 	});
 
 	return next;

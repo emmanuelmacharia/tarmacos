@@ -5,6 +5,8 @@
 	import {
 		ArrowLeft,
 		Download,
+		FileDown,
+		FileText,
 		History,
 		LoaderCircle,
 		Network,
@@ -12,6 +14,7 @@
 	} from '@lucide/svelte';
 	import MesssageBubble from '$lib/components/messsage-bubble.svelte';
 	import MentionTextarea from '$lib/components/mention-textarea.svelte';
+	import DownloadModal from '$lib/components/download-modal.svelte';
 	import { resolve } from '$app/paths';
 	import posthog from 'posthog-js';
 	import { api } from '../../../../convex/_generated/api';
@@ -37,10 +40,13 @@
 	const versionsFetch = useQuery(api.artifacts.versions.getArtifactVersionsByRunId, () => ({
 		runId
 	}));
+	// ready exports for this run — drives the "generated files" / re-download UI (plan §8, Phase 6)
+	const exportsFetch = useQuery(api.exports.index.listRunExports, () => ({ runId }));
 
 	const messages: ChatMessage[] = $derived(messageFetch.data ?? []);
 	const run: Doc<'runs'> | undefined = $derived(runFetch.data?.data?.run);
 	const versions = $derived(versionsFetch.data ?? []);
+	const runExports = $derived(exportsFetch.data?.data ?? []);
 
 	// the artifact panel takes over once the writer has produced a first draft
 	const showPreview = $derived(versions.length > 0);
@@ -70,6 +76,24 @@
 
 	let activeMobileTab = $state<'chat' | 'preview'>('chat');
 	let showHistory = $state(false);
+	let showFiles = $state(false);
+	let showDownloadModal = $state(false);
+
+	const formatLabel: Record<string, string> = { pdf: 'PDF', docx: 'Word', txt: 'Text' };
+
+	function formatBytes(bytes: number): string {
+		if (!bytes) return '';
+		if (bytes < 1024) return `${bytes} B`;
+		if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+	}
+
+	// Re-download a previously generated export. The endpoint records the download
+	// (and emits export_redownloaded server-side) then 302s to the signed file URL;
+	// a new tab keeps the app mounted.
+	function downloadExport(exportId: Id<'exports'>) {
+		window.open(`/api/runs/${runId}/export/${exportId}/download`, '_blank', 'noopener');
+	}
 	// null follows the latest version as new drafts land
 	let selectedVersionId = $state<Id<'artifactVersions'> | null>(null);
 	let composerText = $state('');
@@ -364,7 +388,23 @@
 						<History size={14} aria-hidden="true" />
 						<span class="hidden md:inline">History</span>
 					</button>
-					<!-- TODO: wire up the export/download functionality -->
+					{#if runExports.length > 0}
+						<button
+							type="button"
+							onclick={() => (showFiles = !showFiles)}
+							aria-pressed={showFiles}
+							class="flex h-8 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs font-medium transition-colors md:px-3 {showFiles
+								? 'bg-muted text-foreground'
+								: 'bg-card text-muted-foreground hover:text-foreground'}"
+						>
+							<FileDown size={14} aria-hidden="true" />
+							<span class="hidden md:inline">Files</span>
+							<span
+								class="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground"
+								>{runExports.length}</span
+							>
+						</button>
+					{/if}
 					<button
 						type="button"
 						onclick={() =>
@@ -406,6 +446,42 @@
 				</div>
 			{/if}
 
+			{#if showFiles && runExports.length > 0}
+				<div
+					class="flex shrink-0 flex-col gap-2 border-b border-border bg-background px-4 py-2.5 md:px-6"
+					transition:slide={{ duration: 200 }}
+				>
+					<span class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
+						>Generated files</span
+					>
+					{#each runExports as file (file.id)}
+						<div class="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2">
+							<FileText size={16} class="shrink-0 text-muted-foreground" aria-hidden="true" />
+							<div class="min-w-0 flex-1">
+								<p class="truncate text-xs font-semibold">
+									{formatLabel[file.format] ?? file.format.toUpperCase()}
+									{#if file.templateName}<span class="font-normal text-muted-foreground"
+											>· {file.templateName}</span
+										>{/if}
+								</p>
+								<p class="text-[11px] text-muted-foreground">
+									{#if file.fileSizeBytes}{formatBytes(file.fileSizeBytes)} ·
+									{/if}downloaded
+									{file.downloadCount}×
+								</p>
+							</div>
+							<button
+								type="button"
+								onclick={() => downloadExport(file.id)}
+								class="flex h-7 shrink-0 items-center gap-1.5 rounded-md bg-primary px-2.5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+							>
+								<Download size={13} aria-hidden="true" /> Download
+							</button>
+						</div>
+					{/each}
+				</div>
+			{/if}
+
 			{@render mobileTabs()}
 
 			<div class="flex-1 overflow-y-auto p-4 md:p-10">
@@ -419,6 +495,8 @@
 		</div>
 	{/if}
 </div>
+
+<DownloadModal bind:open={showDownloadModal} {runId} />
 
 <style>
 	.artifact-document :global(h1) {

@@ -26,7 +26,8 @@ export const documentType = v.union(
 	v.literal('uploaded_coverletter'),
 	v.literal('promoted_generated_coverletter'),
 	v.literal('job_description'),
-	v.literal('supporting_documents')
+	v.literal('supporting_documents'),
+	v.literal('generated_export')
 );
 
 export const documentFormat = v.union(
@@ -206,6 +207,19 @@ export const exportFormat = v.union(v.literal('pdf'), v.literal('docx'), v.liter
 
 export const exportStatus = v.union(v.literal('pending'), v.literal('ready'), v.literal('failed'));
 
+// Renderer pipeline for a template. `html` = Chromium/LibreOffice pipeline over
+// canonicalJson; `docx` = docxtemplater-driven .docx template (higher Word fidelity).
+export const templateEngine = v.union(v.literal('html'), v.literal('docx'));
+
+export const templateStatus = v.union(
+	v.literal('draft'),
+	v.literal('published'),
+	v.literal('archived')
+);
+
+// Which DOCX rendering strategy a build request asks the renderer to use.
+export const renderStrategy = v.union(v.literal('libreoffice'), v.literal('docxtemplater'));
+
 export const llmRequestKind = v.union(
 	v.literal('initial_draft'),
 	v.literal('review_revision'),
@@ -233,10 +247,6 @@ export const nextInstructions = v.union(
 		action: v.literal('await_user')
 	}),
 	v.object({
-		action: v.literal('generate_export'),
-		artifactVersionId: v.id('artifactVersions')
-	}),
-	v.object({
 		action: v.literal('done')
 	})
 );
@@ -255,10 +265,6 @@ export type NextInstruction =
 			userMessageId?: Id<'messages'>;
 	  }
 	| { action: 'await_user' }
-	| {
-			action: 'generate_export';
-			artifactVersionId: Id<'artifactVersions'>;
-	  }
 	| { action: 'done' };
 
 export const CritiquePlan = v.object({
