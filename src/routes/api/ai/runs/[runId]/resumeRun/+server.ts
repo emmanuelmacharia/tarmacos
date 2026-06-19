@@ -32,15 +32,19 @@ export const POST = withApiErrorHandling(async (event) => {
 	});
 
 	const posthog = getPostHogClient();
-	posthog.capture({
-		distinctId: userId,
-		event: 'run_resume_requested',
-		properties: {
-			run_id: runId,
-			run_status: run.status
-		}
-	});
-	await posthog.flush();
+	try {
+		posthog.capture({
+			distinctId: userId,
+			event: 'run_resume_requested',
+			properties: {
+				run_id: runId,
+				run_status: run.status
+			}
+		});
+		await posthog.flush();
+	} catch (err) {
+		console.warn('posthog capture failed', err);
+	}
 
 	return json(result, { status: 200 });
 });
