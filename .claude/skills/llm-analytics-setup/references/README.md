@@ -5,7 +5,7 @@ This package provides AI Observability for .NET applications using PostHog. It c
 > [!WARNING]  
 > This package is currently in a pre-release stage. We're making it available publicly to solicit
 > feedback. While we always strive to maintain a high level of quality, use this package at your own
-> risk. There *will* be many breaking changes until we reach a stable release.
+> risk. There _will_ be many breaking changes until we reach a stable release.
 
 ## Installation
 
@@ -40,7 +40,7 @@ builder.Services.AddPostHog(options =>
 // 2. Register OpenAI Client with PostHog integration
 // This registers OpenAIClient as a Singleton and configures it to use the PostHog interceptor.
 // You can also chain additional HTTP handlers here (e.g., for resilience).
-builder.Services.AddPostHogOpenAIClient("YOUR_OPENAI_API_KEY", options => 
+builder.Services.AddPostHogOpenAIClient("YOUR_OPENAI_API_KEY", options =>
 {
     // Optional: Configure OpenAIClientOptions here
 });
@@ -75,28 +75,28 @@ builder.Services.AddSingleton<OpenAIClient>(sp =>
 {
     var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
     var httpClient = httpClientFactory.CreateClient("PostHogOpenAI");
-    
+
     // Explicitly set the transport
     var options = new OpenAIClientOptions
     {
         Transport = new HttpClientPipelineTransport(httpClient)
     };
-    
+
     return new OpenAIClient(new ApiKeyCredential("YOUR_OPENAI_API_KEY"), options);
 });
 ```
 
 ## Supported Features
 
--   **Trace Capture**: Automatically captures `$ai_generation` and `$ai_embedding` events.
--   **Token Usage**: Captures prompt, completion, and total token usage.
--   **Model Parameters**: Tracks model configuration including temperature, max_tokens, stream, and tools.
--   **Latency**: Measures and records request latency in seconds.
--   **Streaming**: Supports capturing content from streamed responses (Server-Sent Events).
--   **Embeddings**: Automatically detects and captures `$ai_embedding` events for embedding requests.
--   **Error Handling**: Captures error messages and HTTP status codes.
--   **Span and Session Tracking**: Supports grouping events with session IDs, span IDs, and parent-child relationships via `PostHogAIContext`.
--   **Cache Tracking**: Captures cache token usage when available in API responses.
+- **Trace Capture**: Automatically captures `$ai_generation` and `$ai_embedding` events.
+- **Token Usage**: Captures prompt, completion, and total token usage.
+- **Model Parameters**: Tracks model configuration including temperature, max_tokens, stream, and tools.
+- **Latency**: Measures and records request latency in seconds.
+- **Streaming**: Supports capturing content from streamed responses (Server-Sent Events).
+- **Embeddings**: Automatically detects and captures `$ai_embedding` events for embedding requests.
+- **Error Handling**: Captures error messages and HTTP status codes.
+- **Span and Session Tracking**: Supports grouping events with session IDs, span IDs, and parent-child relationships via `PostHogAIContext`.
+- **Cache Tracking**: Captures cache token usage when available in API responses.
 
 ## Captured Event Properties
 

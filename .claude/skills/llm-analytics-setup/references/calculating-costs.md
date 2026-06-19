@@ -14,10 +14,10 @@ If OpenRouter doesn't have pricing data for a specific model, we fall back to ou
 
 The total cost (`$ai_total_cost_usd`) is calculated from multiple components:
 
--   **Token-based costs**: Input (prompt) and output (completion) tokens
--   **Cache costs**: Cached token reads and writes (when applicable)
--   **Request-based costs**: Some models charge per request in addition to token costs
--   **Web search costs**: Some models charge per web search performed
+- **Token-based costs**: Input (prompt) and output (completion) tokens
+- **Cache costs**: Cached token reads and writes (when applicable)
+- **Request-based costs**: Some models charge per request in addition to token costs
+- **Web search costs**: Some models charge per web search performed
 
 For cached LLM responses, our pricing models include cached token pricing which we automatically apply.
 
@@ -27,8 +27,8 @@ We also take into account the reasoning / thinking tokens for models that suppor
 
 Different LLM providers report cache tokens differently:
 
--   **Exclusive counting** (Anthropic/Claude) - Cache tokens are separate from `$ai_input_tokens`. For example, if you have 100 input tokens and 50 cached tokens, `$ai_input_tokens` is 100.
--   **Inclusive counting** (OpenAI and most others) - Cache tokens are included in `$ai_input_tokens`. Using the same example, `$ai_input_tokens` is 150.
+- **Exclusive counting** (Anthropic/Claude) - Cache tokens are separate from `$ai_input_tokens`. For example, if you have 100 input tokens and 50 cached tokens, `$ai_input_tokens` is 100.
+- **Inclusive counting** (OpenAI and most others) - Cache tokens are included in `$ai_input_tokens`. Using the same example, `$ai_input_tokens` is 150.
 
 PostHog auto-detects which counting style to use based on the `$ai_provider` and `$ai_model` properties. For Anthropic and Claude models, PostHog assumes exclusive counting. For all other providers, it assumes inclusive counting.
 
@@ -36,8 +36,8 @@ PostHog auto-detects which counting style to use based on the `$ai_provider` and
 
 If you're manually capturing events or using a framework wrapper that normalizes token counts differently, override the auto-detection by setting the `$ai_cache_reporting_exclusive` property:
 
--   `$ai_cache_reporting_exclusive: true` - Cache tokens are separate from input tokens (Anthropic-style)
--   `$ai_cache_reporting_exclusive: false` - Input tokens already include cache tokens
+- `$ai_cache_reporting_exclusive: true` - Cache tokens are separate from input tokens (Anthropic-style)
+- `$ai_cache_reporting_exclusive: false` - Input tokens already include cache tokens
 
 When not set, PostHog resolves this automatically and writes the resolved value back to the event for downstream consumers.
 
@@ -45,20 +45,20 @@ When not set, PostHog resolves this automatically and writes the resolved value 
 
 You can override PostHog's automatic cost calculation by providing custom pricing for your LLM models. This is useful when:
 
--   You have negotiated custom pricing with your LLM provider
--   You're using a model that PostHog doesn't support yet
--   PostHog's automatic pricing doesn't match your specific use case
+- You have negotiated custom pricing with your LLM provider
+- You're using a model that PostHog doesn't support yet
+- PostHog's automatic pricing doesn't match your specific use case
 
 ### Option 1: Custom price per token
 
 If you know your pricing per token, you can set the following [custom properties](/docs/ai-observability/custom-properties.md) when calling your LLM:
 
--   `$ai_input_token_price` (required): Price per input/prompt token
--   `$ai_output_token_price` (required): Price per output/completion token
--   `$ai_cache_read_token_price` (optional): Price per cached token read
--   `$ai_cache_write_token_price` (optional): Price per cached token write
--   `$ai_request_price` (optional): Price per request (for models that charge per request)
--   `$ai_web_search_price` (optional): Price per web search (for models that charge per search)
+- `$ai_input_token_price` (required): Price per input/prompt token
+- `$ai_output_token_price` (required): Price per output/completion token
+- `$ai_cache_read_token_price` (optional): Price per cached token read
+- `$ai_cache_write_token_price` (optional): Price per cached token write
+- `$ai_request_price` (optional): Price per request (for models that charge per request)
+- `$ai_web_search_price` (optional): Price per web search (for models that charge per search)
 
 **Important:** Token prices should be per individual token, not per million tokens. For example, if your provider charges $0.03 per 1M tokens, you would set `$ai_input_token_price: 0.00000003` (0.03 / 1,000,000).
 
@@ -67,27 +67,24 @@ PostHog AI
 ### JavaScript
 
 ```javascript
-import { OpenAI } from '@posthog/ai'
-import { PostHog } from 'posthog-node'
-const phClient = new PostHog(
-  '<ph_project_token>',
-  { host: 'https://us.i.posthog.com' }
-)
+import { OpenAI } from '@posthog/ai';
+import { PostHog } from 'posthog-node';
+const phClient = new PostHog('<ph_project_token>', { host: 'https://us.i.posthog.com' });
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  posthog: phClient
-})
+	apiKey: process.env.OPENAI_API_KEY,
+	posthog: phClient
+});
 const response = await openai.responses.create({
-  model: 'my-custom-model',
-  messages: [{ role: 'user', content: 'Hello' }],
-  posthogProperties: {
-    $ai_input_token_price: 0.00000003,   // $0.03 per 1M tokens = $0.00000003 per token
-    $ai_output_token_price: 0.00000006,  // $0.06 per 1M tokens = $0.00000006 per token
-    // Optional: cache pricing
-    $ai_cache_read_token_price: 0.000000015,
-    $ai_cache_write_token_price: 0.0000000375
-  }
-})
+	model: 'my-custom-model',
+	messages: [{ role: 'user', content: 'Hello' }],
+	posthogProperties: {
+		$ai_input_token_price: 0.00000003, // $0.03 per 1M tokens = $0.00000003 per token
+		$ai_output_token_price: 0.00000006, // $0.06 per 1M tokens = $0.00000006 per token
+		// Optional: cache pricing
+		$ai_cache_read_token_price: 0.000000015,
+		$ai_cache_write_token_price: 0.0000000375
+	}
+});
 ```
 
 ### Python
@@ -122,10 +119,10 @@ Both `$ai_input_token_price` and `$ai_output_token_price` must be provided for c
 
 If you're [manually capturing](/docs/ai-observability/installation/manual-capture.md) LLM events and have already calculated the total costs yourself, you can send them directly:
 
--   `$ai_input_cost_usd`: Total cost for input/prompt tokens in USD
--   `$ai_output_cost_usd`: Total cost for output/completion tokens in USD
--   `$ai_request_cost_usd`: Total cost for requests in USD
--   `$ai_web_search_cost_usd`: Total cost for web searches in USD
+- `$ai_input_cost_usd`: Total cost for input/prompt tokens in USD
+- `$ai_output_cost_usd`: Total cost for output/completion tokens in USD
+- `$ai_request_cost_usd`: Total cost for requests in USD
+- `$ai_web_search_cost_usd`: Total cost for web searches in USD
 
 PostHog AI
 
@@ -134,15 +131,15 @@ PostHog AI
 ```javascript
 // After making your LLM call and calculating costs
 posthog.capture('$ai_generation', {
-  $ai_trace_id: traceId,
-  $ai_model: 'my-custom-model',
-  $ai_provider: 'my-provider',
-  $ai_input_tokens: inputTokens,
-  $ai_output_tokens: outputTokens,
-  $ai_input_cost_usd: 0.0042,
-  $ai_output_cost_usd: 0.0028
-  // ... other required properties
-})
+	$ai_trace_id: traceId,
+	$ai_model: 'my-custom-model',
+	$ai_provider: 'my-provider',
+	$ai_input_tokens: inputTokens,
+	$ai_output_tokens: outputTokens,
+	$ai_input_cost_usd: 0.0042,
+	$ai_output_cost_usd: 0.0028
+	// ... other required properties
+});
 ```
 
 ### Python
@@ -178,11 +175,11 @@ Cost calculation follows this precedence order:
 
 When PostHog calculates costs automatically, it sets the following metadata properties on the event to help you understand how costs were determined:
 
-| Property | Description | Examples |
-| --- | --- | --- |
-| $ai_model_cost_used | The model identifier used for cost calculation. May differ from the requested model when a variant or alias is resolved. | openai/gpt-4o-mini |
-| $ai_cost_model_source | Where the cost data for this model was sourced from. | openrouter, manual, custom, passthrough |
-| $ai_cost_model_provider | The provider used to look up the cost for this model. | openai, anthropic, custom |
+| Property                | Description                                                                                                              | Examples                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
+| $ai_model_cost_used     | The model identifier used for cost calculation. May differ from the requested model when a variant or alias is resolved. | openai/gpt-4o-mini                      |
+| $ai_cost_model_source   | Where the cost data for this model was sourced from.                                                                     | openrouter, manual, custom, passthrough |
+| $ai_cost_model_provider | The provider used to look up the cost for this model.                                                                    | openai, anthropic, custom               |
 
 These properties are useful for debugging cost discrepancies or understanding which pricing was applied when using model aliases or custom configurations.
 
