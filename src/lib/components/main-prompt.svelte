@@ -319,7 +319,8 @@
 				abortController: undefined
 			});
 			posthog.capture('resume_uploaded', {
-				file_name: latestFileStateAfterPersist.file.name,
+				file_extension:
+					latestFileStateAfterPersist.file.name.split('.').pop()?.toLowerCase() ?? null,
 				file_size: latestFileStateAfterPersist.file.size,
 				mime_type: latestFileStateAfterPersist.file.type
 			});
