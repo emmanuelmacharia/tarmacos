@@ -18,7 +18,7 @@ const posthogProxy: Handle = async ({ event, resolve }) => {
 		url.port = '443';
 		url.pathname = pathname.replace(/^\/ingest/, '');
 
-		const headers = new Headers(event.request.headers);
+		const headers = new Headers();
 
 		const passthrough = ['content-type', 'user-agent', 'origin', 'referer'];
 
