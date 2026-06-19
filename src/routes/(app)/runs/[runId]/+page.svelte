@@ -368,7 +368,7 @@
 					<button
 						type="button"
 						onclick={() =>
-							posthog.capture('artifact_downloaded', {
+							posthog.capture('artifact_download_clicked', {
 								run_id: runId,
 								version_count: versions.length
 							})}
