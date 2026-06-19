@@ -4,8 +4,8 @@ Traces are a collection of [generations](/docs/ai-observability/generations.md) 
 
 ## Sessions vs Traces
 
--   **Trace** (`$ai_trace_id`): Groups related generations and spans together. Required for all AI Observability events.
--   **Session** (`$ai_session_id`): Optional property that groups multiple traces together based on your chosen grouping strategy.
+- **Trace** (`$ai_trace_id`): Groups related generations and spans together. Required for all AI Observability events.
+- **Session** (`$ai_session_id`): Optional property that groups multiple traces together based on your chosen grouping strategy.
 
 See the [Sessions](/docs/ai-observability/sessions.md) documentation for more details on how to use `$ai_session_id`.
 
@@ -21,9 +21,9 @@ A trace presents LLM event data in a timeline, tree-structured view
 
 When viewing a trace, you can control how conversation messages are displayed using the display options dropdown. The available options are:
 
--   **Expand all** - Shows the full content of all messages in the conversation
--   **Expand user only** - Expands only user messages, keeping system and assistant messages collapsed for easier scanning of user inputs
--   **Collapse except output and last input** - The default view that shows the model's output and the most recent user input, keeping earlier messages collapsed
+- **Expand all** - Shows the full content of all messages in the conversation
+- **Expand user only** - Expands only user messages, keeping system and assistant messages collapsed for easier scanning of user inputs
+- **Collapse except output and last input** - The default view that shows the model's output and the most recent user input, keeping earlier messages collapsed
 
 ## Tool calls
 
@@ -39,16 +39,16 @@ PostHog can classify the sentiment of user messages in a trace as negative, neut
 
 Example prompts you can try:
 
--   "Show me recent LLM traces from the past week"
--   "What are the most expensive LLM calls from today?"
--   "Find traces with errors in the last 30 days"
--   "What's happening in my most expensive trace?"
+- "Show me recent LLM traces from the past week"
+- "What are the most expensive LLM calls from today?"
+- "Find traces with errors in the last 30 days"
+- "What's happening in my most expensive trace?"
 
 PostHog AI returns trace details including name, latency, cost, token counts, and error count. It can also read individual traces to provide a detailed summary of what happened.
 
 ## AI event hierarchy
 
-flowchart TD S\["<strong>$ai\_session\_id</strong><br/>(optional)"\] A\[<strong>$ai\_trace</strong>\] A2\[<strong>$ai\_trace</strong>\] B\[<strong>$ai\_generation</strong>\] C@{ shape: processes, label: "<strong>$ai\_spans</strong>" } D\[<strong>$ai\_generation</strong>\] E@{ shape: processes, label: "<strong>$ai\_spans</strong>" } F\[<strong>$ai\_generation</strong>\] S -.-> A S -.-> A2 A --> B A --> C C --> D C --> E E --> F
+flowchart TD S\["<strong>$ai\_session\_id</strong><br/>(optional)"\] A\[<strong>$ai_trace</strong>\] A2\[<strong>$ai\_trace</strong>\] B\[<strong>$ai_generation</strong>\] C@{ shape: processes, label: "<strong>$ai\_spans</strong>" } D\[<strong>$ai_generation</strong>\] E@{ shape: processes, label: "<strong>$ai\_spans</strong>" } F\[<strong>$ai_generation</strong>\] S -.-> A S -.-> A2 A --> B A --> C C --> D C --> E E --> F
 
 Traces consist of the following event hierarchy:
 
@@ -66,23 +66,23 @@ A trace is a group that contains multiple spans, generations, and embeddings. Tr
 
 ### Core properties
 
-| Property | Description |
-| --- | --- |
-| $ai_trace_id | The trace ID (a UUID to group related AI events together)Must contain only letters, numbers, and special characters: -, _, ~, ., @, (, ), !, ', :, \|Example: d9222e05-8708-41b8-98ea-d4a21849e761 |
+| Property       | Description                                                                                                                                                                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| $ai_trace_id   | The trace ID (a UUID to group related AI events together)Must contain only letters, numbers, and special characters: -, \_, ~, ., @, (, ), !, ', :, \|Example: d9222e05-8708-41b8-98ea-d4a21849e761                                         |
 | $ai_session_id | (Optional) Groups related traces together. Use this to organize traces by whatever grouping makes sense for your application (user sessions, workflows, conversations, or other logical boundaries).Example: session-abc-123, conv-user-456 |
-| $ai_latency | (Optional) The latency of the trace in seconds |
-| $ai_span_name | (Optional) The name of the traceExample: chat_completion, rag_pipeline |
-| $ai_is_error | (Optional) Boolean to indicate if the trace encountered an error |
-| $ai_error | (Optional) The error message or object if the trace failed |
+| $ai_latency    | (Optional) The latency of the trace in seconds                                                                                                                                                                                              |
+| $ai_span_name  | (Optional) The name of the traceExample: chat_completion, rag_pipeline                                                                                                                                                                      |
+| $ai_is_error   | (Optional) Boolean to indicate if the trace encountered an error                                                                                                                                                                            |
+| $ai_error      | (Optional) The error message or object if the trace failed                                                                                                                                                                                  |
 
 ### Pseudo-trace Events
 
 When you send generation (`$ai_generation`), span (`$ai_span`), or embedding (`$ai_embedding`) events with a `$ai_trace_id`, PostHog automatically creates a pseudo-trace event that appears in the dashboard as a parent grouping. These pseudo-traces:
 
--   Are not actual events in your data
--   Automatically aggregate metrics from child events (latency, tokens, costs)
--   Provide a hierarchical view of your AI operations
--   Do not require sending an explicit `$ai_trace` event
+- Are not actual events in your data
+- Automatically aggregate metrics from child events (latency, tokens, costs)
+- Provide a hierarchical view of your AI operations
+- Do not require sending an explicit `$ai_trace` event
 
 This means you can either:
 

@@ -88,12 +88,12 @@ PostHog is initialized in the SvelteKit client hooks `init` function, which runs
 import posthog from 'posthog-js';
 
 export async function init() {
-  posthog.init(PUBLIC_POSTHOG_PROJECT_TOKEN, {
-    api_host: '/ingest',
-    ui_host: 'https://us.posthog.com',
-    defaults: '2026-01-30',
-    capture_exceptions: true
-  });
+	posthog.init(PUBLIC_POSTHOG_PROJECT_TOKEN, {
+		api_host: '/ingest',
+		ui_host: 'https://us.posthog.com',
+		defaults: '2026-01-30',
+		capture_exceptions: true
+	});
 }
 ```
 
@@ -107,14 +107,14 @@ import { PostHog } from 'posthog-node';
 let posthogClient: PostHog | null = null;
 
 export function getPostHogClient() {
-  if (!posthogClient) {
-    posthogClient = new PostHog(PUBLIC_POSTHOG_PROJECT_TOKEN, {
-      host: PUBLIC_POSTHOG_HOST,
-      flushAt: 1,
-      flushInterval: 0
-    });
-  }
-  return posthogClient;
+	if (!posthogClient) {
+		posthogClient = new PostHog(PUBLIC_POSTHOG_PROJECT_TOKEN, {
+			host: PUBLIC_POSTHOG_HOST,
+			flushAt: 1,
+			flushInterval: 0
+		});
+	}
+	return posthogClient;
 }
 ```
 
@@ -124,14 +124,14 @@ The server hooks handle proxies requests through `/ingest` to avoid ad blockers:
 
 ```typescript
 export const handle: Handle = async ({ event, resolve }) => {
-  if (event.url.pathname.startsWith('/ingest')) {
-    const pathname = event.url.pathname.replace('/ingest', '');
-    const host = pathname.startsWith('/static')
-      ? 'https://us-assets.i.posthog.com'
-      : 'https://us.i.posthog.com';
-    // Proxy to PostHog...
-  }
-  return resolve(event);
+	if (event.url.pathname.startsWith('/ingest')) {
+		const pathname = event.url.pathname.replace('/ingest', '');
+		const host = pathname.startsWith('/static')
+			? 'https://us-assets.i.posthog.com'
+			: 'https://us.i.posthog.com';
+		// Proxy to PostHog...
+	}
+	return resolve(event);
 };
 ```
 
@@ -157,8 +157,8 @@ Errors are automatically captured via the `handleError` hook:
 
 ```typescript
 export const handleError: HandleClientError = async ({ error }) => {
-  posthog.captureException(error);
-  return { message: 'An error occurred' };
+	posthog.captureException(error);
+	return { message: 'An error occurred' };
 };
 ```
 
@@ -166,9 +166,9 @@ You can also manually capture errors:
 
 ```typescript
 try {
-  // Some operation
+	// Some operation
 } catch (err) {
-  posthog.captureException(err);
+	posthog.captureException(err);
 }
 ```
 
@@ -178,11 +178,11 @@ For session replay to work correctly, add this to `svelte.config.js`:
 
 ```javascript
 export default {
-  kit: {
-    paths: {
-      relative: false
-    }
-  }
+	kit: {
+		paths: {
+			relative: false
+		}
+	}
 };
 ```
 
@@ -238,7 +238,6 @@ declare global {
 }
 
 export {};
-
 ```
 
 ---
@@ -257,7 +256,6 @@ export {};
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>
-
 ```
 
 ---
@@ -274,7 +272,7 @@ export async function init() {
 	posthog.init(PUBLIC_POSTHOG_PROJECT_TOKEN, {
 		api_host: '/ingest',
 		ui_host: 'https://us.posthog.com',
-  defaults: '2026-01-30',
+		defaults: '2026-01-30',
 		capture_exceptions: true
 	});
 }
@@ -288,7 +286,6 @@ export const handleError: HandleClientError = async ({ error, status, message })
 		status
 	};
 };
-
 ```
 
 ---
@@ -305,7 +302,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// Reverse proxy for PostHog - route /ingest requests to PostHog servers
 	if (pathname.startsWith('/ingest')) {
-		const useAssetHost = pathname.startsWith('/ingest/static/') || pathname.startsWith('/ingest/array/')
+		const useAssetHost =
+			pathname.startsWith('/ingest/static/') || pathname.startsWith('/ingest/array/');
 		const hostname = useAssetHost ? 'us-assets.i.posthog.com' : 'us.i.posthog.com';
 
 		const url = new URL(event.request.url);
@@ -356,7 +354,6 @@ export const handleError: HandleServerError = async ({ error, status, message })
 		status
 	};
 };
-
 ```
 
 ---
@@ -443,7 +440,6 @@ export function setAuthContext(auth: AuthState) {
 export function getAuthContext(): AuthState {
 	return getContext<AuthState>(AUTH_KEY);
 }
-
 ```
 
 ---
@@ -474,7 +470,6 @@ export function getAuthContext(): AuthState {
 		</div>
 	</div>
 </header>
-
 ```
 
 ---
@@ -483,7 +478,6 @@ export function getAuthContext(): AuthState {
 
 ```ts
 // place files you want to import through the `$lib` alias in this folder.
-
 ```
 
 ---
@@ -512,7 +506,6 @@ export async function shutdownPostHog() {
 		await posthogClient.shutdown();
 	}
 }
-
 ```
 
 ---
@@ -541,7 +534,6 @@ export async function shutdownPostHog() {
 <main>
 	{@render children()}
 </main>
-
 ```
 
 ---
@@ -607,12 +599,9 @@ export async function shutdownPostHog() {
 			<button type="submit" class="btn-primary">Sign In</button>
 		</form>
 
-		<p class="note">
-			Enter any username and password to sign in. This is a demo app.
-		</p>
+		<p class="note">Enter any username and password to sign in. This is a demo app.</p>
 	{/if}
 </div>
-
 ```
 
 ---
@@ -667,7 +656,6 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	return json({ success: true, user });
 };
-
 ```
 
 ---
@@ -730,7 +718,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		<p>Please log in to consider burritos.</p>
 	{/if}
 </div>
-
 ```
 
 ---
@@ -789,7 +776,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		<p>Please log in to view your profile.</p>
 	{/if}
 </div>
-
 ```
 
 ---
@@ -830,7 +816,6 @@ const config = {
 };
 
 export default config;
-
 ```
 
 ---
@@ -844,8 +829,6 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	plugins: [sveltekit()]
 });
-
 ```
 
 ---
-

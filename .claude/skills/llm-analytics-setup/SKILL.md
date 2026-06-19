@@ -75,4 +75,4 @@ If the user's provider isn't listed, use `manual-capture.md` as a fallback — i
 - PII belongs in identify() person properties, NOT in capture() event properties. Safe event properties are metadata like message_length, form_type, boolean flags.
 - Register posthog_client.shutdown with atexit.register() to ensure all events are flushed on exit
 - The Python SDK has NO identify() method — use posthog_client.set(distinct_id=user_id, properties={...}) to set person properties, or use identify_context(user_id) within a context
-- When a reverse proxy is configured, both /static/* AND /array/* must route to the assets origin (us-assets.i.posthog.com or eu-assets.i.posthog.com).
+- When a reverse proxy is configured, both /static/_ AND /array/_ must route to the assets origin (us-assets.i.posthog.com or eu-assets.i.posthog.com).

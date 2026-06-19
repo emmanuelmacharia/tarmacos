@@ -13,17 +13,17 @@ The wizard has completed a deep integration of PostHog analytics into your Resum
 
 ## Events instrumented
 
-| Event | Description | File |
-|-------|-------------|------|
-| `run_started` | User submits a job description and resume to kick off a tailoring run. Core conversion event. | `src/lib/utils/startRun.ts` |
-| `resume_uploaded` | User's resume file finishes uploading and is marked ready. | `src/lib/components/main-prompt.svelte` |
-| `instructions_added` | User opens the tailoring instructions panel. Signals advanced usage intent. | `src/lib/components/main-prompt.svelte` |
-| `feedback_submitted` | User sends a revision/feedback message within a run. | `src/routes/(app)/runs/[runId]/+page.svelte` |
-| `run_resumed` | User manually resumes a stalled or failed run. | `src/routes/(app)/runs/[runId]/+page.svelte` |
-| `artifact_downloaded` | User clicks Download on their tailored resume output. Key success signal. | `src/routes/(app)/runs/[runId]/+page.svelte` |
-| `run_created` | Server-side: new run created in the API. Complements the client-side `run_started`. | `src/routes/api/ai/runs/+server.ts` |
-| `run_resume_requested` | Server-side: resume-run API endpoint is triggered. | `src/routes/api/ai/runs/[runId]/resumeRun/+server.ts` |
-| `server_error` | Any unhandled server-side error (via `handleError` hook). | `src/hooks.server.ts` |
+| Event                  | Description                                                                                   | File                                                  |
+| ---------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `run_started`          | User submits a job description and resume to kick off a tailoring run. Core conversion event. | `src/lib/utils/startRun.ts`                           |
+| `resume_uploaded`      | User's resume file finishes uploading and is marked ready.                                    | `src/lib/components/main-prompt.svelte`               |
+| `instructions_added`   | User opens the tailoring instructions panel. Signals advanced usage intent.                   | `src/lib/components/main-prompt.svelte`               |
+| `feedback_submitted`   | User sends a revision/feedback message within a run.                                          | `src/routes/(app)/runs/[runId]/+page.svelte`          |
+| `run_resumed`          | User manually resumes a stalled or failed run.                                                | `src/routes/(app)/runs/[runId]/+page.svelte`          |
+| `artifact_downloaded`  | User clicks Download on their tailored resume output. Key success signal.                     | `src/routes/(app)/runs/[runId]/+page.svelte`          |
+| `run_created`          | Server-side: new run created in the API. Complements the client-side `run_started`.           | `src/routes/api/ai/runs/+server.ts`                   |
+| `run_resume_requested` | Server-side: resume-run API endpoint is triggered.                                            | `src/routes/api/ai/runs/[runId]/resumeRun/+server.ts` |
+| `server_error`         | Any unhandled server-side error (via `handleError` hook).                                     | `src/hooks.server.ts`                                 |
 
 ## LLM analytics (AI Observability)
 
@@ -37,14 +37,14 @@ PostHog LLM analytics are integrated via the Vercel AI SDK's OpenTelemetry suppo
 
 ### Instrumented call sites
 
-| Function | `functionId` | Description |
-|----------|-------------|-------------|
-| `executeStructuredCall` (native) | `resume-tailor/{role}/structured` | Reviewer critique/plan and review phases using structured output |
-| `executeStructuredCall` (prompted) | `resume-tailor/{role}/structured-prompted` | JSON-prompted structured fallback strategy |
-| `executeFreeformCall` | `resume-tailor/{role}/freeform` | Writer draft and revision phases |
-| `executeStructuredRepairCall` | `resume-tailor/{role}/repair-structured` | AI-assisted repair of malformed structured output |
-| `executeFreeformRepairCall` | `resume-tailor/{role}/repair-freeform` | AI-assisted repair of malformed freeform text |
-| `profileCreationInference` | `resume-tailor/profile/inference` | Profile creation inference |
+| Function                           | `functionId`                               | Description                                                      |
+| ---------------------------------- | ------------------------------------------ | ---------------------------------------------------------------- |
+| `executeStructuredCall` (native)   | `resume-tailor/{role}/structured`          | Reviewer critique/plan and review phases using structured output |
+| `executeStructuredCall` (prompted) | `resume-tailor/{role}/structured-prompted` | JSON-prompted structured fallback strategy                       |
+| `executeFreeformCall`              | `resume-tailor/{role}/freeform`            | Writer draft and revision phases                                 |
+| `executeStructuredRepairCall`      | `resume-tailor/{role}/repair-structured`   | AI-assisted repair of malformed structured output                |
+| `executeFreeformRepairCall`        | `resume-tailor/{role}/repair-freeform`     | AI-assisted repair of malformed freeform text                    |
+| `profileCreationInference`         | `resume-tailor/profile/inference`          | Profile creation inference                                       |
 
 Each generation event includes `run_id`, `phase`, and `loop` as custom metadata for correlation with your Convex run records.
 
