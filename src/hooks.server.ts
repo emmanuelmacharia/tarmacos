@@ -19,6 +19,14 @@ const posthogProxy: Handle = async ({ event, resolve }) => {
 		url.pathname = pathname.replace(/^\/ingest/, '');
 
 		const headers = new Headers(event.request.headers);
+
+		const passthrough = ['content-type', 'user-agent', 'origin', 'referer'];
+
+		for (const key of passthrough) {
+			const value = event.request.headers.get(key);
+			if (value) headers.set(key, value);
+		}
+
 		headers.set('host', hostname);
 		headers.set('accept-encoding', '');
 
