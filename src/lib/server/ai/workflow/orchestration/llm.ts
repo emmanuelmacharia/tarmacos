@@ -13,6 +13,7 @@ import type z from 'zod';
 import { api } from '../../../../../convex/_generated/api';
 import { getChatModel } from '../../openrouter';
 import { generateText, Output } from 'ai';
+import type { OpenRouterUsageAccounting } from '@openrouter/ai-sdk-provider';
 import type { NormalizationResult } from './normalization';
 import { buildFreeformRepairPrompt, buildStructuredRepairPrompt } from '../../prompt-builder';
 import { DEFAULT_MAX_RETRIES } from '../../models';
@@ -635,22 +636,23 @@ async function executeStructuredCall<T>(
 				metadata: { run_id: args.runId, phase: args.phase, loop: args.loopNumber }
 			}
 		});
+		const usageCost = extractUsageCost(result);
 		return {
 			latencyMs: Date.now() - startedAt,
-			inputTokens: result.usage?.inputTokens,
-			outputTokens: result.usage?.outputTokens,
-			reasoningTokens: result.usage?.reasoningTokens,
-			cachedTokens: result.usage?.cachedInputTokens,
+			inputTokens: usageCost.inputTokens,
+			outputTokens: usageCost.outputTokens,
+			reasoningTokens: usageCost.reasoningTokens,
+			cachedTokens: usageCost.cachedTokens,
 			finishReason: result.finishReason,
 			rawText: JSON.stringify(result.output),
 			output: result.output,
 			reasoning: normalizeReasoning(result.reasoning),
-			openRouterRequestId: result.response?.id,
-			routedProvider: result.providerMetadata?.provider?.id?.toString(),
+			openRouterRequestId: usageCost.openRouterRequestId,
+			routedProvider: usageCost.routedProvider,
 			strategyUsed: 'native_structured',
 			status: 'completed',
 			completedAt: Date.now(),
-			costUsd: result.usage.totalTokens // calculate cost from result response - I think it's there
+			costUsd: usageCost.costUsd
 		};
 	}
 
@@ -675,17 +677,22 @@ async function executeStructuredCall<T>(
 	});
 
 	const parsed = parseJSONResponse(result.text);
+	const usageCost = extractUsageCost(result);
 	return {
 		latencyMs: Date.now() - startedAt,
-		inputTokens: result.usage?.inputTokens,
-		outputTokens: result.usage?.outputTokens,
-		reasoningTokens: result.usage?.reasoningTokens,
-		cachedTokens: result.usage?.cachedInputTokens,
+		inputTokens: usageCost.inputTokens,
+		outputTokens: usageCost.outputTokens,
+		reasoningTokens: usageCost.reasoningTokens,
+		cachedTokens: usageCost.cachedTokens,
 		finishReason: result.finishReason,
 		rawText: JSON.stringify(parsed),
 		output: parsed,
+		openRouterRequestId: usageCost.openRouterRequestId,
+		routedProvider: usageCost.routedProvider,
+		strategyUsed: 'prompted_json',
 		status: 'completed',
 		completedAt: Date.now(),
+		costUsd: usageCost.costUsd,
 		reasoning: normalizeReasoning(result.reasoning)
 	};
 }
@@ -713,18 +720,23 @@ async function executeFreeformCall<T>(args: FreeFormCallArgs<T>): Promise<Attemp
 
 	console.debug('Freeform call completed');
 
+	const usageCost = extractUsageCost(result);
 	return {
 		latencyMs: Date.now() - startedAt,
-		inputTokens: result.usage?.inputTokens,
-		outputTokens: result.usage?.outputTokens,
-		reasoningTokens: result.usage?.reasoningTokens,
-		cachedTokens: result.usage?.cachedInputTokens,
+		inputTokens: usageCost.inputTokens,
+		outputTokens: usageCost.outputTokens,
+		reasoningTokens: usageCost.reasoningTokens,
+		cachedTokens: usageCost.cachedTokens,
 		finishReason: normalizeFinishReason(result.finishReason),
 		rawText: result.text,
 		output: result.text,
 		reasoning: normalizeReasoning(result.reasoning),
+		openRouterRequestId: usageCost.openRouterRequestId,
+		routedProvider: usageCost.routedProvider,
+		strategyUsed: 'freeform_text',
 		status: 'completed',
-		completedAt: Date.now()
+		completedAt: Date.now(),
+		costUsd: usageCost.costUsd
 	};
 }
 
@@ -752,22 +764,23 @@ async function executeStructuredRepairCall<T>(
 		}
 	});
 
+	const usageCost = extractUsageCost(result);
 	return {
 		latencyMs: Date.now() - startedAt,
-		inputTokens: result.usage?.inputTokens,
-		outputTokens: result.usage?.outputTokens,
-		reasoningTokens: result.usage?.reasoningTokens,
-		cachedTokens: result.usage?.cachedInputTokens,
+		inputTokens: usageCost.inputTokens,
+		outputTokens: usageCost.outputTokens,
+		reasoningTokens: usageCost.reasoningTokens,
+		cachedTokens: usageCost.cachedTokens,
 		finishReason: result.finishReason,
 		rawText: JSON.stringify(result.output),
 		output: result.output,
 		reasoning: normalizeReasoning(result.reasoning),
-		openRouterRequestId: result.response?.id,
-		routedProvider: result.providerMetadata?.provider?.id?.toString(),
+		openRouterRequestId: usageCost.openRouterRequestId,
+		routedProvider: usageCost.routedProvider,
 		strategyUsed: 'native_structured',
 		status: 'completed',
 		completedAt: Date.now(),
-		costUsd: result.usage.totalTokens // calculate cost from result response - I think it's there
+		costUsd: usageCost.costUsd
 	};
 }
 
@@ -792,22 +805,23 @@ async function executeFreeformRepairCall<T>(
 		}
 	});
 
+	const usageCost = extractUsageCost(result);
 	return {
 		latencyMs: Date.now() - startedAt,
-		inputTokens: result.usage?.inputTokens,
-		outputTokens: result.usage?.outputTokens,
-		reasoningTokens: result.usage?.reasoningTokens,
-		cachedTokens: result.usage?.cachedInputTokens,
+		inputTokens: usageCost.inputTokens,
+		outputTokens: usageCost.outputTokens,
+		reasoningTokens: usageCost.reasoningTokens,
+		cachedTokens: usageCost.cachedTokens,
 		finishReason: result.finishReason,
 		rawText: result.text,
 		output: result.text,
 		reasoning: normalizeReasoning(result.reasoning),
-		openRouterRequestId: result.response?.id,
-		routedProvider: result.providerMetadata?.provider?.id?.toString(),
+		openRouterRequestId: usageCost.openRouterRequestId,
+		routedProvider: usageCost.routedProvider,
 		strategyUsed: 'freeform_text',
 		status: 'completed',
 		completedAt: Date.now(),
-		costUsd: result.usage.totalTokens // calculate cost from result response - I think it's there
+		costUsd: usageCost.costUsd
 	};
 }
 
@@ -1277,13 +1291,75 @@ async function finalizeNormalization(
 }
 
 function buildProviderOptions(requestParams: ModelRequestParameters) {
+	// NOTE: the provider key must be lowercase `openrouter` - the AI SDK provider
+	// only reads `providerOptions.openrouter`. `usage.include` turns on OpenRouter
+	// usage accounting so the response carries the authoritative per-call cost.
 	return {
-		openRouter: {
+		openrouter: {
+			usage: { include: true },
 			provider: {
 				require_parameters: requestParams.routing?.requireParameters ?? true,
 				order: requestParams.routing?.order
 			}
 		}
+	};
+}
+
+interface OpenRouterCallMetadata {
+	openrouter?: {
+		provider?: string;
+		usage?: OpenRouterUsageAccounting;
+	};
+	// some SDK builds surface the routed provider here instead
+	provider?: { id?: string | number };
+}
+
+interface UsageCostExtract {
+	inputTokens?: number;
+	outputTokens?: number;
+	reasoningTokens?: number;
+	cachedTokens?: number;
+	costUsd?: number;
+	routedProvider?: string;
+	openRouterRequestId?: string;
+}
+
+/**
+ * Pulls accurate token usage and the real USD cost from an AI SDK result.
+ *
+ * Prefers OpenRouter's usage accounting (`providerMetadata.openrouter.usage`),
+ * which reports the exact credits charged for the call (reflecting the routed
+ * provider's real pricing and any cache discounts). Falls back to the generic
+ * `result.usage` token counts when accounting is unavailable. `costUsd` is left
+ * undefined when OpenRouter does not return a cost, so we never persist a guess.
+ */
+function extractUsageCost(result: {
+	usage?: {
+		inputTokens?: number;
+		outputTokens?: number;
+		reasoningTokens?: number;
+		cachedInputTokens?: number;
+	};
+	providerMetadata?: unknown;
+	response?: { id?: string };
+}): UsageCostExtract {
+	const metadata = result.providerMetadata as OpenRouterCallMetadata | undefined;
+	const orUsage = metadata?.openrouter?.usage;
+
+	const routedProvider =
+		typeof metadata?.openrouter?.provider === 'string'
+			? metadata.openrouter.provider
+			: metadata?.provider?.id?.toString();
+
+	return {
+		inputTokens: orUsage?.promptTokens ?? result.usage?.inputTokens,
+		outputTokens: orUsage?.completionTokens ?? result.usage?.outputTokens,
+		reasoningTokens:
+			orUsage?.completionTokensDetails?.reasoningTokens ?? result.usage?.reasoningTokens,
+		cachedTokens: orUsage?.promptTokensDetails?.cachedTokens ?? result.usage?.cachedInputTokens,
+		costUsd: typeof orUsage?.cost === 'number' ? orUsage.cost : undefined,
+		routedProvider,
+		openRouterRequestId: result.response?.id
 	};
 }
 
