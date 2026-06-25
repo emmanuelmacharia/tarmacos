@@ -50,7 +50,7 @@ export const MODEL_POLICY: Record<string, ModelPolicy> = {
 		roles: ['writer', 'reviewer'],
 		supportsStructuredOutput: true
 	},
-	'Anthropic/Claude Sonnet 4.6': {
+	'anthropic/claude-sonnet-4.6': {
 		enabled: true,
 		roles: ['writer', 'reviewer'],
 		supportsStructuredOutput: true
