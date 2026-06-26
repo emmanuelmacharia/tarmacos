@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Monetization Plan — Resume Tailor</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #f0f2f5;
+    --border: #e2e5ea;
+    --text: #1c2230;
+    --muted: #5d6677;
+    --faint: #8a93a6;
+    --accent: #4f46e5;
+    --accent-soft: #eef0fe;
+    --green: #1f9d6b;
+    --green-soft: #e6f6ef;
+    --red: #d9534f;
+    --red-soft: #fceeee;
+    --amber: #c98a00;
+    --amber-soft: #fdf4e0;
+    --shadow: 0 1px 2px rgba(20,25,40,.06), 0 4px 16px rgba(20,25,40,.05);
+    --radius: 12px;
+    --maxw: 880px;
+    --nav-w: 280px;
+  }
+  [data-theme="dark"] {
+    --bg: #0e1117;
+    --surface: #161b24;
+    --surface-2: #1d2430;
+    --border: #2a3240;
+    --text: #e6e9ef;
+    --muted: #9aa4b5;
+    --faint: #6b7689;
+    --accent: #8b86ff;
+    --accent-soft: #20203a;
+    --green: #4cc796;
+    --green-soft: #14271f;
+    --red: #f08784;
+    --red-soft: #2a1818;
+    --amber: #e0ab44;
+    --amber-soft: #2a2310;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 18px;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar h1 { font-size: 15px; margin: 0; font-weight: 650; letter-spacing: -.2px; white-space: nowrap; }
+  .topbar .dot { color: var(--accent); }
+  .spacer { flex: 1; }
+  .savechip {
+    font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border);
+    transition: color .2s;
+  }
+  .savechip .led { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); transition: background .2s; }
+  .savechip.saved .led { background: var(--green); }
+  .savechip.dirty .led { background: var(--amber); }
+  .btn {
+    font: inherit; font-size: 13px; cursor: pointer;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 12px; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.primary:hover { filter: brightness(1.08); color:#fff; }
+  .icon-btn { padding: 6px 9px; }
+
+  /* ---------- Layout ---------- */
+  .shell { display: flex; align-items: flex-start; max-width: 1240px; margin: 0 auto; }
+  nav.toc {
+    position: sticky; top: 53px;
+    width: var(--nav-w); flex: 0 0 var(--nav-w);
+    max-height: calc(100vh - 53px); overflow-y: auto;
+    padding: 18px 10px 40px 18px;
+  }
+  nav.toc .progress-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 14px; box-shadow: var(--shadow);
+  }
+  .progress-card .pct { font-size: 22px; font-weight: 700; letter-spacing: -.5px; }
+  .progress-card .lbl { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .bar { height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .4s; }
+  nav.toc a {
+    display: block; text-decoration: none; color: var(--muted);
+    font-size: 13px; padding: 5px 10px; border-radius: 7px; margin: 1px 0;
+    border-left: 2px solid transparent; transition: all .12s;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  nav.toc a:hover { background: var(--surface-2); color: var(--text); }
+  nav.toc a.active { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+  nav.toc a .num { color: var(--faint); font-variant-numeric: tabular-nums; margin-right: 7px; font-size: 12px; }
+  nav.toc a.done::after { content: "●"; color: var(--green); font-size: 9px; float: right; margin-top: 4px; }
+
+  main { flex: 1; min-width: 0; max-width: var(--maxw); padding: 22px 26px 120px; margin: 0 auto; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    background: linear-gradient(135deg, var(--accent-soft), var(--surface));
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px 26px; margin-bottom: 12px; box-shadow: var(--shadow);
+  }
+  .hero h2 { margin: 0 0 6px; font-size: 24px; letter-spacing: -.5px; }
+  .hero p { margin: 0; color: var(--muted); font-size: 14px; max-width: 60ch; }
+  .hero .note { margin-top: 14px; font-size: 12.5px; padding: 9px 13px; background: var(--amber-soft);
+    border: 1px solid color-mix(in srgb, var(--amber) 35%, var(--border)); border-radius: 8px; color: var(--text); }
+
+  /* ---------- Sections ---------- */
+  section { scroll-margin-top: 64px; margin: 28px 0; }
+  section > h3 {
+    font-size: 18px; letter-spacing: -.3px; margin: 0 0 4px;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  section > h3 .secnum {
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 6px; padding: 2px 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  section > .lead { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 14px;
+  }
+  .card h4 { margin: 0 0 8px; font-size: 14.5px; }
+  .card h4:not(:first-child) { margin-top: 16px; }
+  p { margin: 8px 0; }
+  ul { margin: 8px 0; padding-left: 20px; }
+  li { margin: 3px 0; }
+  code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; font-size: 13px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
+  /* ---------- Tables ---------- */
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 6px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr:hover { background: var(--surface-2); }
+  table.compact td, table.compact th { padding: 6px 8px; }
+
+  /* ---------- Callouts ---------- */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 720px){ .grid2 { grid-template-columns: 1fr; } }
+  .callout { border-radius: 10px; padding: 12px 14px; font-size: 13.5px; border: 1px solid var(--border); }
+  .callout h5 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+  .callout ul { margin: 4px 0 0; }
+  .callout.pro { background: var(--green-soft); border-color: color-mix(in srgb, var(--green) 30%, var(--border)); }
+  .callout.pro h5 { color: var(--green); }
+  .callout.con { background: var(--red-soft); border-color: color-mix(in srgb, var(--red) 30%, var(--border)); }
+  .callout.con h5 { color: var(--red); }
+  .callout.risk { background: var(--amber-soft); border-color: color-mix(in srgb, var(--amber) 35%, var(--border)); }
+  .callout.risk h5 { color: var(--amber); }
+  .callout.rec { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
+  .callout.rec h5 { color: var(--accent); }
+
+  .pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 99px;
+    background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+  .pill.good { background: var(--green-soft); color: var(--green); border-color: transparent; }
+  .pill.mid { background: var(--amber-soft); color: var(--amber); border-color: transparent; }
+  .pill.low { background: var(--red-soft); color: var(--red); border-color: transparent; }
+
+  blockquote { margin: 10px 0; padding: 8px 14px; border-left: 3px solid var(--accent);
+    background: var(--surface-2); border-radius: 0 8px 8px 0; color: var(--text); font-size: 13.5px; }
+
+  /* ---------- Annotation block ---------- */
+  .annotate {
+    margin-top: 12px; border: 1px dashed color-mix(in srgb, var(--accent) 40%, var(--border));
+    border-radius: 10px; padding: 12px 14px; background: color-mix(in srgb, var(--accent-soft) 50%, var(--surface));
+  }
+  .annotate .alabel { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px;
+    color: var(--accent); display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+  .annotate textarea {
+    width: 100%; min-height: 64px; resize: vertical; font: inherit; font-size: 13.5px;
+    background: var(--surface); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 11px; line-height: 1.5;
+  }
+  .annotate textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+  /* ---------- Exploration block ---------- */
+  .explore {
+    margin: 14px 0; border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+    border-left: 4px solid var(--accent); border-radius: 10px; overflow: hidden;
+    background: var(--surface);
+  }
+  .explore > .ehead {
+    display: flex; align-items: center; gap: 9px; padding: 10px 16px;
+    background: color-mix(in srgb, var(--accent-soft) 60%, var(--surface));
+    border-bottom: 1px solid var(--border);
+  }
+  .explore .ehead .etag { font-size: 10.5px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase;
+    color: #fff; background: var(--accent); padding: 2px 8px; border-radius: 5px; }
+  .explore .ehead h4 { margin: 0; font-size: 14.5px; }
+  .explore > .ebody { padding: 14px 16px; }
+  .explore > .ebody > p:first-child { margin-top: 0; }
+  .opt-row { display: grid; grid-template-columns: auto 1fr; gap: 10px 12px; margin: 10px 0; align-items: start; }
+  .opt-row .otag { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 6px; white-space: nowrap;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); text-align: center; }
+  .opt-row .otag.a { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+  .opt-row .odesc { font-size: 13px; }
+  .opt-row .odesc strong { font-weight: 650; }
+  .leans { font-size: 12.5px; margin-top: 10px; padding: 9px 12px; border-radius: 8px;
+    background: var(--green-soft); border: 1px solid color-mix(in srgb, var(--green) 28%, var(--border)); }
+  .leans b { color: var(--green); }
+  .annotate.decide { border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+    background: color-mix(in srgb, var(--accent-soft) 70%, var(--surface)); margin-top: 12px; }
+
+  /* segmented status control */
+  .seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 2px; gap: 2px; }
+  .seg label { cursor: pointer; font-size: 12px; padding: 4px 11px; border-radius: 6px; color: var(--muted);
+    transition: all .12s; user-select: none; }
+  .seg input { display: none; }
+  .seg input:checked + span { display: inline; }
+  .seg label:has(input:checked) { background: var(--surface); color: var(--text); box-shadow: var(--shadow); font-weight: 600; }
+  .seg label.s-decided:has(input:checked) { color: var(--green); }
+  .seg label.s-leaning:has(input:checked) { color: var(--amber); }
+  .seg label.s-open:has(input:checked) { color: var(--faint); }
+
+  /* ---------- Decisions ---------- */
+  .decision { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 10px; box-shadow: var(--shadow); }
+  .decision .q { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .decision .qhint { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+  .decision .drow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .decision textarea { width: 100%; min-height: 44px; resize: vertical; font: inherit; font-size: 13px;
+    background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; margin-top: 9px; }
+  .decision textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .dcat { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--faint);
+    margin: 20px 0 8px; font-weight: 700; }
+
+  /* ---------- Modal ---------- */
+  .modal-bg { position: fixed; inset: 0; background: rgba(8,10,16,.55); z-index: 100;
+    display: none; align-items: center; justify-content: center; padding: 24px; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    width: min(760px, 100%); max-height: 86vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+  .modal header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .modal header h3 { margin: 0; font-size: 16px; }
+  .modal .body { padding: 16px 20px; overflow-y: auto; }
+  .modal pre { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; font-size: 12.5px; line-height: 1.55; overflow-x: auto; white-space: pre-wrap; word-break: break-word;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  .modal footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+  .empty { color: var(--faint); font-style: italic; }
+
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--bg); font-size: 13px; padding: 9px 16px; border-radius: 99px;
+    opacity: 0; transition: all .25s; z-index: 200; box-shadow: var(--shadow); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .mobnav { display: none; }
+  @media (max-width: 960px) {
+    nav.toc { display: none; }
+    .mobnav { display: inline-flex; }
+  }
+  details.opts > summary { cursor: pointer; font-weight: 600; font-size: 14.5px; padding: 4px 0; list-style: none; display:flex; align-items:center; gap:8px; }
+  details.opts > summary::-webkit-details-marker { display: none; }
+  details.opts > summary::before { content: "▸"; color: var(--accent); transition: transform .15s; }
+  details.opts[open] > summary::before { transform: rotate(90deg); }
+  details.opts { border-top: 1px solid var(--border); padding: 12px 0; }
+  .matrix-good { color: var(--green); font-weight: 600; }
+  .matrix-mid { color: var(--amber); font-weight: 600; }
+  .matrix-low { color: var(--red); font-weight: 600; }
+
+  /* ---------- Decision ledger ---------- */
+  .ledger-stats { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 18px; }
+  .lstat { flex: 1 1 120px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+  .lstat .n { font-size: 26px; font-weight: 800; line-height: 1; }
+  .lstat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--faint); margin-top: 5px; font-weight: 700; }
+  .lstat.decided { border-color: color-mix(in srgb, var(--green) 35%, var(--border)); } .lstat.decided .n { color: var(--green); }
+  .lstat.leaning { border-color: color-mix(in srgb, var(--amber) 35%, var(--border)); } .lstat.leaning .n { color: var(--amber); }
+  .lstat.open .n { color: var(--faint); }
+  .lstat.resolved { border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); } .lstat.resolved .n { color: var(--accent); }
+  .ledger-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 14px; }
+  .ledger-col { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+  .ledger-col > h4 { margin: 0 0 10px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .6px; display: flex; align-items: center; gap: 7px; }
+  .ledger-col .cdot { width: 9px; height: 9px; border-radius: 99px; display: inline-block; }
+  .ledger-col .cnt { margin-left: auto; color: var(--faint); font-weight: 700; }
+  .col-decided .cdot { background: var(--green); } .col-leaning .cdot { background: var(--amber); }
+  .col-open .cdot { background: var(--faint); } .col-resolved .cdot { background: var(--accent); }
+  .ledger-col.col-decided { border-color: color-mix(in srgb, var(--green) 28%, var(--border)); }
+  .ledger-col.col-resolved { border-color: color-mix(in srgb, var(--accent) 28%, var(--border)); }
+  .lcard { background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px; margin-bottom: 8px; }
+  .lcard:last-child { margin-bottom: 0; }
+  .lcard .lcat { font-size: 9.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--faint); font-weight: 700; }
+  .lcard .lq { font-size: 12.5px; font-weight: 600; margin-top: 1px; }
+  .lcard .la { font-size: 12px; color: var(--muted); margin-top: 4px; white-space: pre-wrap; }
+  .lcol-empty { font-size: 12px; color: var(--faint); font-style: italic; }
+
+  /* ---------- Billing blueprint ---------- */
+  .bp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 14px; margin-top: 10px; }
+  .bp-col { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; background: var(--surface); }
+  .bp-col.locked { border-color: color-mix(in srgb, var(--green) 30%, var(--border)); background: color-mix(in srgb, var(--green-soft) 35%, var(--surface)); }
+  .bp-col.pending { border-color: color-mix(in srgb, var(--amber) 35%, var(--border)); background: color-mix(in srgb, var(--amber-soft) 35%, var(--surface)); }
+  .bp-col.next { border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface)); }
+  .bp-col h4 { margin: 0; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .bp-col.locked h4 { color: var(--green); } .bp-col.pending h4 { color: var(--amber); } .bp-col.next h4 { color: var(--accent); }
+  .bp-col .bp-sub { font-size: 11.5px; color: var(--muted); margin: 4px 0 10px; }
+  .bp-list { margin: 0; padding: 0; list-style: none; }
+  .bp-list li { font-size: 12.8px; padding: 8px 0; border-top: 1px dashed var(--border); }
+  .bp-list li:first-child { border-top: none; padding-top: 0; }
+  .bp-list .bp-k { font-weight: 700; }
+  .bp-secnote { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .bp-flow { counter-reset: bpstep; margin: 12px 0 0; padding: 0; list-style: none; }
+  .bp-flow li { counter-increment: bpstep; position: relative; padding: 7px 0 7px 30px; font-size: 13px; border-top: 1px solid var(--border); }
+  .bp-flow li:first-child { border-top: none; }
+  .bp-flow li::before { content: counter(bpstep); position: absolute; left: 0; top: 6px; width: 20px; height: 20px; border-radius: 99px;
+    background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .bp-dep { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .4px; color: var(--amber);
+    background: var(--amber-soft); border-radius: 5px; padding: 1px 7px; margin-left: 6px; vertical-align: middle; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1><span class="dot">◆</span> Monetization Plan</h1>
+  <span class="savechip" id="savechip"><span class="led"></span><span id="savetext">All changes saved</span></span>
+  <span class="spacer"></span>
+  <button class="btn mobnav icon-btn" id="mobMenu" title="Sections">☰</button>
+  <button class="btn icon-btn" id="themeBtn" title="Toggle theme">🌙</button>
+  <button class="btn" id="summaryBtn">📋 Review notes</button>
+  <button class="btn" id="exportBtn" title="Download notes as JSON">⬇ Export</button>
+  <button class="btn" id="importBtn" title="Load notes from JSON">⬆ Import</button>
+  <input type="file" id="importFile" accept="application/json" style="display:none" />
+</div>
+
+<div class="shell">
+  <nav class="toc" id="toc">
+    <div class="progress-card">
+      <div class="lbl">Notes completed</div>
+      <div class="pct"><span id="progPct">0</span>%</div>
+      <div class="bar"><i id="progBar"></i></div>
+      <div class="lbl" style="margin-top:8px"><span id="progCount">0</span> of <span id="progTotal">0</span> fields</div>
+    </div>
+    <!-- nav links injected -->
+  </nav>
+
+  <main id="main">
+    <div class="hero">
+      <h2>AI Resume Tailoring — Billing &amp; Monetization</h2>
+      <p>A working document to pressure-test the pricing model: two core tiers, credit-based limits, model gating, overage top-ups, and abuse controls — learning from T3 Chat-style billing.</p>
+      <div class="note">⚠️ All dollar amounts here are <strong>illustrative placeholders</strong> for reasoning only. Final pricing depends on real usage costs, target margins, willingness to pay, and competitive positioning. Your notes save automatically to this browser. Use <strong>Review notes</strong> to copy everything back for the next iteration.</div>
+      <div class="note" style="background:var(--accent-soft);border-color:color-mix(in srgb, var(--accent) 35%, var(--border))">🟦 <strong>Seeded with your answers through round 2.</strong> Your replies to the <strong>“Deeper exploration”</strong> blocks (blue <span style="font-size:9.5px;font-weight:800;letter-spacing:.8px;color:#fff;background:var(--accent);padding:1px 7px;border-radius:5px">EXPLORE</span> tag) are now baked in. Two new sections summarise where things stand: the <strong>★ Decision ledger</strong> (a live board of what's resolved / decided / leaning / open) and the <strong>★ Billing blueprint</strong> (the synthesised plan that drives the next stage). The one thing left deliberately open is <strong>“how many credits / how much”</strong> — it depends on the pending LLM-cost PR, so we settle it last.</div>
+    </div>
+
+    <!-- ============ SECTIONS ============ -->
+
+    <section id="s-overview" data-nav="Overview &amp; goal">
+      <h3><span class="secnum">01</span> Product context &amp; goal</h3>
+      <p class="lead">What the product does and what the billing model must achieve.</p>
+      <div class="card">
+        <h4>Core workflow</h4>
+        <ul>
+          <li>User pastes a job description and their resume.</li>
+          <li>A workflow runs a <strong>reviewer → writer → reviewer</strong> loop until the reviewer is satisfied.</li>
+          <li>User can give feedback; the writer revises. User can tag the reviewer for a final pass.</li>
+          <li>When satisfied: pick a template, preview, download as <strong>PDF or Word</strong>.</li>
+        </ul>
+        <h4>The billing model must</h4>
+        <div class="grid2">
+          <div class="callout rec"><h5>Goals</h5><ul>
+            <li>Support a lower (~$6) and higher (~$10) tier.</li>
+            <li>Control inference cost per user.</li>
+            <li>Let Pro users reach stronger models.</li>
+            <li>Allow overage / top-up credits.</li>
+          </ul></div>
+          <div class="callout risk"><h5>Constraints</h5><ul>
+            <li>Expensive users must not make the product loss-making.</li>
+            <li>Billing must not feel restrictive / hurt engagement.</li>
+            <li>Predictable resets; simple user-facing plans.</li>
+          </ul></div>
+        </div>
+      </div>
+      <div class="annotate" data-note="overview">
+        <div class="alabel">✎ Your take — does this capture the goal? Anything missing?</div>
+        <textarea data-field placeholder="e.g. priorities, non-negotiables, what 'restrictive' means to you…"></textarea>
+      </div>
+    </section>
+
+    <section id="s-margin" data-nav="The margin problem">
+      <h3><span class="secnum">02</span> The margin problem</h3>
+      <p class="lead">Your original inference ceilings leave very little room.</p>
+      <div class="card">
+        <table>
+          <thead><tr><th>Tier</th><th class="num">Price</th><th class="num">Inference ceiling</th><th class="num">Inference as % of revenue</th></tr></thead>
+          <tbody>
+            <tr><td>Basic</td><td class="num">$6</td><td class="num">$4.00</td><td class="num"><span class="pill low">66.7%</span></td></tr>
+            <tr><td>Pro</td><td class="num">$10</td><td class="num">$7.50</td><td class="num"><span class="pill low">75.0%</span></td></tr>
+          </tbody>
+        </table>
+        <p>Those ceilings ignore everything else that eats margin:</p>
+        <p style="font-size:13px;color:var(--muted)">payment fees · hosting · document rendering · storage · failed generations · retries · refunds · support · taxes · OpenRouter price changes · abuse</p>
+        <div class="callout risk"><h5>Implication</h5>If inference alone is 66–75% of revenue, real net margin can easily go negative once the costs above are added. The ceilings likely need to come down to roughly <strong>$2.5–3 (Basic)</strong> and <strong>$5–5.5 (Pro)</strong> to be safe.</div>
+      </div>
+      <div class="annotate" data-note="margin">
+        <div class="alabel">✎ Your take — what inference ceiling feels acceptable per tier?</div>
+        <textarea data-field placeholder="e.g. 'I'm fine dropping Basic to $3 inference, but want Pro to feel generous at $6…'"></textarea>
+      </div>
+    </section>
+
+    <section id="s-whynotcount" data-nav="Why not resume counts">
+      <h3><span class="secnum">03</span> Why resume-count alone fails</h3>
+      <p class="lead">"10 resumes/month" is easy to grasp but not cost-safe once models differ.</p>
+      <div class="card">
+        <table>
+          <thead><tr><th>User</th><th>Model</th><th class="num">Resumes</th><th>Cost</th></tr></thead>
+          <tbody>
+            <tr><td>User A</td><td><code>gpt-oss</code> (cheap)</td><td class="num">3</td><td><span class="pill good">Low</span></td></tr>
+            <tr><td>User B</td><td><code>gpt-5.5 pro</code> (expensive)</td><td class="num">3</td><td><span class="pill low">High</span></td></tr>
+          </tbody>
+        </table>
+        <p>Same count, very different cost. <strong>Pure resume limits are unsafe whenever users can choose models.</strong> They only work if model choice is fixed and workflow cost is consistent.</p>
+      </div>
+      <div class="annotate" data-note="whynotcount">
+        <div class="alabel">✎ Your take — do you still want users to *see* a resume count anywhere?</div>
+        <textarea data-field placeholder="e.g. 'show an estimated resumes/month figure for marketing, bill on credits underneath'…"></textarea>
+      </div>
+    </section>
+
+    <section id="s-credits" data-nav="Recommended: credits">
+      <h3><span class="secnum">04</span> Recommended model: credits</h3>
+      <p class="lead">User-facing credits + internal cost-based debiting + model gating.</p>
+      <div class="card">
+        <p>Don't expose raw tokens. Expose a simple abstraction — recommended name: <strong>AI credits</strong>. Credits absorb differences in model, input/output length, loop count, revisions, and future features (cover letters, LinkedIn, interview prep, tracking).</p>
+        <h4>Example debit table</h4>
+        <table class="compact">
+          <thead><tr><th>Action</th><th class="num">Cheap model</th><th class="num">Balanced</th><th class="num">Premium</th></tr></thead>
+          <tbody>
+            <tr><td>Initial tailoring</td><td class="num">50</td><td class="num">120</td><td class="num">350</td></tr>
+            <tr><td>Feedback revision</td><td class="num">15</td><td class="num">40</td><td class="num">120</td></tr>
+            <tr><td>Reviewer pass</td><td class="num">10</td><td class="num">25</td><td class="num">80</td></tr>
+          </tbody>
+        </table>
+        <div class="grid2">
+          <div class="callout pro"><h5>Why credits win</h5><ul>
+            <li>Cheap models stretch further; expensive ones burn faster.</li>
+            <li>Natural fit for top-ups &amp; future features.</li>
+            <li>Protects margin while giving Pro flexibility.</li>
+          </ul></div>
+          <div class="callout con"><h5>The cost</h5><ul>
+            <li>More complex than a flat plan.</li>
+            <li>Users may not "get" credits without good UX.</li>
+            <li>Needs estimates, a ledger, accurate cost tracking.</li>
+          </ul></div>
+        </div>
+      </div>
+      <div class="annotate" data-note="credits">
+        <div class="alabel">✎ Your take — credits vs. simpler abstraction? Naming?</div>
+        <textarea data-field placeholder="e.g. 'AI credits' / 'tailoring credits' / 'I worry credits feel like a meter — let's hide them mostly'…"></textarea>
+      </div>
+
+      <div class="explore">
+        <div class="ehead"><span class="etag">Explore</span><h4>Making credits feel like value, not a meter</h4></div>
+        <div class="ebody">
+          <p>You flagged two things: credits feel like a meter, and the model→credit mapping should be <em>less punitive</em>. Three levers, drawn partly from how Lovable presents usage (small fractional numbers, cost shown subtly on hover, soft estimates):</p>
+          <div class="opt-row"><span class="otag">1</span><div class="odesc"><strong>Anchor on outcomes, not raw numbers.</strong> Lead the UI with "<em>~12 tailorings left this month</em>" (derived from average run cost) and keep the raw credit number secondary. Users think in resumes; credits stay the accounting layer.</div></div>
+          <div class="opt-row"><span class="otag">2</span><div class="odesc"><strong>Soften the model multiplier.</strong> Don't pass the full provider price delta to the user. A premium model that costs 6× at the API might be shown as only ~2–3× in credits — you absorb part of the spread so picking a better model doesn't feel like a punishment. Margin is protected by gating + caps, not by scary per-run pricing.</div></div>
+          <div class="opt-row"><span class="otag">3</span><div class="odesc"><strong>Show cost calmly, after the fact.</strong> No live countdown during a run. Show "this run used ~X credits" once it completes (hover for the breakdown), like Lovable's per-message cost on hover. A countdown timer is what creates anxiety.</div></div>
+          <div class="leans"><b>Lean:</b> "Tailoring credits" as the unit, but the <b>primary</b> surface is an estimated "runs remaining" figure. Absorb part of the model premium so Smart/Premium feels like a small step up, not a penalty.</div>
+          <div class="annotate decide" data-note="explore_credit_comm">
+            <div class="alabel">↳ Decide — how do we present credits in the UI?</div>
+            <textarea data-field placeholder="e.g. 'lead with runs-remaining, raw credits on hover' / 'how much of the model premium should we absorb?'"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="s-tiers" data-nav="Tier structure">
+      <h3><span class="secnum">05</span> Tier structure</h3>
+      <p class="lead">Two core tiers now; an optional power tier later.</p>
+      <div class="grid2">
+        <div class="card">
+          <h4>Basic — $6/mo <span class="pill">occasional</span></h4>
+          <p style="font-size:13px;color:var(--muted)">~600 AI credits · standard tailoring · default model only · PDF/Word · templates · monthly reset.</p>
+          <strong style="font-size:12.5px">Excludes:</strong>
+          <ul style="font-size:13px"><li>Model selection</li><li>Advanced mode</li><li>Version history</li><li>Premium / deep review</li></ul>
+          <strong style="font-size:12.5px">Caps:</strong>
+          <ul style="font-size:13px"><li>2 reviewer/writer loops</li><li>2 feedback revisions</li><li>1 final reviewer pass</li><li>Lower input limits · credits expire monthly</li></ul>
+        </div>
+        <div class="card">
+          <h4>Pro — $10/mo <span class="pill good">active</span></h4>
+          <p style="font-size:13px;color:var(--muted)">~1,100–1,500 credits · advanced mode · version history · approved model selection · higher input limits · monthly reset.</p>
+          <strong style="font-size:12.5px">Caps:</strong>
+          <ul style="font-size:13px"><li>4 reviewer/writer loops</li><li>5 feedback revisions</li><li>2 final reviewer passes</li><li>Premium models cost more / may need top-ups · per-run caps</li></ul>
+        </div>
+      </div>
+      <details class="opts">
+        <summary>Optional future power tier — $25–29/mo</summary>
+        <p style="font-size:13px">3,000+ credits · higher premium allowance · bulk tailoring · cover letters · larger limits · more templates · application tracker · priority generation. Useful if $10 can't safely support heavy users.</p>
+      </details>
+      <div class="annotate" data-note="tiers">
+        <div class="alabel">✎ Your take — feature split right? What MUST live behind Pro?</div>
+        <textarea data-field placeholder="e.g. 'version history is a strong Pro hook' / 'advanced mode should be the headline Pro feature'…"></textarea>
+      </div>
+    </section>
+
+    <section id="s-creditamounts" data-nav="Credit amounts &amp; pricing">
+      <h3><span class="secnum">06</span> Credit amounts &amp; pricing logic</h3>
+      <p class="lead">Mental model: <strong>1 credit ≈ $0.01 of user-facing value.</strong></p>
+      <div class="card">
+        <div class="grid2">
+          <div>
+            <h4>Option A — conservative</h4>
+            <table class="compact"><thead><tr><th>Plan</th><th class="num">Credits</th><th class="num">AI budget</th></tr></thead>
+            <tbody><tr><td>Basic $6</td><td class="num">600</td><td class="num">$2.5–3.0</td></tr><tr><td>Pro $10</td><td class="num">1,100</td><td class="num">$5.0–5.5</td></tr></tbody></table>
+          </div>
+          <div>
+            <h4>Option B — generous</h4>
+            <table class="compact"><thead><tr><th>Plan</th><th class="num">Credits</th><th class="num">AI budget</th></tr></thead>
+            <tbody><tr><td>Basic $6</td><td class="num">600</td><td class="num">$3.0–4.0</td></tr><tr><td>Pro $10</td><td class="num">1,500</td><td class="num">$6.0–7.5</td></tr></tbody></table>
+          </div>
+        </div>
+        <div class="callout rec" style="margin-top:12px"><h5>Recommendation</h5>Start conservative; raise limits once real usage shows margins are safe.</div>
+        <h4>Internal debit formula</h4>
+        <blockquote><code>credits = ceil( provider_cost × markup ÷ credit_usd_value )</code></blockquote>
+        <p style="font-size:13px">Example: provider cost $0.40 × 2 markup ÷ $0.01 = <strong>80 credits</strong>. User spends $0.80 of value on a $0.40 cost → $0.40 gross before other costs.</p>
+      </div>
+      <div class="annotate" data-note="creditamounts">
+        <div class="alabel">✎ Your take — start conservative or generous? Markup multiplier?</div>
+        <textarea data-field placeholder="e.g. 'Option A but Pro at 1,300' / 'markup 1.8x to stay competitive'…"></textarea>
+      </div>
+
+      <div class="explore">
+        <div class="ehead"><span class="etag">Explore</span><h4>Should a subscription credit cost the same as an overage credit?</h4></div>
+        <div class="ebody">
+          <p>Your instinct: no — we want subscriptions to be the better deal, not credit-buying. Two distinct levers do that, and they're not mutually exclusive:</p>
+          <div class="opt-row"><span class="otag a">Lever A</span><div class="odesc"><strong>Access gating (who can buy).</strong> Standalone credits are <em>not</em> sold to non-subscribers at all. Overage is a subscriber-only convenience. The subscription is the membership; you can't buy your way in with credits alone.</div></div>
+          <div class="opt-row"><span class="otag a">Lever B</span><div class="odesc"><strong>Price gating (what a credit costs).</strong> A credit included in a subscription is cheaper per credit than a credit bought as overage. The subscription's bundled credits are the headline value; overage carries a modest premium.</div></div>
+          <p style="margin-top:14px">Three combinations to choose between:</p>
+          <div class="opt-row"><span class="otag">Model 1</span><div class="odesc"><strong>Gating only, parity pricing.</strong> 1 sub credit = 1 overage credit in value, but overage is subscriber-only. Simple; subscription wins purely because non-subscribers get nothing. <em>(This is the "lock buying to subscribers" idea from your note.)</em></div></div>
+          <div class="opt-row"><span class="otag">Model 2</span><div class="odesc"><strong>Pricing only.</strong> Anyone can buy credits, but subscription credits are meaningfully cheaper per credit. Risk: lets heavy users avoid subscribing if overage is close enough in price.</div></div>
+          <div class="opt-row"><span class="otag">Model 3</span><div class="odesc"><strong>Both (gating + premium).</strong> Overage is subscriber-only <em>and</em> priced at a premium per credit vs. the subscription's bundled rate. Strongest pull toward subscribing.</div></div>
+          <div class="leans"><b>Lean:</b> Model 3. Overage stays subscriber-only (matches your abuse note) and carries a small premium, so the subscription is always the best value-per-credit. The exact premium % is a "how much" question → settle it <b>after</b> cost data lands.</div>
+          <div class="annotate decide" data-note="explore_markup">
+            <div class="alabel">↳ Decide — which model (1 / 2 / 3)? Structure only; % later.</div>
+            <textarea data-field placeholder="e.g. 'Model 3 — subscriber-only overage at a ~20% premium per credit, exact % TBD on cost data'"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="s-overage" data-nav="Overage &amp; top-ups">
+      <h3><span class="secnum">07</span> Overage &amp; top-ups</h3>
+      <p class="lead">Prepaid packs, not raw pay-as-you-go (at first).</p>
+      <div class="card">
+        <table><thead><tr><th>Pack</th><th class="num">Price</th><th class="num">Credits</th><th class="num">AI allowance</th></tr></thead>
+        <tbody>
+          <tr><td>Small</td><td class="num">$5</td><td class="num">500</td><td class="num">~$2.50</td></tr>
+          <tr><td>Medium</td><td class="num">$10</td><td class="num">1,100</td><td class="num">~$5.50</td></tr>
+          <tr><td>Large</td><td class="num">$20</td><td class="num">2,400</td><td class="num">~$12.00</td></tr>
+        </tbody></table>
+        <ul style="font-size:13px">
+          <li>Call it "extra AI credits", never "inference cost".</li>
+          <li>Let users buy credits <em>without</em> upgrading.</li>
+          <li>Still gate the most expensive models even with credits.</li>
+          <li>Larger packs offer slightly better value.</li>
+        </ul>
+      </div>
+      <div class="annotate" data-note="overage">
+        <div class="alabel">✎ Your take — should Basic users be allowed to buy top-ups?</div>
+        <textarea data-field placeholder="e.g. 'yes — keeps them on Basic longer' vs 'no — use it to push upgrades'…"></textarea>
+      </div>
+
+      <div class="explore">
+        <div class="ehead"><span class="etag">Explore</span><h4>Top-up caps, rollover, and the cancellation edge case</h4></div>
+        <div class="ebody">
+          <p>You set three rules: cap top-ups per tier, roll unused overage <em>forward as overage</em> (never fold into the subscription), and only allow overage while subscribed. Mechanics to nail down:</p>
+          <h4 style="margin-top:0">Top-up caps per tier</h4>
+          <table class="compact"><thead><tr><th>Tier</th><th>Top-up ceiling</th><th>Rationale</th></tr></thead>
+          <tbody>
+            <tr><td>Basic</td><td>≤ 2× monthly allowance</td><td>Heavy Basic users feel the ceiling → natural nudge to Pro.</td></tr>
+            <tr><td>Pro</td><td>≤ 3–4× monthly allowance</td><td>More headroom for genuine power users without uncapped exposure.</td></tr>
+          </tbody></table>
+          <p style="font-size:13px;color:var(--muted)">"Ceiling" = max <em>outstanding</em> overage balance you can hold at once, not a per-purchase limit — so they can't stockpile $50 and bail.</p>
+          <h4>Rollover</h4>
+          <p>Unused overage moves into next cycle as a <strong>separate overage pool</strong> (6-month expiry from purchase, per §8). It never merges with subscription credits. Two distinct buckets in the ledger: <code>subscriptionCredits</code> (expire end-of-cycle) and <code>overageCredits</code> (expire +6mo). Clean accounting, matches your "don't fold it in" rule.</p>
+          <h4>The cancellation edge case ⚠️</h4>
+          <p>Your rule: cancel → overage inaccessible. One caution — <strong>permanently forfeiting already-paid-for credits on cancel can feel hostile and may raise consumer-law questions</strong> in some jurisdictions. A softer version keeps the abuse protection without the bad taste:</p>
+          <div class="opt-row"><span class="otag">A</span><div class="odesc"><strong>Forfeit on cancel.</strong> Strongest anti-abuse, but riskiest on goodwill / refunds.</div></div>
+          <div class="opt-row"><span class="otag">B</span><div class="odesc"><strong>Freeze on cancel, restore on resubscribe.</strong> Overage is locked while there's no active subscription, but comes back (until its 6-month expiry) if they return. Same practical effect — you can't use overage without paying for a subscription — but nothing is "stolen".</div></div>
+          <div class="leans"><b>Lean:</b> Option B (freeze, not forfeit). Achieves your anti-abuse goal — overage is useless without an active subscription — while avoiding the "you took my money" reaction. Overage still hard-expires at 6 months regardless.</div>
+          <div class="annotate decide" data-note="explore_overage_cancel">
+            <div class="alabel">↳ Decide — top-up ceilings + forfeit vs. freeze on cancel?</div>
+            <textarea data-field placeholder="e.g. 'Basic 2x / Pro 3x; freeze-on-cancel (Option B), still expires at 6mo'"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="s-rollover" data-nav="Monthly vs purchased">
+      <h3><span class="secnum">08</span> Monthly vs purchased credits</h3>
+      <div class="grid2">
+        <div class="card"><h4>Subscription credits</h4><ul style="font-size:13px">
+          <li>Reset every cycle, <strong>no rollover</strong>.</li>
+          <li>Used <strong>first</strong>, before purchased.</li>
+          <li>Prevents accumulated liability; keeps it simple.</li>
+        </ul></div>
+        <div class="card"><h4>Purchased credits</h4><ul style="font-size:13px">
+          <li><strong>Roll over</strong>; expire after 6–12 months.</li>
+          <li>Used <strong>after</strong> monthly credits.</li>
+          <li>May unlock premium models / extra passes.</li>
+        </ul></div>
+      </div>
+      <div class="annotate" data-note="rollover">
+        <div class="alabel">✎ Your take — expiry windows and rollover rules?</div>
+        <textarea data-field placeholder="e.g. 'purchased credits expire 12mo' / 'no rollover at all to keep accounting clean'…"></textarea>
+      </div>
+    </section>
+
+    <section id="s-modelaccess" data-nav="Model access &amp; gating">
+      <h3><span class="secnum">09</span> Model access &amp; gating</h3>
+      <p class="lead">Never offer unrestricted access to every OpenRouter model on $10.</p>
+      <div class="card">
+        <table class="compact"><thead><tr><th>Class</th><th>Your model mapping</th><th>Basic</th><th>Pro</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Economy</strong></td><td><code>gpt-oss</code>, <code>Haiku</code></td><td>✅</td><td>✅</td></tr>
+          <tr><td><strong>Standard</strong></td><td><code>Sonnet</code>, <code>Kimi K2.5</code>, large open-weight (<code>MiniMax</code>, <code>DeepSeek</code>)</td><td>✅</td><td>✅</td></tr>
+          <tr><td><strong>Smart</strong></td><td><code>gpt-5-mini</code> series, <code>Sonnet 4.6</code>, <code>Gemini 3 Flash</code>, frontier</td><td>❌</td><td>✅</td></tr>
+          <tr><td><strong>Premium</strong></td><td><code>Opus</code>, <code>gpt-5.4+</code>, other SOTA frontier</td><td>❌</td><td>✅</td></tr>
+          <tr><td><strong>Ultra</strong> <span class="pill low">blocked</span></td><td><code>Fable</code>, <code>gpt-5.5 pro</code> &amp; class</td><td>❌</td><td>❌</td></tr>
+        </tbody></table>
+        <p style="font-size:12.5px;color:var(--muted)">Decided: Ultra not served for now; no BYOK (infra not ready). Premium models on Pro cost more credits, show clear warnings, and carry per-run caps.</p>
+      </div>
+
+      <div class="explore">
+        <div class="ehead"><span class="etag">Explore</span><h4>Can overage unlock better models than your tier? (credit-pool selection)</h4></div>
+        <div class="ebody">
+          <p>This is the thread running through your §6, §7 and §11 notes: let a user choose <em>which pool</em> funds a run, so a Basic user could spend <strong>overage</strong> to reach a model their subscription tier normally can't. It's powerful but it can quietly cannibalise the Pro upsell. Three positions:</p>
+          <div class="opt-row"><span class="otag">A</span><div class="odesc"><strong>Strict tier gating.</strong> Model class depends only on subscription tier; overage just buys <em>more</em> of the same classes. Simplest, cleanest upsell — Basic stays Basic. But it contradicts your "purchased credits can access more premium models" instinct.</div></div>
+          <div class="opt-row"><span class="otag">B</span><div class="odesc"><strong>Overage unlocks one class up, capped.</strong> Basic's overage can reach <em>Smart</em> (not Premium); Pro's overage can reach the top non-blocked class. User picks the pool per run. Ultra stays blocked for everyone. Gives flexibility without collapsing the ladder.</div></div>
+          <div class="opt-row"><span class="otag">C</span><div class="odesc"><strong>Overage unlocks everything non-blocked.</strong> Any subscriber with overage reaches Premium. Maximum flexibility, but now "why pay for Pro?" — the answer must be the <em>other</em> Pro perks (history, templates, loop caps, included Smart/Premium allowance), not model access.</div></div>
+          <div class="leans"><b>Lean:</b> Option B. It honours your instinct (purchased credits reach further) without gutting Pro, because Pro still gets Smart/Premium <em>included</em> and one-class-higher reach via its own overage. Critically, your real Pro moat is the §5 list — <b>history, premium templates, higher loop/message limits</b> — so model access alone shouldn't have to carry the upsell.</div>
+          <div class="annotate decide" data-note="explore_pool">
+            <div class="alabel">↳ Decide — strict gating (A), one-class-up via overage (B), or full unlock (C)?</div>
+            <textarea data-field placeholder="e.g. 'B — Basic overage reaches Smart only, Ultra always blocked; per-run pool picker' / 'need Pro perks beyond models to be strong enough'"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="annotate" data-note="modelaccess">
+        <div class="alabel">✎ Your take — which OpenRouter models map to each class? Hard blocks?</div>
+        <textarea data-field placeholder="e.g. 'Economy = gpt-oss / haiku; Premium = sonnet; Ultra = opus/gpt-5.5 pro — block Ultra entirely for now'…"></textarea>
+      </div>
+    </section>
+
+    <section id="s-modelux" data-nav="Model UX (modes)">
+      <h3><span class="secnum">10</span> User-facing model UX</h3>
+      <p class="lead">Sell <strong>modes</strong>, not model names.</p>
+      <div class="card">
+        <table class="compact"><thead><tr><th>Mode</th><th>Description</th><th class="num">Credit usage</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Fast</strong></td><td>Quick tailoring, lower cost</td><td class="num"><span class="pill good">Low</span></td></tr>
+          <tr><td><strong>Balanced</strong></td><td>Best default for most resumes</td><td class="num"><span class="pill mid">Medium</span></td></tr>
+          <tr><td><strong>Deep Review</strong></td><td>More careful rewrite &amp; review</td><td class="num"><span class="pill low">High</span></td></tr>
+          <tr><td><strong>Premium</strong></td><td>Highest quality, most expensive</td><td class="num"><span class="pill low">Very high</span></td></tr>
+        </tbody></table>
+        <p style="font-size:13px"><strong>Decided:</strong> model <em>names</em> show in the run-orchestration view for anyone in <strong>Advanced mode</strong> — for all users, not gated by tier. The modes above are the simplified default surface; the underlying model identity isn't paywalled, it's just tucked behind Advanced mode.</p>
+      </div>
+      <div class="annotate" data-note="modelux">
+        <div class="alabel">✎ Your take — expose model names to advanced Pro, or modes only?</div>
+        <textarea data-field placeholder="e.g. 'modes only — naming models invites comparison shopping' / 'power users want the names'…"></textarea>
+      </div>
+    </section>
+
+    <section id="s-reservation" data-nav="Credit reservation">
+      <h3><span class="secnum">11</span> Credit estimation &amp; reservation</h3>
+      <p class="lead">The loop can run away — reserve before running.</p>
+      <div class="card">
+        <ol style="font-size:13.5px">
+          <li>User picks resume, JD, and mode.</li>
+          <li>System estimates a credit <strong>range</strong> and shows it.</li>
+          <li>User confirms; system <strong>reserves the max</strong>.</li>
+          <li>Workflow runs; actual provider cost computed.</li>
+          <li>Final credits deducted; <strong>unused reserved credits returned</strong>.</li>
+        </ol>
+        <blockquote>Before: "Estimated 80–160 credits. Max: 200." → After: "Final 137 credits. 63 returned."</blockquote>
+      </div>
+      <div class="annotate" data-note="reservation">
+        <div class="alabel">✎ Your take — is showing a live estimate good UX or anxiety-inducing?</div>
+        <textarea data-field placeholder="e.g. 'show a simple range, hide exact numbers until after' …"></textarea>
+      </div>
+
+      <div class="explore">
+        <div class="ehead"><span class="etag">Explore</span><h4>What Lovable does — and a less anxious reservation model</h4></div>
+        <div class="ebody">
+          <p><strong>How Lovable handles it (checked their docs):</strong> they do <em>not</em> show a scary "max" or reserve-and-refund. They charge the <strong>actual</strong> complexity-based cost <em>after</em> the action, in small fractional numbers (a style tweak ≈ 0.5, a bigger build ≈ 1.7), and you only see the per-message cost if you hover. Monthly credits expire ~2 months out; top-ups last 12 months; daily grants don't roll over. The calm comes from <em>small numbers, shown quietly, after the fact</em> — not from a pre-flight quote.</p>
+          <p>Two ways to run our looping workflow safely:</p>
+          <div class="opt-row"><span class="otag">A</span><div class="odesc"><strong>Visible reservation (original §13 plan).</strong> Show "Estimated 80–160, max 200", hold the max, refund the unused. Maximally transparent, but flashing a big "max 200" upfront is exactly the anxiety trigger you want to avoid.</div></div>
+          <div class="opt-row"><span class="otag">B</span><div class="odesc"><strong>Quiet reservation (Lovable-style).</strong> Internally still reserve the max so the loop can't overrun your balance — but the user only sees a soft "this usually costs ~X" and, after completion, "used X credits". You only <em>block</em> a run if the balance can't cover the <em>minimum</em> estimate (then offer Fast mode or overage). No countdown, no scary ceiling.</div></div>
+          <div class="leans"><b>Lean:</b> Option B. Keep the reservation as an internal guardrail (protects margin on the loop) but present it like Lovable — small estimate before, actual cost after, details on hover. Reserve the safety, hide the scaffolding.</div>
+          <div class="annotate decide" data-note="explore_reservation">
+            <div class="alabel">↳ Decide — quiet reservation (B), or show the full estimate/max (A)?</div>
+            <textarea data-field placeholder="e.g. 'B — internal reserve, soft estimate, actual-after, block only if min unaffordable'"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="s-loops" data-nav="Loop caps &amp; per-run">
+      <h3><span class="secnum">12</span> Loop controls &amp; per-run caps</h3>
+      <p class="lead">The reviewer/writer loop is valuable but the biggest cost risk.</p>
+      <div class="grid2">
+        <div class="card"><h4>Basic caps</h4><ul style="font-size:13px"><li>2 reviewer/writer loops</li><li>2 feedback revisions</li><li>1 final pass</li><li>Standard model · lower per-run cap</li></ul></div>
+        <div class="card"><h4>Pro caps</h4><ul style="font-size:13px"><li>4 reviewer/writer loops</li><li>5 feedback revisions</li><li>2 final passes</li><li>Better models · higher per-run cap</li></ul></div>
+      </div>
+      <div class="card">
+        <h4>Per-run credit caps</h4>
+        <table class="compact"><thead><tr><th>Mode</th><th class="num">Max loops</th><th class="num">Est. credits</th><th class="num">Hard max</th></tr></thead>
+        <tbody>
+          <tr><td>Fast</td><td class="num">1</td><td class="num">40–80</td><td class="num">100</td></tr>
+          <tr><td>Balanced</td><td class="num">2</td><td class="num">80–160</td><td class="num">220</td></tr>
+          <tr><td>Deep Review</td><td class="num">4</td><td class="num">180–350</td><td class="num">500</td></tr>
+          <tr><td>Premium</td><td class="num">4</td><td class="num">400–900</td><td class="num">1,200</td></tr>
+        </tbody></table>
+        <blockquote>At budget: "This resume reached its review budget. Accept this version, or spend more credits for another pass."</blockquote>
+      </div>
+      <div class="annotate" data-note="loops">
+        <div class="alabel">✎ Your take — do these caps match how your loop actually behaves?</div>
+        <textarea data-field placeholder="e.g. 'most resumes converge in 2 loops — 4 is plenty for Pro' / 'Premium hard max too high'…"></textarea>
+      </div>
+
+      <div class="explore">
+        <div class="ehead"><span class="etag">Explore</span><h4>Dynamic loop caps: base 3, modulated by tier · model · balance</h4></div>
+        <div class="ebody">
+          <p>You want a base of <strong>3 iterations for everyone</strong>, more for higher tiers, adjusted by the selected model and remaining credits. A simple formula keeps it predictable:</p>
+          <blockquote><code>effectiveCap = min( tierCap, modelCap, floor(creditsRemaining ÷ perLoopCost) )</code></blockquote>
+          <table class="compact"><thead><tr><th>Factor</th><th>Effect on cap</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Tier</strong></td><td>Basic 3 · Pro 4–5 (your §5 "higher message limits" perk).</td></tr>
+            <tr><td><strong>Model class</strong></td><td>Pricier class → lower cap, so one run can't drain the balance (e.g. Premium capped at 2–3 even for Pro).</td></tr>
+            <tr><td><strong>Credits left</strong></td><td>Never start a loop you can't afford to finish; if balance only covers 2 of 4 loops, cap at 2 and surface "add credits / switch model for more passes".</td></tr>
+          </tbody></table>
+          <p style="font-size:13px">The reviewer can still <em>converge early</em> (satisfied before the cap) — the cap is just the ceiling, not a target. Most runs should finish under it.</p>
+          <div class="leans"><b>Lean:</b> Base 3 (Basic), Pro 5, with a per-model override that lowers the cap for Premium, and a hard "can you afford the next loop?" check before each iteration. Tune the exact numbers once cost-per-loop data lands.</div>
+          <div class="annotate decide" data-note="explore_loops">
+            <div class="alabel">↳ Decide — tier caps + how aggressively model/balance lowers them?</div>
+            <textarea data-field placeholder="e.g. 'Basic 3 / Pro 5; Premium hard-capped at 2; always afford-the-next-loop check'"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="s-pacing" data-nav="Weekly pacing">
+      <h3><span class="secnum">13</span> Weekly limits &amp; pacing</h3>
+      <p class="lead">Prevent burning a month in week one — but keep it <strong>soft</strong>.</p>
+      <div class="card">
+        <p>Job seekers apply in bursts. Hard weekly caps frustrate. Use soft pacing:</p>
+        <div class="grid2">
+          <div class="callout"><h5 style="color:var(--text)">Basic</h5>~200–250 credits/wk is "normal". Beyond that, continue if monthly remains — but standard mode only, lower per-run caps, top-ups for pricier workflows.</div>
+          <div class="callout"><h5 style="color:var(--text)">Pro</h5>~500–700 credits/wk "normal". Beyond: standard usage continues; premium modes may need top-ups; very expensive models disabled until reset/top-up.</div>
+        </div>
+        <div class="callout rec" style="margin-top:10px"><h5>Why soft</h5>Prevents abuse without making the product feel broken during intense application periods.</div>
+      </div>
+      <div class="annotate" data-note="pacing">
+        <div class="alabel">✎ Your take — should weekly pacing be visible to users or invisible?</div>
+        <textarea data-field placeholder="e.g. 'invisible — just throttle quietly' / 'visible with a friendly nudge'…"></textarea>
+      </div>
+    </section>
+
+    <section id="s-outofcredits" data-nav="Out-of-credits UX">
+      <h3><span class="secnum">14</span> When credits run out</h3>
+      <div class="card">
+        <blockquote>No credits: "You've used your monthly AI credits. Wait until reset, upgrade, or buy extra credits." → Buy $5 / Buy $10 / Upgrade / switch to cheaper mode.</blockquote>
+        <blockquote>Some but not enough: "You have 90 credits. This resume needs ~120–180. Try Fast mode or add credits."</blockquote>
+      </div>
+      <div class="annotate" data-note="outofcredits">
+        <div class="alabel">✎ Your take — tone &amp; default action when users hit zero?</div>
+        <textarea data-field placeholder="e.g. 'lead with cheaper-mode option before asking for money'…"></textarea>
+      </div>
+    </section>
+
+    <section id="s-free" data-nav="Free / trial">
+      <h3><span class="secnum">15</span> Free plan or trial</h3>
+      <p class="lead">Still an open decision. Three shapes:</p>
+      <div class="card">
+        <table class="compact"><thead><tr><th>Option</th><th>Pros</th><th>Cons</th></tr></thead>
+        <tbody>
+          <tr><td><strong>A. No free plan</strong></td><td>Protects cost, no abuse, monetizes now</td><td>Higher friction, harder to build trust</td></tr>
+          <tr><td><strong>B. Free preview only</strong></td><td>Shows value, protects download, good conversion</td><td>Still incurs inference cost</td></tr>
+          <tr><td><strong>C. One free generation</strong></td><td>Strong activation, easy to grasp</td><td>Abuse risk, needs rate limits / fraud prevention</td></tr>
+        </tbody></table>
+        <div class="callout rec"><h5>Recommendation</h5>Free preview or one limited generation · require account · no premium models · watermark or block download until paid.</div>
+      </div>
+      <div class="annotate" data-note="free">
+        <div class="alabel">✎ Your take — which free shape, and what's gated behind payment?</div>
+        <textarea data-field placeholder="e.g. 'free preview, block download — that's the paywall moment'…"></textarea>
+      </div>
+    </section>
+
+    <section id="s-abuse" data-nav="Abuse prevention">
+      <h3><span class="secnum">16</span> Abuse prevention</h3>
+      <div class="card">
+        <p style="font-size:13px;color:var(--muted)">Guard against: very long resumes/JDs · repeated generations · multi-account abuse · automation · premium-model abuse · refund abuse.</p>
+        <div class="grid2">
+          <div class="callout"><h5 style="color:var(--text)">Account &amp; identity</h5><ul><li>Account required before generation</li><li>Email verification</li><li>CAPTCHA if suspicious</li></ul></div>
+          <div class="callout"><h5 style="color:var(--text)">Usage limits</h5><ul><li>Rate limits · input length limits</li><li>Per-run credit caps · model allowlist</li><li>Payment before downloads · per-user ledger</li></ul></div>
+        </div>
+      </div>
+      <div class="annotate" data-note="abuse">
+        <div class="alabel">✎ Your take — biggest abuse vector you're worried about?</div>
+        <textarea data-field placeholder="e.g. 'multi-account free-tier farming' / 'huge JD pastes blowing up token counts'…"></textarea>
+      </div>
+
+      <div class="explore">
+        <div class="ehead"><span class="etag">Explore</span><h4>Do we still need an input-length cap?</h4></div>
+        <div class="ebody">
+          <p>You asked: why cap input length when longer inputs just cost more credits? You're mostly right — <strong>credits already meter length, so no arbitrary low cap is needed.</strong> But two non-billing reasons remain:</p>
+          <div class="opt-row"><span class="otag">1</span><div class="odesc"><strong>Model context windows are a hard technical ceiling.</strong> A genuinely huge paste can exceed the model's input window and the run simply fails — better to catch that before charging anything. This is a validation limit, not a pricing limit.</div></div>
+          <div class="opt-row"><span class="otag">2</span><div class="odesc"><strong>One accidental run shouldn't quietly cost a fortune.</strong> Someone pasting a 200-page PDF could burn a large chunk of their balance in a single click. Not a hard cap — just a "<em>this input is large and will cost ~X credits, continue?</em>" confirmation above a threshold.</div></div>
+          <div class="leans"><b>Lean:</b> No arbitrary length cap (you're right — credits handle it). Instead: (a) a technical max tied to the chosen model's context window, and (b) a soft "large input → cost preview &amp; confirm" prompt. Aligns with §11's quiet-reservation approach.</div>
+          <div class="annotate decide" data-note="explore_inputlen">
+            <div class="alabel">↳ Decide — no cap + context-window validation + large-input confirm?</div>
+            <textarea data-field placeholder="e.g. 'agree — drop the cap, keep context-window check + confirm on unusually large pastes'"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="s-metrics" data-nav="Metrics to track">
+      <h3><span class="secnum">17</span> Metrics to instrument first</h3>
+      <p class="lead">You can't set limits without these. Instrument before finalizing.</p>
+      <div class="card">
+        <div class="callout rec"><h5>Single most important metric</h5>Average <strong>and P95</strong> provider cost per completed tailored resume.</div>
+        <p style="font-size:13px;color:var(--muted);margin-top:10px">Also: median &amp; max cost/resume · tokens per resume &amp; JD · avg loops · avg revisions · cost by model &amp; mode · failed-generation &amp; retry cost · export cost · avg monthly usage/user · % hitting limits · top-up conversion · churn by plan.</p>
+      </div>
+      <div class="annotate" data-note="metrics">
+        <div class="alabel">✎ Your take — do you have any of these numbers today? (avg/P95 cost per resume)</div>
+        <textarea data-field placeholder="e.g. 'current avg cost ≈ $___, P95 ≈ $___, worst observed ≈ $___' — fill what you know"></textarea>
+      </div>
+    </section>
+
+    <section id="s-architecture" data-nav="Billing architecture">
+      <h3><span class="secnum">18</span> Internal billing architecture</h3>
+      <div class="card">
+        <h4>Three balances per user</h4>
+        <p style="font-size:13px">1) Monthly subscription credits · 2) Promotional credits · 3) Purchased credits.</p>
+        <h4>Spend priority — <code>expiresFirst</code></h4>
+        <p style="font-size:13px">Consume the credits whose expiry is <strong>nearest</strong>, first. Since subscription credits expire end-of-cycle and overage expires +6 months, this naturally spends subscription credits before overage — no separate rule needed, and it minimises wasted (expired) credits for the user.</p>
+        <p style="font-size:13px;color:var(--muted)"><strong>Override:</strong> if §9's pool-selection lands (overage unlocks a higher model class), a premium run can explicitly draw from the <em>overage</em> pool even when subscription credits remain. So: <code>expiresFirst</code> by default, pool-choice when the user deliberately picks a gated model.</p>
+        <h4>Per-workflow usage record</h4>
+        <p style="font-size:12.5px;color:var(--muted)">user · plan · workflow id · mode · model · est min/max · reserved · final charged · actual provider cost · markup · input/output tokens · reviewer/writer/revision counts · export count · status · created date.</p>
+      </div>
+      <div class="annotate" data-note="architecture">
+        <div class="alabel">✎ Your take — Convex schema implications / what to log from day one?</div>
+        <textarea data-field placeholder="e.g. 'add a ledger table now even before billing ships, so we collect cost data'…"></textarea>
+      </div>
+    </section>
+
+    <section id="s-options" data-nav="Options compared">
+      <h3><span class="secnum">19</span> Monetization options compared</h3>
+      <p class="lead">Ten approaches evaluated. Expand any for detail.</p>
+      <div class="card">
+        <table class="compact">
+          <thead><tr><th>Model</th><th>Simplicity</th><th>Cost ctrl</th><th>UX</th><th>Recurring</th><th>Model select</th></tr></thead>
+          <tbody>
+            <tr><td>Simple subscription</td><td class="matrix-good">High</td><td class="matrix-low">Low</td><td class="matrix-good">High</td><td class="matrix-good">High</td><td class="matrix-low">Low</td></tr>
+            <tr><td>Credit-based</td><td class="matrix-mid">Med</td><td class="matrix-good">High</td><td class="matrix-mid">Med</td><td class="matrix-good">Med/Hi</td><td class="matrix-good">High</td></tr>
+            <tr><td>Resume-count</td><td class="matrix-good">High</td><td class="matrix-mid">Med/Lo</td><td class="matrix-good">High</td><td class="matrix-good">Med/Hi</td><td class="matrix-low">Low</td></tr>
+            <tr><td>Hybrid resume+controls</td><td class="matrix-good">High</td><td class="matrix-good">Med/Hi</td><td class="matrix-good">High</td><td class="matrix-good">High</td><td class="matrix-mid">Med</td></tr>
+            <tr><td>Token-based</td><td class="matrix-low">Low</td><td class="matrix-good">High</td><td class="matrix-low">Low</td><td class="matrix-mid">Med</td><td class="matrix-good">High</td></tr>
+            <tr><td>Pay-as-you-go</td><td class="matrix-mid">Med</td><td class="matrix-good">High</td><td class="matrix-mid">Med</td><td class="matrix-low">Low</td><td class="matrix-good">High</td></tr>
+            <tr><td>Job-search bundles</td><td class="matrix-good">High</td><td class="matrix-mid">Med/Hi</td><td class="matrix-good">High</td><td class="matrix-mid">Low/Med</td><td class="matrix-mid">Med</td></tr>
+            <tr><td><strong>Subscription + overage</strong></td><td class="matrix-mid">Med</td><td class="matrix-good">High</td><td class="matrix-mid">Med</td><td class="matrix-good">High</td><td class="matrix-good">High</td></tr>
+            <tr><td>Model-gated tiers</td><td class="matrix-mid">Med</td><td class="matrix-good">High</td><td class="matrix-mid">Med</td><td class="matrix-good">High</td><td class="matrix-good">High</td></tr>
+            <tr><td>Enterprise/team</td><td class="matrix-mid">Med</td><td class="matrix-good">High</td><td class="matrix-mid">Med</td><td class="matrix-good">High</td><td class="matrix-mid">Med</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <details class="opts"><summary>1 · Simple monthly subscription</summary><p style="font-size:13px">Flat price for access. Easy to understand, predictable revenue, simple checkout. <strong>Risk:</strong> a few heavy users can collapse margins; still needs hidden internal limits.</p></details>
+        <details class="opts"><summary>2 · Credit-based billing</summary><p style="font-size:13px">Credits debited by model/length/loops. Aligns usage to cost, supports top-ups, cheap models stretch. <strong>Risk:</strong> credit anxiety / confusion if UX is poor.</p></details>
+        <details class="opts"><summary>3 · Resume-count billing</summary><p style="font-size:13px">Pay per N tailored resumes. Crystal clear, maps to value. <strong>Risk:</strong> ignores model-cost differences; same count, very different cost.</p></details>
+        <details class="opts"><summary>4 · Hybrid resume limits + internal controls</summary><p style="font-size:13px">User sees resumes; system tracks cost/tokens/loops/models internally. Clean UX + cost safety. <strong>Risk:</strong> hidden limits feel unfair if not explained.</p></details>
+        <details class="opts"><summary>5 · Token-based billing</summary><p style="font-size:13px">Limit/charge by tokens. Precise, maps to cost. <strong>Risk:</strong> bad UX for job seekers; feels like infrastructure, hurts conversion.</p></details>
+        <details class="opts"><summary>6 · Pay-as-you-go</summary><p style="font-size:13px">Pay per action. Revenue tied to usage, no commitment. <strong>Risk:</strong> hesitation before every action; payment fees hurt small charges; weak habit.</p></details>
+        <details class="opts"><summary>7 · One-time job-search bundles</summary><p style="font-size:13px">Fixed pack valid for a period (30/60/90 days). Matches bursty, temporary job search; no subscription resentment. <strong>Risk:</strong> lumpy, less recurring revenue.</p></details>
+        <details class="opts"><summary>8 · Subscription + overage credits ★</summary><p style="font-size:13px">Monthly allowance + buy more when needed. Predictable revenue, handles heavy users, supports model differences. T3-Chat-like. <strong>Risk:</strong> overage must feel helpful not exploitative.</p></details>
+        <details class="opts"><summary>9 · Tiered subscription with model gating ★</summary><p style="font-size:13px">Tiers unlock model classes &amp; features. Protects against expensive-model abuse, clear upgrade story. <strong>Risk:</strong> don't promise "all models" unless affordable.</p></details>
+        <details class="opts"><summary>10 · Enterprise / team plans</summary><p style="font-size:13px">Sell seats to coaches, bootcamps, universities, outplacement firms. Higher contract value, better retention. <strong>Risk:</strong> admin features distract from consumer MVP.</p></details>
+      </div>
+      <div class="annotate" data-note="options">
+        <div class="alabel">✎ Your take — which of the 10 are you drawn to / ruling out?</div>
+        <textarea data-field placeholder="e.g. 'core = #8 subscription+overage; offer #7 bundles for non-subscribers; #10 enterprise much later'…"></textarea>
+      </div>
+    </section>
+
+    <section id="s-direction" data-nav="Recommended direction">
+      <h3><span class="secnum">20</span> Recommended direction</h3>
+      <div class="card">
+        <div class="callout rec"><h5>Primary model</h5>Subscription + AI credits + model gating (combines options 8 &amp; 9).</div>
+        <div class="callout rec" style="margin-top:8px"><h5>Secondary</h5>One-time job-search bundles for users who refuse a subscription.</div>
+        <h4 style="margin-top:14px">Example shape (illustrative)</h4>
+        <table class="compact"><thead><tr><th>Plan</th><th class="num">Price</th><th>Included</th></tr></thead>
+        <tbody>
+          <tr><td>Basic</td><td class="num">$6</td><td>Monthly credits, default model</td></tr>
+          <tr><td>Pro</td><td class="num">$10</td><td>More credits, advanced mode, history, smart models</td></tr>
+          <tr><td>Top-ups</td><td class="num">$5+</td><td>Extra credits, gated by plan/model rules</td></tr>
+        </tbody></table>
+        <div class="grid2" style="margin-top:12px">
+          <div class="callout con"><h5>Do not</h5><ul><li>Use token pricing as the main user-facing model.</li><li>Use pure resume-count if Pro picks models.</li><li>Promise unrestricted access to all OpenRouter models.</li></ul></div>
+          <div class="callout pro"><h5>This gives you</h5><ul><li>Cost control &amp; pricing flexibility.</li><li>Premium upsell &amp; model selection.</li><li>Abuse protection &amp; room beyond resumes.</li></ul></div>
+        </div>
+      </div>
+      <div class="annotate" data-note="direction">
+        <div class="alabel">✎ Your take — do you endorse this direction? What would you change?</div>
+        <textarea data-field placeholder="e.g. 'agree on primary, skip bundles for v1' / 'I want Pro higher than $10'…"></textarea>
+      </div>
+
+      <div class="explore">
+        <div class="ehead"><span class="etag">Explore</span><h4>Positioning the bundle (secondary option) honestly</h4></div>
+        <div class="ebody">
+          <p>You want the one-off bundle to exist, be priced <em>differently</em>, not be the obvious choice, and carry expiry — without dark patterns. The honest way to make subscription the better deal is on <strong>value, not trickery</strong>:</p>
+          <div class="opt-row"><span class="otag">1</span><div class="odesc"><strong>Price per credit higher than the subscription.</strong> A bundle is convenience for someone who refuses recurring billing, so it legitimately costs more per credit. Subscription wins on math, transparently — no hidden cost, the difference is shown plainly.</div></div>
+          <div class="opt-row"><span class="otag">2</span><div class="odesc"><strong>Give it a clear expiry.</strong> e.g. valid 30–60 days — it matches a burst of job applications and bounds your liability. State it up front.</div></div>
+          <div class="opt-row"><span class="otag">3</span><div class="odesc"><strong>Discoverable, not default.</strong> Subscription is the primary CTA; the bundle is a visible secondary link ("just need a one-off? → buy a pack"). Not buried (that <em>would</em> be a dark pattern), not competing for the headline.</div></div>
+          <p style="font-size:13px"><strong>The honest-nudge line:</strong> showing "subscription = better value per credit" is fine; <em>hiding</em> the bundle, pre-checking the pricier option, or making cancellation hard is not. Stay on the right side of that.</p>
+          <div class="leans"><b>Lean:</b> Offer the bundle as a clearly-labelled secondary option with a higher per-credit price and a 30–60 day expiry. Lower priority for v1 — ship subscription + overage first, add bundles once the core loop is proven.</div>
+          <div class="annotate decide" data-note="explore_bundle">
+            <div class="alabel">↳ Decide — bundle in v1 or later? Expiry window &amp; how visible?</div>
+            <textarea data-field placeholder="e.g. 'later — v1 is subscription+overage; when added: higher per-credit, 45-day expiry, secondary CTA'"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DECISION LEDGER ============ -->
+    <section id="s-review" data-nav="★ Decision ledger">
+      <h3><span class="secnum">21</span> Decision ledger</h3>
+      <p class="lead">A live rollup of where every call stands — the explorations you resolved, the decisions you locked, what's leaning, and what's still open. This updates automatically as you edit the form below.</p>
+      <div class="ledger-stats" id="ledgerStats"></div>
+      <div class="ledger-board" id="ledgerBoard"></div>
+    </section>
+
+    <!-- ============ BILLING BLUEPRINT ============ -->
+    <section id="s-blueprint" data-nav="★ Billing blueprint">
+      <h3><span class="secnum">22</span> Billing blueprint — the plan so far</h3>
+      <p class="lead">Synthesis of everything decided. This is the spec that drives the next stage of exploration: build against the <span class="pill good">Locked</span> column, hold the <span class="pill mid">Pending</span> column until cost data lands, and work the numbered plan at the bottom.</p>
+
+      <div class="bp-grid">
+        <div class="bp-col locked">
+          <h4>🔒 Locked — build against these</h4>
+          <p class="bp-sub">Decided and stable. Safe to design and implement now.</p>
+          <ul class="bp-list">
+            <li><span class="bp-k">No free / trial tier.</span> Account + email verification (Clerk → Google/Apple). You must subscribe to use the product. Rate-limiting is effectively the credit balance.</li>
+            <li><span class="bp-k">Two tiers at launch — Basic &amp; Pro.</span> Monthly billing only for now. Prices are still movable anchors; annual + an optional Power tier come later, data-permitting.</li>
+            <li><span class="bp-k">Credits are the unit ("tailoring credits").</span> Outcome-anchored UI: lead with "~N runs left", raw credits secondary, run cost shown calmly on hover <em>after</em> the run (Lovable-style). Absorb part of the model premium so better models don't feel punitive.</li>
+            <li><span class="bp-k">Credit lifecycle.</span> Subscription credits expire each billing cycle (no rollover). Purchased overage credits roll forward and expire in ~6 months. Consumption order is <code>expiresFirst</code>.</li>
+            <li><span class="bp-k">Overage / top-ups.</span> Only purchasable &amp; usable with an active subscription, within the billing cycle. Per-tier purchase caps (higher tiers unlock larger packs). <strong>Freeze on cancel, restore on resubscribe</strong> — no forfeiture.</li>
+            <li><span class="bp-k">Pricing parity (Model 1).</span> A subscription credit and an overage credit carry the same value — gate by access, don't surcharge overage. Flagged risk: overage reaching better models can cannibalise higher tiers; that's what the caps below defend.</li>
+            <li><span class="bp-k">Model gating by class.</span> Economy → Standard → Smart → Premium. Ultra (Fable, gpt-5.5 pro class) not served for now; no BYOK yet. Gate by subscription tier; overage may reach <em>one class up, capped</em> — a taste, not the full entree. Model names visible to all Advanced-mode users (never paywalled).</li>
+            <li><span class="bp-k">Loop caps.</span> Base 3 (Basic), Pro 5. Per-model override can lower the cap for Premium models; hard "can you afford the next loop?" check before each iteration.</li>
+            <li><span class="bp-k">Input length.</span> No flat cap — validate per-model against the context window, and warn before a very large request (Claude Code-style confirm).</li>
+            <li><span class="bp-k">Weekly pacing.</span> Visible, but in a usage-review view — not surfaced mid-run.</li>
+            <li><span class="bp-k">Reservation.</span> Quiet reservation — reserve internally for safety, present softly. No scary pre-charge or live countdown.</li>
+          </ul>
+        </div>
+
+        <div class="bp-col pending">
+          <h4>⏳ Pending — blocked on cost data</h4>
+          <p class="bp-sub">Can't be set responsibly until the LLM-cost-logging PR deploys and we have real per-run numbers.</p>
+          <ul class="bp-list">
+            <li><span class="bp-k">Credit grants per tier.</span> How many credits Basic vs Pro get each month.</li>
+            <li><span class="bp-k">Markup multiplier &amp; credit value.</span> The <code>credit_usd_value</code> and markup in the debit formula.</li>
+            <li><span class="bp-k">Final prices.</span> Whether Basic/Pro stay at ~$6/$10 or Pro moves to $12–15.</li>
+            <li><span class="bp-k">Safe ceilings.</span> P95 and worst-case per-run cost that set per-tier and per-loop limits.</li>
+            <li><span class="bp-k">Overage pack sizes &amp; per-tier caps.</span> Exact "up to N×" and pack tiers.</li>
+            <li><span class="bp-k">Expected monthly usage per user.</span> The runs/month assumption everything else is sized against.</li>
+          </ul>
+        </div>
+
+        <div class="bp-col next">
+          <h4>🧭 Still to think through</h4>
+          <p class="bp-sub">Directionally leaning but needs one more pass before it's locked.</p>
+          <ul class="bp-list">
+            <li><span class="bp-k">Credit-pool selection UX.</span> Letting a user choose which pool (subscription vs overage) funds a run — so a Basic user could reach stronger models by spending overage. Powerful, but the main lever that risks cannibalising Pro.</li>
+            <li><span class="bp-k">The "one class up" matrix.</span> Exactly which classes overage unlocks from each tier, and the cap.</li>
+            <li><span class="bp-k">Premium-via-purchased-credits.</span> Whether purchased credits should reach premium models regardless of tier (m4). Currently: gate by tier only — revisit.</li>
+            <li><span class="bp-k">Feedback-revision caps (l2).</span> Per-tier revision limits not yet fixed.</li>
+            <li><span class="bp-k">Allowed model list (m2).</span> Most text models in, a few exceptions; class assignment to finalise.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bp-row-head" style="font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--faint);font-weight:700;margin:20px 0 4px">Next stage of exploration — in order</div>
+      <div class="card">
+        <ol class="bp-flow">
+          <li><strong>Deploy the LLM-cost PR</strong> and collect average / P95 / worst-case cost per run, per model class. <span class="bp-dep">UNBLOCKS EVERYTHING</span></li>
+          <li><strong>Fix the economics:</strong> set <code>credit_usd_value</code>, the markup multiplier, and a target inference budget (deliberately &lt;50% so server + DB costs are covered).</li>
+          <li><strong>Size the tiers:</strong> derive Basic/Pro credit grants from real usage, start conservative, leave headroom to raise once margins prove safe.</li>
+          <li><strong>Pin overage:</strong> pack sizes, per-tier purchase caps, and the freeze/restore-on-cancel flow.</li>
+          <li><strong>Lock the gating matrix:</strong> finalise class assignments (m2) and the capped "one class up" overage unlock.</li>
+          <li><strong>Spec the credit-pool selection UX</strong> and decide premium-via-purchased-credits (m4) — guarding against tier cannibalisation.</li>
+          <li><strong>Defer &amp; revisit:</strong> annual plans, the Power tier, and one-off bundles — only once the core subscription + overage loop is proven, and the infra can handle one-off purchases.</li>
+        </ol>
+      </div>
+
+      <div class="annotate" data-note="blueprint">
+        <div class="alabel">✎ Does this blueprint match your intent? Anything mis-stated, missing, or in the wrong column?</div>
+        <textarea data-field placeholder="e.g. 'move credit-pool selection to Locked' / 'Pro should be $12 from day one' / 'the cannibalisation guard needs its own section'…"></textarea>
+      </div>
+    </section>
+
+    <!-- ============ OPEN DECISIONS ============ -->
+    <section id="s-decisions" data-nav="★ Open decisions">
+      <h3><span class="secnum">23</span> Open decisions</h3>
+      <p class="lead">Answer these to lock the plan. Set a status and jot your call — these feed directly into the next iteration.</p>
+      <div id="decisions"></div>
+    </section>
+
+    <section id="s-final" data-nav="Next step">
+      <h3><span class="secnum">24</span> Next step</h3>
+      <div class="card">
+        <p>When you've annotated enough, hit <strong>📋 Review notes</strong> in the top bar. It compiles everything (notes + decisions + statuses) into copyable Markdown. Paste that back to me and we iterate from your actual positions — no re-deriving.</p>
+        <p style="font-size:13px;color:var(--muted)">Tip: <strong>⬇ Export</strong> saves a JSON backup you can re-import on another machine. Your notes also persist automatically in this browser's localStorage.</p>
+        <button class="btn primary" id="summaryBtn2">📋 Review &amp; copy my notes</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <header>
+      <h3>Your notes &amp; decisions</h3>
+      <span class="spacer" style="flex:1"></span>
+      <button class="btn" id="copyMd">Copy Markdown</button>
+      <button class="btn" id="closeModal">Close</button>
+    </header>
+    <div class="body"><pre id="summaryOut"></pre></div>
+    <footer>
+      <span style="flex:1;font-size:12px;color:var(--muted);align-self:center">Paste this back into the chat to keep iterating.</span>
+      <button class="btn" id="clearAll">Clear all notes</button>
+    </footer>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var STORE_KEY = "tarmacos_monetization_notes_v1";
+  var THEME_KEY = "tarmacos_monetization_theme";
+
+  // ---------- Open decisions data ----------
+  var DECISIONS = [
+    ["Pricing","p1","Are $6 and $10 fixed?","Or are these still movable anchors?"],
+    ["Pricing","p2","Open to $12 or $15 for Pro?","Higher Pro price relaxes the margin squeeze."],
+    ["Pricing","p3","Do you want a future Power tier?","$25–29 for heavy users / cover letters / tracking."],
+    ["Pricing","p4","Will there be annual plans?","Discounted annual improves retention & cash flow."],
+    ["Credits","c1","Name: AI / tailoring / resume credits?","Pick the user-facing term."],
+    ["Credits","c2","How many credits per tier?","Basic ___ , Pro ___ (start conservative)."],
+    ["Credits","c3","Should monthly credits expire?","Recommended: yes, no rollover."],
+    ["Credits","c4","Should purchased credits expire?","Recommended: 6–12 months."],
+    ["Credits","c5","Can Basic users buy top-ups?","Retention vs. upgrade pressure."],
+    ["Models","m1","Show model names or only modes?","Modes simpler; names appeal to power users."],
+    ["Models","m2","Which OpenRouter models are allowed?","List by class (Economy→Premium)."],
+    ["Models","m3","Which models are blocked outright?","The Ultra tier you won't serve."],
+    ["Models","m4","Should premium models require purchased credits?","Extra guardrail on the priciest models."],
+    ["Limits","l1","Max reviewer/writer loops per plan?","Basic ___ , Pro ___ ."],
+    ["Limits","l2","Max feedback revisions per plan?","Basic ___ , Pro ___ ."],
+    ["Limits","l3","Input length limits (resume + JD)?","Caps token blow-ups."],
+    ["Limits","l4","Weekly pacing visible or invisible?","Soft throttle quietly, or show a nudge?"],
+    ["Free / trial","f1","Should there be a free plan at all?","No free / preview only / one free generation."],
+    ["Free / trial","f2","Can free users preview output?","Preview drives conversion but costs inference."],
+    ["Free / trial","f3","Do downloads require payment?","The natural paywall moment."],
+    ["Free / trial","f4","How will abuse be prevented?","Account, email verify, rate limits, CAPTCHA…"],
+    ["Metrics","x1","Current average cost per completed resume?","Fill if known."],
+    ["Metrics","x2","P95 cost per completed resume?","The number that sets safe ceilings."],
+    ["Metrics","x3","Worst observed workflow cost?","Tail risk."],
+    ["Metrics","x4","Expected monthly usage per user?","Resumes/month assumption."]
+  ];
+
+  // ---------- Resolved explorations (the ↳ Decide fields, surfaced in the ledger) ----------
+  var EXPLORES = [
+    ["§04 Credits","note_explore_credit_comm","How credits are presented in the UI"],
+    ["§06 Markup","note_explore_markup","Subscription vs. overage pricing"],
+    ["§07 Overage","note_explore_overage_cancel","Top-up caps & cancellation handling"],
+    ["§09 Pool","note_explore_pool","Can overage reach better models?"],
+    ["§11 Reservation","note_explore_reservation","Reservation style"],
+    ["§12 Loops","note_explore_loops","Loop caps per tier"],
+    ["§16 Input","note_explore_inputlen","Input length limits"],
+    ["§20 Bundle","note_explore_bundle","Bundle positioning"]
+  ];
+
+  // ---------- Seeded answers (baked into the file so they travel with it) ----------
+  var SEED = {
+    "note_overview": "Yeah, this is perfect.",
+    "note_margin": "We need a healthy inference budget so we don't go overboard on inference. A lower-than-50% inference budget makes sense, so we also cater for server costs, db costs, etc.",
+    "note_whynotcount": "Resume count is the wrong primitive. Two people walk into a store - one buys a TV, the other a loaf of bread - it would be crazy if they spent the same amount but still 'bought an item'. Same outcome, wildly different cost.",
+    "note_credits": "Credits will feel like a meter - we need a really good way to communicate how they work; they become the main unit of measure. We also need to map model usage and cost to credits, but make it less punitive.",
+    "note_tiers": "What lives behind Pro:\n1. Access to better model selection\n2. Access to histories\n3. Access to more premium templates\n4. Higher message limits between the user and the models",
+    "note_creditamounts": "Open question: should the markup on a SUBSCRIPTION credit equal the markup on an OVERAGE/standalone credit? I don't think so - we want to encourage subscriptions over buying credits alone. One option: lock standalone credit purchases to active subscribers only (as overage), in which case a subscription credit could equal an overage credit in value. Needs deeper exploration.",
+    "note_overage": "Yes, but cap how much they can top up. e.g. on the $6 tier they can only top up to ~double their credits, no further. Unused overage at period end rolls FORWARD as overage into next month - it is NOT folded into the subscription (that accounting is too complicated; I don't want to do it).",
+    "note_rollover": "Good starting point.",
+    "note_modelaccess": "Economy: gpt-oss, Haiku\nStandard: Sonnet, Kimi K2.5, and large open-weight models (MiniMax, DeepSeek)\nSmart: gpt-5-mini series, Sonnet 4.6, other frontier (Gemini 3 Flash, etc.)\nPremium: Opus, gpt-5.4 and above, other SOTA frontier models\nUltra: Fable, gpt-5.5 pro and that class (not served for now)",
+    "note_modelux": "Show model names in the run-orchestration view (the chat) for anyone using Advanced mode - for ALL users, not gated by how much they paid. We can hide for basic users by default, but the info itself shouldn't be paywalled.",
+    "note_reservation": "Like this - want to explore it but ensure it isn't anxiety-inducing. Check how lovable.dev does it.",
+    "note_loops": "Standard max iteration loop count of 3 across all users. Those paying more should get a higher loop cap. It should also depend on: (1) which model was selected, (2) how many credits the user has left.",
+    "note_pacing": "Visible - so users don't get frustrated and can switch to cheaper models if they need to make their credits last.",
+    "note_outofcredits": "Both. When the user has few credits, tell them and offer to add overage. When out, they must buy more. To prevent abuse, overage credits are only purchasable/usable with an ACTIVE subscription within the current billing cycle.",
+    "note_free": "No free or trial plan. We don't have the capital to support it, and free tiers don't guarantee conversion.",
+    "note_abuse": "No free tier. Account + email verification required (Clerk - Google/Apple identity providers). Could add CAPTCHA, but onboarding already requires payment to use the platform, which doesn't work for bots. Rate limiting is effectively the credit balance.",
+    "note_metrics": "Don't have these yet. There's a pending PR to log the average cost of a run across model classes - we get these numbers once it deploys.",
+    "note_architecture": "Want an `expiresFirst` approach: consume the credits whose expiry is nearest, first.",
+    "note_options": "I like 4, 8, 9 most. A combination of 8 & 9 is a strong contender, plus some internal controls from #4.",
+    "note_direction": "Okay overall, but the secondary (bundle) option should be charged differently. No dark patterns, but it shouldn't be the obvious choice, and it should have expiry.",
+
+    "note_explore_credit_comm": "Anchor on outcomes - the user gets an estimate of the runs they have left. Like Lovable, the cost is shown subtly on hover.",
+    "note_explore_markup": "Model 1 - gate access but keep pricing at parity; don't charge more for overage credits. Watch out though: letting overage reach better models could cannibalise the higher tiers we rely on for margin.",
+    "note_explore_overage_cancel": "Freeze on cancel, restore on resubscribe. And cap how much credit each tier can buy - higher tiers unlock access to bigger credit packs.",
+    "note_explore_pool": "Option B, but capped. Give a taste of the next tier's models to make users want to bump up - not the full entree of smart models on a cheap tier.",
+    "note_explore_reservation": "Lovable style - quiet reservation.",
+    "note_explore_loops": "Base 3 (Basic), Pro 5, with a per-model override that lowers the cap for Premium, and a hard 'can you afford the next loop?' check before each iteration. Tune the exact numbers once cost-per-loop data lands.",
+    "note_explore_inputlen": "No flat cap - caps should be per-model, based on each model's context window. For accidental runs, warn the user before continuing on a large request (like Claude Code does).",
+    "note_explore_bundle": "Clearly-labelled secondary option, higher per-credit price, 30-60 day expiry. Lower priority for v1 - ship subscription + overage first, add bundles once the core loop is proven. Infra must be able to handle one-off bundles.",
+
+    "dec_p1_status":"open","dec_p1_note":"Not fixed - we'll learn the cost, then decide.",
+    "dec_p2_status":"open","dec_p2_note":"Yes, definitely. A higher Pro tier was always on the table.",
+    "dec_p3_status":"open","dec_p3_note":"Maybe - depends how much extra value we can add. If it's just more inference, the value proposition isn't great.",
+    "dec_p4_status":"open","dec_p4_note":"Not thought about yet. Start monthly; explore annual once we have more users and data.",
+    "dec_c1_status":"open","dec_c1_note":"'Tailoring credits' is on-brand. Open to other suggestions.",
+    "dec_c2_status":"open","dec_c2_note":"TBD - depends on cost data (this is the last thing to settle).",
+    "dec_c3_status":"decided","dec_c3_note":"Yes. Subscription credits expire within the billing cycle, no rollover. Only purchased overage credits roll over.",
+    "dec_c4_status":"decided","dec_c4_note":"Yes, but longer shelf life - say 6 months.",
+    "dec_c5_status":"leaning","dec_c5_note":"Yes, but capped, and only while subscribed. Can't buy $50 of credits then cancel. If they cancel, overage becomes inaccessible; if not, overage is used after subscription credits deplete. Possible refinement: let users pick which pool funds a run, so a Basic user could reach more powerful models by spending overage. Higher tiers can also buy larger credit packs. Needs more thought.",
+    "dec_m1_status":"decided","dec_m1_note":"Show model names for all users in Advanced mode.",
+    "dec_m2_status":"open","dec_m2_note":"Long list - most text-generation models available (a few exceptions). Tiering TBD.",
+    "dec_m3_status":"decided","dec_m3_note":"For now, no Ultra models (Fable, gpt-5.5 pro, etc.). No BYOK either - want to, but lack the infra.",
+    "dec_m4_status":"open","dec_m4_note":"No - gate by subscription tier. Purchased credits could access more premium models regardless of tier. Need to think more.",
+    "dec_l1_status":"leaning","dec_l1_note":"Base 3 (Basic), Pro 5. A per-model override can lower the cap for Premium models, plus a hard affordability check before each loop. Exact numbers tuned once cost-per-loop data lands.",
+    "dec_l2_status":"","dec_l2_note":"",
+    "dec_l3_status":"decided","dec_l3_note":"Why cap? Longer resumes/JDs just consume more credits.",
+    "dec_l4_status":"decided","dec_l4_note":"Visible - in a usage-review view, not during the run.",
+    "dec_f1_status":"decided","dec_f1_note":"No.",
+    "dec_f2_status":"decided","dec_f2_note":"No free tier.",
+    "dec_f3_status":"decided","dec_f3_note":"While subscribed you get inference, preview, and downloads.",
+    "dec_f4_status":"decided","dec_f4_note":"Account + email verification; must subscribe to use the platform. Rate limiting = credit balance.",
+    "dec_x1_status":"open","dec_x1_note":"Not yet - comes from the LLM-cost PR.",
+    "dec_x2_status":"open","dec_x2_note":"Not yet - comes from the LLM-cost PR.",
+    "dec_x3_status":"open","dec_x3_note":"Not yet - comes from the LLM-cost PR.",
+    "dec_x4_status":"open","dec_x4_note":"Not yet - comes from the LLM-cost PR."
+  };
+
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch(e){ saved = {}; }
+  // localStorage edits win over seed; seed fills anything not yet touched in this browser.
+  var state = Object.assign({}, SEED, saved);
+
+  // ---------- Build decisions UI ----------
+  var decWrap = document.getElementById("decisions");
+  var lastCat = "";
+  DECISIONS.forEach(function(d){
+    var cat=d[0], id=d[1], q=d[2], hint=d[3];
+    if(cat!==lastCat){ var h=document.createElement("div"); h.className="dcat"; h.textContent=cat; decWrap.appendChild(h); lastCat=cat; }
+    var el=document.createElement("div"); el.className="decision";
+    el.innerHTML =
+      '<div class="q">'+q+'</div><div class="qhint">'+hint+'</div>'+
+      '<div class="drow"><div class="seg">'+
+        seg(id,"decided","Decided","s-decided")+
+        seg(id,"leaning","Leaning","s-leaning")+
+        seg(id,"open","Open","s-open")+
+      '</div></div>'+
+      '<textarea data-field data-note="dec_'+id+'_note" placeholder="Your call / reasoning…"></textarea>';
+    decWrap.appendChild(el);
+  });
+  function seg(id,val,label,cls){
+    return '<label class="'+cls+'"><input type="radio" name="dec_'+id+'" value="'+val+'" data-field data-note="dec_'+id+'_status"><span>'+label+'</span></label>';
+  }
+
+  // ---------- Field wiring ----------
+  function fieldKey(el){
+    if(el.dataset.note) return el.dataset.note;
+    // for note textareas inside .annotate, derive from parent
+    var p = el.closest("[data-note]");
+    return p ? p.getAttribute("data-note") : null;
+  }
+  var fields = Array.prototype.slice.call(document.querySelectorAll("[data-field]"));
+  // Assign keys for annotate textareas
+  fields.forEach(function(el){
+    if(!el.dataset.note){
+      var p = el.closest(".annotate");
+      if(p && p.dataset.note) el.dataset.noteKey = "note_"+p.dataset.note;
+    }
+  });
+
+  function keyFor(el){
+    if(el.dataset.note) return el.dataset.note;
+    if(el.dataset.noteKey) return el.dataset.noteKey;
+    return null;
+  }
+
+  // Restore
+  fields.forEach(function(el){
+    var k = keyFor(el); if(!k) return;
+    if(el.type==="radio"){ if(state[k]===el.value) el.checked = true; }
+    else { if(state[k]!=null) el.value = state[k]; }
+  });
+
+  var saveChip = document.getElementById("savechip");
+  var saveText = document.getElementById("savetext");
+  var saveTimer;
+  function markDirty(){
+    saveChip.className="savechip dirty"; saveText.textContent="Saving…";
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(persist, 350);
+  }
+  function persist(){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+    saveChip.className="savechip saved"; saveText.textContent="All changes saved";
+    updateProgress();
+  }
+
+  fields.forEach(function(el){
+    var ev = (el.type==="radio") ? "change":"input";
+    el.addEventListener(ev, function(){
+      var k=keyFor(el); if(!k) return;
+      if(el.type==="radio"){ state[k]=el.value; } else { state[k]=el.value; }
+      markDirty();
+    });
+  });
+
+  // ---------- Progress (count the big annotate notes + decisions) ----------
+  function updateProgress(){
+    var noteEls = document.querySelectorAll(".annotate textarea");
+    var total = noteEls.length;
+    var done = 0;
+    noteEls.forEach(function(t){ if((t.value||"").trim().length>3) done++; });
+    // decisions count: a decision is "done" if status set or note written
+    DECISIONS.forEach(function(d){
+      total++;
+      var status = state["dec_"+d[1]+"_status"];
+      var note = (state["dec_"+d[1]+"_note"]||"").trim();
+      if(status || note.length>2) done++;
+    });
+    var pct = total? Math.round(done/total*100):0;
+    document.getElementById("progPct").textContent = pct;
+    document.getElementById("progBar").style.width = pct+"%";
+    document.getElementById("progCount").textContent = done;
+    document.getElementById("progTotal").textContent = total;
+    // mark nav done
+    document.querySelectorAll("section[data-nav]").forEach(function(sec){
+      var a = navMap[sec.id]; if(!a) return;
+      var t = sec.querySelector(".annotate textarea");
+      if(sec.id==="s-decisions"){
+        a.classList.toggle("done", anyDecisionDone());
+      } else if(t){
+        a.classList.toggle("done",(t.value||"").trim().length>3);
+      }
+    });
+    renderReview();
+  }
+  function anyDecisionDone(){
+    return DECISIONS.some(function(d){
+      return state["dec_"+d[1]+"_status"] || (state["dec_"+d[1]+"_note"]||"").trim().length>2;
+    });
+  }
+
+  // ---------- Decision ledger (live review) ----------
+  function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function statCard(cls,n,k){ return '<div class="lstat '+cls+'"><div class="n">'+n+'</div><div class="k">'+k+'</div></div>'; }
+  function laneHtml(cls,title,items){
+    var inner = items.length ? items.map(function(it){
+      return '<div class="lcard"><div class="lcat">'+esc(it.cat)+'</div><div class="lq">'+esc(it.q)+'</div>'+
+             (it.a?'<div class="la">'+esc(it.a)+'</div>':'')+'</div>';
+    }).join("") : '<div class="lcol-empty">Nothing here yet.</div>';
+    return '<div class="ledger-col '+cls+'"><h4><span class="cdot"></span>'+title+'<span class="cnt">'+items.length+'</span></h4>'+inner+'</div>';
+  }
+  function renderReview(){
+    var stats=document.getElementById("ledgerStats");
+    var board=document.getElementById("ledgerBoard");
+    if(!stats||!board) return;
+    var lanes={decided:[],leaning:[],open:[],resolved:[]};
+    DECISIONS.forEach(function(d){
+      var cat=d[0],id=d[1],q=d[2].replace(/&amp;/g,"&");
+      var st=state["dec_"+id+"_status"]||"";
+      var note=(state["dec_"+id+"_note"]||"").trim();
+      var lane = st==="decided"?"decided":(st==="leaning"?"leaning":"open");
+      lanes[lane].push({cat:cat,q:q,a:note});
+    });
+    EXPLORES.forEach(function(e){
+      var a=(state[e[1]]||"").trim();
+      if(a) lanes.resolved.push({cat:e[0],q:e[2],a:a});
+    });
+    stats.innerHTML =
+      statCard("resolved",lanes.resolved.length,"Explorations resolved")+
+      statCard("decided",lanes.decided.length,"Decided")+
+      statCard("leaning",lanes.leaning.length,"Leaning")+
+      statCard("open",lanes.open.length,"Still open");
+    board.innerHTML =
+      laneHtml("col-resolved","Explorations resolved",lanes.resolved)+
+      laneHtml("col-decided","Decided",lanes.decided)+
+      laneHtml("col-leaning","Leaning",lanes.leaning)+
+      laneHtml("col-open","Open",lanes.open);
+  }
+
+  // ---------- Build nav ----------
+  var toc = document.getElementById("toc");
+  var navMap = {};
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section[data-nav]"));
+  sections.forEach(function(sec, i){
+    var a = document.createElement("a");
+    a.href = "#"+sec.id;
+    var n = String(i+1).padStart(2,"0");
+    a.innerHTML = '<span class="num">'+n+'</span>'+sec.getAttribute("data-nav");
+    a.addEventListener("click", function(){ if(window.innerWidth<=960) toc.style.display="none"; });
+    toc.appendChild(a);
+    navMap[sec.id]=a;
+  });
+
+  // Scroll spy
+  var spy = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        Object.values(navMap).forEach(function(a){a.classList.remove("active");});
+        var a=navMap[e.target.id]; if(a){ a.classList.add("active"); }
+      }
+    });
+  }, {rootMargin:"-10% 0px -75% 0px", threshold:0});
+  sections.forEach(function(s){ spy.observe(s); });
+
+  // ---------- Theme ----------
+  var themeBtn=document.getElementById("themeBtn");
+  function applyTheme(t){ document.documentElement.setAttribute("data-theme",t); themeBtn.textContent = t==="dark"?"☀️":"🌙"; }
+  applyTheme(localStorage.getItem(THEME_KEY)||"light");
+  themeBtn.addEventListener("click", function(){
+    var cur=document.documentElement.getAttribute("data-theme");
+    var nxt=cur==="dark"?"light":"dark"; localStorage.setItem(THEME_KEY,nxt); applyTheme(nxt);
+  });
+
+  // ---------- Mobile menu ----------
+  document.getElementById("mobMenu").addEventListener("click", function(){
+    toc.style.display = (toc.style.display==="block")?"none":"block";
+    toc.style.position="fixed"; toc.style.background="var(--surface)"; toc.style.zIndex=60;
+    toc.style.top="53px"; toc.style.left="0"; toc.style.bottom="0"; toc.style.width="78%";
+    toc.style.borderRight="1px solid var(--border)";
+  });
+
+  // ---------- Toast ----------
+  var toastEl=document.getElementById("toast");
+  function toast(msg){ toastEl.textContent=msg; toastEl.classList.add("show"); setTimeout(function(){toastEl.classList.remove("show");},1800); }
+
+  // ---------- Summary / Markdown ----------
+  function buildMarkdown(){
+    var lines=[];
+    lines.push("# Monetization Plan — My Notes");
+    lines.push("");
+    lines.push("_Generated "+new Date().toLocaleString()+" from monetization-plan.html_");
+    lines.push("");
+    lines.push("## Section notes");
+    lines.push("");
+    sections.forEach(function(sec){
+      if(sec.id==="s-decisions"||sec.id==="s-final") return;
+      var blocks = sec.querySelectorAll(".annotate");
+      var wrote = false;
+      blocks.forEach(function(b){
+        var t = b.querySelector("textarea");
+        var v = t ? (t.value||"").trim() : "";
+        if(!v) return;
+        if(!wrote){ lines.push("### "+sec.getAttribute("data-nav").replace(/&amp;/g,"&")); wrote=true; }
+        if(b.classList.contains("decide")){
+          var lbl=b.querySelector(".alabel");
+          var ltxt=lbl ? lbl.textContent.replace(/^[↳✎\s]+/,"").replace(/^Decide\s*—\s*/,"").trim() : "Decision";
+          lines.push("- **"+ltxt+"** → "+v);
+        } else {
+          lines.push(v);
+        }
+        lines.push("");
+      });
+    });
+    lines.push("## Open decisions");
+    lines.push("");
+    var lastCat="";
+    DECISIONS.forEach(function(d){
+      var cat=d[0],id=d[1],q=d[2];
+      var status=state["dec_"+id+"_status"]||"";
+      var note=(state["dec_"+id+"_note"]||"").trim();
+      if(!status && !note) return;
+      if(cat!==lastCat){ lines.push("**"+cat+"**"); lines.push(""); lastCat=cat; }
+      var tag = status?("["+status.toUpperCase()+"]"):"[—]";
+      lines.push("- "+tag+" "+q.replace(/&amp;/g,"&")+(note?(" → "+note):""));
+    });
+    lines.push("");
+    var anyNotes = lines.length>8;
+    return anyNotes?lines.join("\n"):"_(No notes yet — fill in the form fields, then reopen this.)_";
+  }
+
+  var modalBg=document.getElementById("modalBg");
+  function openModal(){ document.getElementById("summaryOut").textContent = buildMarkdown(); modalBg.classList.add("open"); }
+  function closeModal(){ modalBg.classList.remove("open"); }
+  document.getElementById("summaryBtn").addEventListener("click", openModal);
+  document.getElementById("summaryBtn2").addEventListener("click", openModal);
+  document.getElementById("closeModal").addEventListener("click", closeModal);
+  modalBg.addEventListener("click", function(e){ if(e.target===modalBg) closeModal(); });
+  document.getElementById("copyMd").addEventListener("click", function(){
+    var txt=document.getElementById("summaryOut").textContent;
+    navigator.clipboard.writeText(txt).then(function(){toast("Markdown copied ✓");},function(){toast("Copy failed — select manually");});
+  });
+
+  // ---------- Export / Import / Clear ----------
+  document.getElementById("exportBtn").addEventListener("click", function(){
+    var blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+    var a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    a.download="monetization-notes-"+new Date().toISOString().slice(0,10)+".json";
+    a.click(); URL.revokeObjectURL(a.href); toast("Exported JSON ✓");
+  });
+  document.getElementById("importBtn").addEventListener("click", function(){ document.getElementById("importFile").click(); });
+  document.getElementById("importFile").addEventListener("change", function(e){
+    var f=e.target.files[0]; if(!f) return;
+    var r=new FileReader();
+    r.onload=function(){
+      try{
+        var obj=JSON.parse(r.result);
+        state=obj||{};
+        localStorage.setItem(STORE_KEY,JSON.stringify(state));
+        // re-apply
+        fields.forEach(function(el){
+          var k=keyFor(el); if(!k) return;
+          if(el.type==="radio"){ el.checked=(state[k]===el.value); }
+          else { el.value=state[k]!=null?state[k]:""; }
+        });
+        updateProgress(); toast("Imported ✓");
+      }catch(err){ toast("Invalid JSON file"); }
+    };
+    r.readAsText(f); e.target.value="";
+  });
+  document.getElementById("clearAll").addEventListener("click", function(){
+    if(!confirm("Clear ALL notes and decisions? This cannot be undone.")) return;
+    state={}; localStorage.removeItem(STORE_KEY);
+    fields.forEach(function(el){ if(el.type==="radio") el.checked=false; else el.value=""; });
+    updateProgress(); closeModal(); toast("Cleared");
+  });
+
+  // init
+  saveChip.className="savechip saved";
+  updateProgress();
+})();
+</script>
+</body>
+</html>
